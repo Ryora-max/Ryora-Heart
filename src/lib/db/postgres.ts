@@ -17,7 +17,7 @@ function getPool(): Pool {
   return pool;
 }
 
-export async function query(text: string, params?: any[]) {
+export async function query(text: string, params?: unknown[]) {
   const pool = getPool();
   try {
     return await pool.query(text, params);
@@ -27,27 +27,27 @@ export async function query(text: string, params?: any[]) {
   }
 }
 
-export async function getOne(text: string, params?: any[]) {
+export async function getOne(text: string, params?: unknown[]) {
   const result = await query(text, params);
   return result.rows[0] || null;
 }
 
-export async function getAll(text: string, params?: any[]) {
+export async function getAll(text: string, params?: unknown[]) {
   const result = await query(text, params);
   return result.rows;
 }
 
-export async function insert(text: string, params?: any[]) {
+export async function insert(text: string, params?: unknown[]) {
   const result = await query(text, params);
   return result.rows[0];
 }
 
-export async function update(text: string, params?: any[]) {
+export async function update(text: string, params?: unknown[]) {
   const result = await query(text, params);
   return result.rows[0];
 }
 
-export async function remove(text: string, params?: any[]) {
+export async function remove(text: string, params?: unknown[]) {
   const result = await query(text, params);
   return result.rows;
 }

@@ -5,6 +5,8 @@ export interface User {
   role: "owner" | "partner";
   relationship: string;
   avatar_url?: string;
+  token?: string;
+  pairId?: string;
 }
 
 export interface RelationshipStats {
@@ -60,6 +62,23 @@ export interface CalendarEvent {
   date: Date;
   type: "vc" | "birthday" | "anniversary" | "reminder";
   description?: string;
+}
+
+export interface Hug {
+  id: string;
+  senderId: string;
+  receiverId: string;
+  message: string;
+  emoji: string;
+  createdAt: Date;
+}
+
+export interface StatusUpdate {
+  id: string;
+  userId: string;
+  message: string;
+  emoji: string;
+  createdAt: Date;
 }
 
 export interface Achievement {

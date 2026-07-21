@@ -2,7 +2,7 @@
 "use server";
 
 import { v4 as uuidv4 } from "uuid";
-import { query, getOne, insert as dbInsert, generateId } from "@/lib/db/postgres";
+import { query, getOne, generateId } from "@/lib/db/postgres";
 import { initializeDatabase } from "@/lib/db/init";
 import jwt from "jsonwebtoken";
 

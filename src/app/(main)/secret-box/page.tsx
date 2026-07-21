@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useRef } from "react";
-import { Unlock, Eye, EyeOff, Heart } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { Unlock, Eye, EyeOff, Heart, Settings, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { MagneticButton } from "@/components/animations/MagneticButton";
 import { LdrBanner } from "@/components/ldr/LdrBanner";
@@ -23,12 +23,34 @@ export default function SecretBoxPage() {
   const [secretForm, setSecretForm] = useState(false);
   const [secretTitle, setSecretTitle] = useState("");
   const [secretContent, setSecretContent] = useState("");
+  const [showSettings, setShowSettings] = useState(false);
+  const [newPin, setNewPin] = useState("");
+  const [confirmPin, setConfirmPin] = useState("");
+  const [selfDestruct, setSelfDestruct] = useState(false);
+  const [disguiseMode, setDisguiseMode] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return localStorage.getItem("ryora-disguise-mode") === "true";
+  });
   const { token } = useAuthStore();
   const { letters, loading, createLetter } = useLetters(token || "");
 
   const savedPin = typeof window !== "undefined" ? localStorage.getItem("ryora-secret-pin") || DEFAULT_PIN : DEFAULT_PIN;
 
   const secretLetters = letters.filter((l) => l.type === "secret");
+
+  useEffect(() => {
+    if (disguiseMode) {
+      document.title = "Notes App";
+      if (envelopeRef.current) {
+        envelopeRef.current.style.display = "none";
+      }
+    } else {
+      document.title = typeof window !== "undefined" ? document.title : "RYORA";
+      if (envelopeRef.current) {
+        envelopeRef.current.style.display = "";
+      }
+    }
+  }, [disguiseMode]);
 
   const handleUnlock = () => {
     if (pin === savedPin) {
@@ -43,27 +65,62 @@ export default function SecretBoxPage() {
     if (!secretTitle.trim() || !secretContent.trim() || !token) return;
     await createLetter({
       title: secretTitle.trim(),
-      content: secretContent.trim(),
+      content: selfDestruct ? `[SELF_DESTRUCT]${secretContent.trim()}` : secretContent.trim(),
       type: "secret",
     });
     setSecretTitle("");
     setSecretContent("");
     setSecretForm(false);
+    setSelfDestruct(false);
+  };
+
+  const handleChangePin = () => {
+    if (newPin.length !== 4 || newPin !== confirmPin) return;
+    localStorage.setItem("ryora-secret-pin", newPin);
+    setNewPin("");
+    setConfirmPin("");
+    setShowSettings(false);
+    alert("PIN updated successfully!");
+  };
+
+  const toggleDisguiseMode = () => {
+    const newMode = !disguiseMode;
+    setDisguiseMode(newMode);
+    localStorage.setItem("ryora-disguise-mode", String(newMode));
+  };
+
+  const handleDeleteSecret = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this secret? This cannot be undone.")) return;
+    await fetch("/api/db", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "deleteLetter", token, letterId: id }),
+    });
+    window.location.reload();
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-red-100 via-rose-100 to-pink-100 p-4 md:p-8">
+    <div className="min-h-screen bg-gradient-to-br from-red-100 via-rose-100 to-pink-100 p-3 sm:p-4 md:p-8">
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-8">
-          <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-red-500 to-pink-600 bg-clip-text text-transparent mb-2">
-            💝 Secret Box
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold bg-gradient-to-r from-red-500 to-pink-600 bg-clip-text text-transparent mb-2">
+            {disguiseMode ? "📝 My Notes" : "💝 Secret Box"}
           </h1>
-          <p className="text-pink-600/70">Your private encrypted space</p>
+          <p className="text-pink-600/70">{disguiseMode ? "Your personal notes" : "Your private encrypted space"}</p>
+          {!isUnlocked && (
+            <button
+              onClick={toggleDisguiseMode}
+              className="mt-3 px-4 py-2 rounded-full bg-pink-200 text-pink-700 text-sm font-semibold hover:bg-pink-300 transition-all cursor-pointer flex items-center gap-2 mx-auto min-h-[44px]"
+            >
+              {disguiseMode ? <Eye size={16} /> : <EyeOff size={16} />}
+              {disguiseMode ? "Exit Disguise" : "Disguise Mode"}
+            </button>
+          )}
         </div>
 
-        <LdrBanner tagline="Rahasia LDR: PIN-nya tanggal pertama kita video call. 🤫💞" />
+        {!disguiseMode && <LdrBanner tagline="Rahasia LDR: PIN-nya tanggal pertama kita video call. 🤫💞" />}
 
-        {!isUnlocked ? (
+        {!isUnlocked && !disguiseMode ? (
           <div className="flex flex-col items-center justify-center py-12">
             <div ref={envelopeRef} className={cn("secret-card bg-white/90 backdrop-blur-sm rounded-3xl p-8 shadow-2xl border-2 border-pink-200 max-w-sm w-full", shake && "border-red-300")}>
               <div className="text-center">
@@ -83,19 +140,37 @@ export default function SecretBoxPage() {
                     maxLength={4}
                     value={pin}
                     onChange={(e) => setPin(e.target.value.replace(/\D/g, "").slice(0, 4))}
-                    className="w-full bg-pink-50 border-2 border-pink-200 rounded-xl px-4 py-3 text-center text-2xl tracking-[1em] text-pink-900 placeholder-pink-300 focus:outline-none focus:border-pink-400 transition-colors"
+                    className="w-full bg-pink-50 border-2 border-pink-200 rounded-xl px-4 py-3 text-center text-2xl tracking-[1em] text-pink-900 placeholder-pink-300 focus:outline-none focus:border-pink-400 transition-colors min-h-[48px]"
                     placeholder="••••"
                   />
-                  <button onClick={() => setShowPin(!showPin)} className="absolute right-4 top-1/2 -translate-y-1/2 text-pink-400 hover:text-pink-600 transition-colors">
+                  <button onClick={() => setShowPin(!showPin)} className="absolute right-4 top-1/2 -translate-y-1/2 text-pink-400 hover:text-pink-600 transition-colors p-2 min-h-[44px] min-w-[44px] flex items-center justify-center">
                     {showPin ? <EyeOff size={20} /> : <Eye size={20} />}
                   </button>
+                </div>
+
+                <div className="grid grid-cols-3 gap-2 mb-4 max-w-[200px] mx-auto">
+                  {["1", "2", "3", "4", "5", "6", "7", "8", "9", "", "0", "⌫"].map((key) => (
+                    <button
+                      key={key}
+                      onClick={() => {
+                        if (key === "⌫") {
+                          setPin(pin.slice(0, -1));
+                        } else if (key) {
+                          setPin(pin + key);
+                        }
+                      }}
+                      className={`py-3 rounded-xl text-lg font-bold transition-all min-h-[44px] ${key ? "bg-pink-100 hover:bg-pink-200 text-pink-700" : "bg-transparent"}`}
+                    >
+                      {key}
+                    </button>
+                  ))}
                 </div>
 
                 <MagneticButton>
                   <button
                     onClick={handleUnlock}
                     disabled={pin.length === 0}
-                    className="w-full py-3 rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 text-white font-bold hover:from-pink-600 hover:to-rose-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
+                    className="w-full py-3 rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 text-white font-bold hover:from-pink-600 hover:to-rose-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2 min-h-[48px]"
                   >
                     <Unlock size={18} />
                     Unlock
@@ -105,7 +180,7 @@ export default function SecretBoxPage() {
             </div>
           </div>
         ) : (
-          <div className="secret-card bg-white/90 backdrop-blur-sm rounded-3xl p-8 shadow-2xl border-2 border-green-200">
+          <div className="secret-card bg-white/90 backdrop-blur-sm rounded-3xl p-6 sm:p-8 shadow-2xl border-2 border-green-200">
             <div className="text-center mb-8">
               <div className="text-6xl mb-4">🔓</div>
               <h3 className="text-2xl font-bold text-green-600">Unlocked!</h3>
@@ -117,15 +192,54 @@ export default function SecretBoxPage() {
                 <Heart size={18} className="text-pink-500" />
                 Secret Letters ({secretLetters.length})
               </h4>
-              <MagneticButton>
-                <button
-                  onClick={() => setSecretForm(!secretForm)}
-                  className="px-4 py-1.5 bg-gradient-to-r from-pink-500 to-rose-500 text-white rounded-xl text-sm font-semibold hover:from-pink-600 hover:to-rose-600 transition-all"
-                >
-                  {secretForm ? "Cancel" : "Write Secret 💌"}
-                </button>
-              </MagneticButton>
+              <div className="flex gap-2">
+                <MagneticButton>
+                  <button
+                    onClick={() => setShowSettings(!showSettings)}
+                    className="px-3 py-2 bg-purple-100 hover:bg-purple-200 text-purple-700 rounded-xl text-sm font-semibold transition-all flex items-center gap-1 cursor-pointer min-h-[44px]"
+                  >
+                    <Settings size={16} /> PIN
+                  </button>
+                </MagneticButton>
+                <MagneticButton>
+                  <button
+                    onClick={() => setSecretForm(!secretForm)}
+                    className="px-4 py-2.5 bg-gradient-to-r from-pink-500 to-rose-500 text-white rounded-xl text-sm font-semibold hover:from-pink-600 hover:to-rose-600 transition-all min-h-[44px]"
+                  >
+                    {secretForm ? "Cancel" : "Write Secret 💌"}
+                  </button>
+                </MagneticButton>
+              </div>
             </div>
+
+            {showSettings && (
+              <div className="mb-6 p-4 rounded-xl bg-purple-50 border-2 border-purple-200 animate-scale-in space-y-3">
+                <h4 className="font-bold text-purple-900">Change PIN</h4>
+                <input
+                  type="password"
+                  maxLength={4}
+                  value={newPin}
+                  onChange={(e) => setNewPin(e.target.value.replace(/\D/g, "").slice(0, 4))}
+                  placeholder="New 4-digit PIN"
+                  className="w-full px-4 py-3 rounded-xl border-2 border-purple-200 focus:border-purple-400 focus:outline-none text-purple-900 text-sm min-h-[44px]"
+                />
+                <input
+                  type="password"
+                  maxLength={4}
+                  value={confirmPin}
+                  onChange={(e) => setConfirmPin(e.target.value.replace(/\D/g, "").slice(0, 4))}
+                  placeholder="Confirm PIN"
+                  className="w-full px-4 py-3 rounded-xl border-2 border-purple-200 focus:border-purple-400 focus:outline-none text-purple-900 text-sm min-h-[44px]"
+                />
+                <button
+                  onClick={handleChangePin}
+                  disabled={newPin.length !== 4 || newPin !== confirmPin}
+                  className="w-full py-3 rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold hover:from-purple-600 hover:to-pink-600 disabled:opacity-50 transition-all min-h-[44px]"
+                >
+                  Update PIN
+                </button>
+              </div>
+            )}
 
             {secretForm && (
               <div className="mb-6 p-4 rounded-xl bg-pink-50 border-2 border-pink-200 animate-scale-in space-y-3">
@@ -134,19 +248,31 @@ export default function SecretBoxPage() {
                   value={secretTitle}
                   onChange={(e) => setSecretTitle(e.target.value)}
                   placeholder="Secret title 🤫"
-                  className="w-full px-4 py-2 rounded-xl border-2 border-pink-200 focus:border-pink-400 focus:outline-none text-pink-900 text-sm"
+                  className="w-full px-4 py-3 rounded-xl border-2 border-pink-200 focus:border-pink-400 focus:outline-none text-pink-900 text-sm min-h-[44px]"
                 />
                 <textarea
                   value={secretContent}
                   onChange={(e) => setSecretContent(e.target.value)}
                   placeholder="Write your secret here..."
                   rows={4}
-                  className="w-full px-4 py-2 rounded-xl border-2 border-pink-200 focus:border-pink-400 focus:outline-none text-pink-900 text-sm resize-none"
+                  className="w-full px-4 py-3 rounded-xl border-2 border-pink-200 focus:border-pink-400 focus:outline-none text-pink-900 text-sm resize-none"
                 />
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="selfDestruct"
+                    checked={selfDestruct}
+                    onChange={(e) => setSelfDestruct(e.target.checked)}
+                    className="w-4 h-4 text-pink-600 rounded border-pink-300 focus:ring-pink-500"
+                  />
+                  <label htmlFor="selfDestruct" className="text-sm text-pink-700 flex items-center gap-1 cursor-pointer">
+                    <Trash2 size={14} /> Self-destruct after reading
+                  </label>
+                </div>
                 <button
                   onClick={handleCreateSecret}
                   disabled={!secretTitle.trim() || !secretContent.trim()}
-                  className="w-full py-2.5 rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 text-white font-bold hover:from-pink-600 hover:to-rose-600 disabled:opacity-50 transition-all"
+                  className="w-full py-3 rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 text-white font-bold hover:from-pink-600 hover:to-rose-600 disabled:opacity-50 transition-all min-h-[44px]"
                 >
                   Save Secret
                 </button>
@@ -163,15 +289,30 @@ export default function SecretBoxPage() {
                 <p className="text-pink-600/70">No secrets yet. Write your first one!</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                 {secretLetters.map((letter, idx) => (
                   <div
                     key={letter.id}
                     className="secret-item bg-gradient-to-br from-pink-50 to-rose-50 p-4 rounded-xl border-2 border-pink-100 hover:border-pink-300 hover:shadow-lg transition-all"
                     style={{ animationDelay: `${idx * 0.08}s` }}
                   >
-                    <h5 className="font-bold text-pink-900 text-sm mb-1">{letter.title}</h5>
-                    <p className="text-pink-700/80 text-xs leading-relaxed line-clamp-3">{letter.content}</p>
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <h5 className="font-bold text-pink-900 text-sm mb-1 flex items-center gap-1">
+                          {letter.content.startsWith("[SELF_DESTRUCT]") && <Trash2 size={14} className="text-red-400" />}
+                          {letter.title}
+                        </h5>
+                        <p className="text-pink-700/80 text-xs leading-relaxed line-clamp-3">
+                          {letter.content.startsWith("[SELF_DESTRUCT]") ? letter.content.replace("[SELF_DESTRUCT]", "") : letter.content}
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => handleDeleteSecret(letter.id)}
+                        className="text-red-400 hover:text-red-600 transition-colors p-1 min-h-[44px] min-w-[44px] flex items-center justify-center"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
                     <p className="text-pink-400 text-xs mt-2">
                       From: {letter.createdBy === "user-1" ? "Ryo" : "Ara"} • {new Date(letter.createdAt).toLocaleDateString("id-ID")}
                     </p>

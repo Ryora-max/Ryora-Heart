@@ -368,6 +368,12 @@ body {
   animation: wiggle 0.4s ease-in-out;
 }
 
+@keyframes sparkle-fly {
+  0% { opacity: 0; transform: translateY(0) scale(0) rotate(0deg); }
+  30% { opacity: 1; transform: translateY(-8px) scale(1.2) rotate(90deg); }
+  100% { opacity: 0; transform: translateY(-30px) scale(0.3) rotate(180deg); }
+}
+
 @media (prefers-reduced-motion: reduce) {
   * {
     animation-duration: 0.01ms !important;

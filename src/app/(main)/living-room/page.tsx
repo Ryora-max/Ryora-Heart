@@ -78,10 +78,10 @@ export default function LivingRoomPage() {
   const filteredActivities = todayActivities.filter((a) => a.title.toLowerCase().includes(searchQuery.toLowerCase()));
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-100 via-cyan-100 to-teal-100 p-4 md:p-8">
+    <div className="min-h-screen bg-gradient-to-br from-blue-100 via-cyan-100 to-teal-100 p-3 sm:p-4 md:p-8">
       <div className="max-w-6xl mx-auto">
         <div className="mb-8 text-center">
-          <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-500 to-cyan-600 bg-clip-text text-transparent mb-2">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-500 to-cyan-600 bg-clip-text text-transparent mb-2">
             🛋️ Living Room
           </h1>
           <p className="text-blue-600/70">Where you spend quality time together</p>
@@ -89,28 +89,28 @@ export default function LivingRoomPage() {
 
         <LdrBanner tagline="Living room virtual: kita duduk bersebelahan lewat layar. Saling senggol pixel. 🛋️💞" />
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 mb-6">
           <div className="room-card animate-fade-in-up lg:col-span-2 bg-white/80 backdrop-blur-sm rounded-2xl p-6 border-2 border-blue-200 shadow-xl">
-            <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-              <h3 className="text-lg font-bold text-blue-900 flex items-center gap-2">
-                <User size={18} className="text-blue-500" />
-                Today&apos;s Activity
-              </h3>
-              <div className="flex items-center gap-2">
-                <div className="relative">
-                  <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-400" />
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search..."
-                    className="pl-8 pr-3 py-1.5 bg-blue-50 border-2 border-blue-200 rounded-lg text-sm focus:border-blue-400 focus:outline-none w-32 md:w-36"
-                  />
-                </div>
-                <button
-                  onClick={() => setShowAddForm(!showAddForm)}
-                  className="px-3 py-1.5 rounded-lg bg-blue-500 text-white text-sm font-semibold hover:bg-blue-600 transition-all flex items-center gap-1 cursor-pointer"
-                >
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+          <h3 className="text-lg font-bold text-blue-900 flex items-center gap-2">
+            <User size={18} className="text-blue-500" />
+            Today&apos;s Activity
+          </h3>
+          <div className="flex items-center gap-2">
+            <div className="relative">
+              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-400" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search..."
+                className="pl-8 pr-3 py-2 bg-blue-50 border-2 border-blue-200 rounded-lg text-sm focus:border-blue-400 focus:outline-none w-32 md:w-36 min-h-[44px]"
+              />
+            </div>
+            <button
+              onClick={() => setShowAddForm(!showAddForm)}
+              className="px-3 py-2.5 rounded-lg bg-blue-500 text-white text-sm font-semibold hover:bg-blue-600 transition-all flex items-center gap-1 cursor-pointer min-h-[44px]"
+            >
                   {showAddForm ? "Cancel" : "+ Add"}
                 </button>
               </div>
@@ -120,26 +120,26 @@ export default function LivingRoomPage() {
               <div className="mb-4 p-4 rounded-xl bg-blue-50 border-2 border-blue-200 animate-scale-in space-y-3">
                 <h4 className="text-sm font-bold text-blue-900">Add Daily Activity 📅</h4>
                 <div className="flex flex-col sm:flex-row gap-2">
-                  <input
+                   <input
                     type="text"
                     value={newActivityTitle}
                     onChange={(e) => setNewActivityTitle(e.target.value)}
                     placeholder="E.g., Virtual dinner date, Watch movie..."
-                    className="flex-1 px-3 py-2 bg-white border-2 border-blue-200 rounded-xl text-sm focus:border-blue-400 focus:outline-none text-blue-900"
+                    className="flex-1 px-3 py-2.5 bg-white border-2 border-blue-200 rounded-xl text-sm focus:border-blue-400 focus:outline-none text-blue-900 min-h-[44px]"
                   />
                   <select
                     value={newActivityType}
                     onChange={(e) => setNewActivityType(e.target.value as "schedule" | "reminder" | "milestone")}
-                    className="px-3 py-2 bg-white border-2 border-blue-200 rounded-xl text-sm focus:border-blue-400 focus:outline-none text-blue-900"
+                    className="px-3 py-2.5 bg-white border-2 border-blue-200 rounded-xl text-sm focus:border-blue-400 focus:outline-none text-blue-900 min-h-[44px]"
                   >
                     <option value="schedule">Schedule</option>
                     <option value="reminder">Reminder</option>
                     <option value="milestone">Milestone</option>
                   </select>
-                  <button
+                   <button
                     onClick={handleAddActivity}
                     disabled={!newActivityTitle.trim()}
-                    className="px-4 py-2 bg-blue-500 hover:bg-blue-600 disabled:opacity-50 text-white font-bold rounded-xl text-sm transition-all cursor-pointer"
+                    className="px-4 py-2.5 bg-blue-500 hover:bg-blue-600 disabled:opacity-50 text-white font-bold rounded-xl text-sm transition-all cursor-pointer min-h-[44px]"
                   >
                     Save
                   </button>
@@ -182,12 +182,12 @@ export default function LivingRoomPage() {
             {selectedMood ? (
               <div className="space-y-4 text-center">
                 <div className="text-5xl animate-bounce">{MOOD_OPTIONS.find((m) => m.value === selectedMood)?.icon}</div>
-                <textarea
+                 <textarea
                   value={moodNote}
                   onChange={(e) => setMoodNote(e.target.value)}
                   placeholder="Add a note..."
                   rows={3}
-                  className="w-full px-4 py-2 rounded-xl border-2 border-pink-200 focus:border-pink-400 focus:outline-none text-pink-900 placeholder-pink-300 resize-none text-sm"
+                  className="w-full px-4 py-2.5 rounded-xl border-2 border-pink-200 focus:border-pink-400 focus:outline-none text-pink-900 placeholder-pink-300 resize-none text-sm min-h-[44px]"
                 />
                 <div className="flex gap-2">
                   <button onClick={() => setSelectedMood(null)} className="flex-1 py-2 rounded-xl border-2 border-pink-200 text-pink-600 hover:bg-pink-50 transition-all text-sm">Cancel</button>
@@ -197,7 +197,7 @@ export default function LivingRoomPage() {
                 </div>
               </div>
             ) : (
-              <div className="grid grid-cols-3 gap-2">
+                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                  {MOOD_OPTIONS.map((mood, idx) => (
                    <MagneticButton key={mood.value}>
                      <button
@@ -233,7 +233,7 @@ export default function LivingRoomPage() {
           )}
         </div>
 
-          <div className="room-card animate-fade-in-up bg-white/80 backdrop-blur-sm rounded-2xl p-6 border-2 border-purple-200 shadow-xl" style={{ animationDelay: "0.2s" }}>
+                 <div className="room-card animate-fade-in-up bg-white/80 backdrop-blur-sm rounded-2xl p-4 sm:p-6 border-2 border-purple-200 shadow-xl" style={{ animationDelay: "0.2s" }}>
           <h3 className="text-lg font-bold text-purple-900 mb-4">Recent Moods 💭</h3>
           {moodsLoading ? (
             <div className="text-center py-8">

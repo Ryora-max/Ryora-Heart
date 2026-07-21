@@ -11,9 +11,20 @@ import {
   deletePhoto,
   getCalendarEvents,
   addCalendarEvent,
+  updateCalendarEvent,
+  deleteCalendarEvent,
   getLetters,
   createLetter,
+  deleteLetter,
   getNotifications,
+  updatePresence,
+  getPresence,
+  addStatusUpdate,
+  getStatusUpdates,
+  sendHug,
+  getHugs,
+  updateLoveMeter,
+  getLoveMeter,
 } from "@/app/actions/db";
 import { updateProfile, updateSettings, getUserSettings } from "@/app/actions/auth";
 
@@ -51,12 +62,35 @@ export async function POST(request: NextRequest) {
         return NextResponse.json(await getCalendarEvents(pairId));
       case "addCalendarEvent":
         return NextResponse.json(await addCalendarEvent(userId, pairId, params.title, params.date, params.type, params.description));
+      case "updateCalendarEvent":
+        return NextResponse.json(await updateCalendarEvent(userId, pairId, params.eventId, params.data));
+      case "deleteCalendarEvent":
+        return NextResponse.json({ success: await deleteCalendarEvent(userId, pairId, params.eventId) });
       case "getLetters":
         return NextResponse.json(await getLetters(pairId));
       case "createLetter":
         return NextResponse.json(await createLetter(userId, pairId, params.letter));
+      case "deleteLetter":
+        return NextResponse.json({ success: await deleteLetter(userId, pairId, params.letterId) });
       case "getNotifications":
         return NextResponse.json(await getNotifications(userId));
+      case "updatePresence":
+        await updatePresence(userId, pairId, params.status);
+        return NextResponse.json({ success: true });
+      case "getPresence":
+        return NextResponse.json(await getPresence(pairId));
+      case "addStatusUpdate":
+        return NextResponse.json(await addStatusUpdate(userId, pairId, params.message, params.emoji));
+      case "getStatusUpdates":
+        return NextResponse.json(await getStatusUpdates(pairId));
+      case "sendHug":
+        return NextResponse.json(await sendHug(userId, pairId, params.receiverId, params.message));
+      case "getHugs":
+        return NextResponse.json(await getHugs(pairId));
+      case "updateLoveMeter":
+        return NextResponse.json(await updateLoveMeter(userId, pairId, params.percentage));
+      case "getLoveMeter":
+        return NextResponse.json(await getLoveMeter(pairId));
       case "updateProfile":
         await updateProfile(userId, params.data);
         return NextResponse.json({ success: true });

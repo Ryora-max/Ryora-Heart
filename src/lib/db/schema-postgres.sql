@@ -96,6 +96,45 @@ CREATE TABLE IF NOT EXISTS user_settings (
   secret_pin TEXT DEFAULT '0101'
 );
 
+-- LDR presence table
+CREATE TABLE IF NOT EXISTS ldr_presence (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL REFERENCES users(id),
+  pair_id TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'online',
+  last_seen TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- LDR status updates table
+CREATE TABLE IF NOT EXISTS ldr_status_updates (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL REFERENCES users(id),
+  pair_id TEXT NOT NULL,
+  message TEXT NOT NULL,
+  emoji TEXT DEFAULT '💬',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- LDR virtual hugs table
+CREATE TABLE IF NOT EXISTS ldr_hugs (
+  id TEXT PRIMARY KEY,
+  sender_id TEXT NOT NULL REFERENCES users(id),
+  receiver_id TEXT NOT NULL REFERENCES users(id),
+  pair_id TEXT NOT NULL,
+  message TEXT NOT NULL,
+  emoji TEXT DEFAULT '🤗',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- LDR love meter table
+CREATE TABLE IF NOT EXISTS ldr_love_meter (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL REFERENCES users(id),
+  pair_id TEXT NOT NULL,
+  percentage INTEGER NOT NULL DEFAULT 0,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Indexes
 CREATE INDEX IF NOT EXISTS idx_moods_pair_id ON moods(pair_id);
 CREATE INDEX IF NOT EXISTS idx_activities_pair_id ON activities(pair_id);
@@ -104,6 +143,10 @@ CREATE INDEX IF NOT EXISTS idx_calendar_events_pair_id ON calendar_events(pair_i
 CREATE INDEX IF NOT EXISTS idx_letters_pair_id ON letters(pair_id);
 CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON notifications(user_id);
 CREATE INDEX IF NOT EXISTS idx_sessions_token ON sessions(token);
+CREATE INDEX IF NOT EXISTS idx_ldr_presence_pair_id ON ldr_presence(pair_id);
+CREATE INDEX IF NOT EXISTS idx_ldr_status_pair_id ON ldr_status_updates(pair_id);
+CREATE INDEX IF NOT EXISTS idx_ldr_hugs_pair_id ON ldr_hugs(pair_id);
+CREATE INDEX IF NOT EXISTS idx_ldr_love_meter_pair_id ON ldr_love_meter(pair_id);
 
 -- Seed data
 INSERT INTO users (id, username, password, name, role, relationship, pair_id, created_at)

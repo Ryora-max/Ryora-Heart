@@ -1,8 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use server";
 
-import { v4 as uuidv4 } from "uuid";
-import { query, getOne, getAll, insert as dbInsert, generateId } from "@/lib/db/postgres";
+import { query, getOne, getAll, generateId } from "@/lib/db/postgres";
 import { initializeDatabase } from "@/lib/db/init";
 
 initializeDatabase();
@@ -153,6 +152,49 @@ export async function addCalendarEvent(userId: string, pairId: string, title: st
   return { id, title, date, type, description };
 }
 
+export async function updateCalendarEvent(userId: string, pairId: string, eventId: string, data: { title?: string; date?: string; type?: string; description?: string }) {
+  const event = await getOne("SELECT * FROM calendar_events WHERE id = $1 AND pair_id = $2", [eventId, pairId]);
+  if (!event) return null;
+
+  const fields: string[] = [];
+  const values: any[] = [];
+
+  if (data.title !== undefined) { fields.push("title = $" + (values.length + 1)); values.push(data.title); }
+  if (data.date !== undefined) { fields.push("date = $" + (values.length + 1)); values.push(data.date); }
+  if (data.type !== undefined) { fields.push("type = $" + (values.length + 1)); values.push(data.type); }
+  if (data.description !== undefined) { fields.push("description = $" + (values.length + 1)); values.push(data.description); }
+
+  if (fields.length === 0) return event;
+
+  values.push(eventId);
+  await query(`UPDATE calendar_events SET ${fields.join(", ")} WHERE id = $${values.length}`, values);
+
+  const notificationId = generateId();
+  await query(
+    `INSERT INTO notifications (id, user_id, pair_id, message, type, read, created_at)
+     VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+    [notificationId, userId, pairId, `Event updated: ${data.title || event.title}`, "calendar", false, new Date().toISOString()]
+  );
+
+  return await getOne("SELECT * FROM calendar_events WHERE id = $1", [eventId]);
+}
+
+export async function deleteCalendarEvent(userId: string, pairId: string, eventId: string) {
+  const event = await getOne("SELECT * FROM calendar_events WHERE id = $1 AND pair_id = $2", [eventId, pairId]);
+  if (!event) return false;
+
+  await query("DELETE FROM calendar_events WHERE id = $1 AND pair_id = $2", [eventId, pairId]);
+
+  const notificationId = generateId();
+  await query(
+    `INSERT INTO notifications (id, user_id, pair_id, message, type, read, created_at)
+     VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+    [notificationId, userId, pairId, `Event deleted: ${event.title}`, "calendar", false, new Date().toISOString()]
+  );
+
+  return true;
+}
+
 export async function getLetters(pairId: string) {
   const result = await getAll(`
     SELECT id, title, content, type, open_date as "openDate", created_at as "createdAt", created_by as "createdBy"
@@ -191,5 +233,119 @@ export async function getNotifications(userId: string) {
     ORDER BY created_at DESC
     LIMIT 20
   `, [userId]);
+  return result;
+}
+
+export async function deleteLetter(userId: string, pairId: string, letterId: string) {
+  await query("DELETE FROM letters WHERE id = $1 AND pair_id = $2", [letterId, pairId]);
+  return { success: true };
+}
+
+export async function updatePresence(userId: string, pairId: string, status: string) {
+  const existing = await getOne("SELECT id FROM ldr_presence WHERE user_id = $1", [userId]);
+  if (existing) {
+    await query("UPDATE ldr_presence SET status = $1, last_seen = $2 WHERE user_id = $3", [status, new Date().toISOString(), userId]);
+  } else {
+    await query("INSERT INTO ldr_presence (id, user_id, pair_id, status, last_seen) VALUES ($1, $2, $3, $4, $5)", [generateId(), userId, pairId, status, new Date().toISOString()]);
+  }
+  return { success: true };
+}
+
+export async function getPresence(pairId: string) {
+  const result = await getAll(`
+    SELECT user_id, status, last_seen FROM ldr_presence WHERE pair_id = $1
+  `, [pairId]);
+  return result;
+}
+
+export async function addStatusUpdate(userId: string, pairId: string, message: string, emoji?: string) {
+  const id = generateId();
+  const now = new Date().toISOString();
+  await query(
+    `INSERT INTO ldr_status_updates (id, user_id, pair_id, message, emoji, created_at)
+     VALUES ($1, $2, $3, $4, $5, $6)`,
+    [id, userId, pairId, message, emoji || "💬", now]
+  );
+
+  const notificationId = generateId();
+  await query(
+    `INSERT INTO notifications (id, user_id, pair_id, message, type, read, created_at)
+     VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+    [notificationId, userId, pairId, `Status update: ${message}`, "status", false, now]
+  );
+
+  return { id, message, emoji: emoji || "💬", createdAt: now };
+}
+
+export async function getStatusUpdates(pairId: string) {
+  const result = await getAll(`
+    SELECT id, user_id, message, emoji, created_at as "createdAt"
+    FROM ldr_status_updates
+    WHERE pair_id = $1
+    ORDER BY created_at DESC
+    LIMIT 50
+  `, [pairId]);
+  return result;
+}
+
+export async function sendHug(userId: string, pairId: string, receiverId: string, message?: string) {
+  const id = generateId();
+  const now = new Date().toISOString();
+  const hugMessage = message || "Sent a virtual hug 🤗";
+
+  await query(
+    `INSERT INTO ldr_hugs (id, sender_id, receiver_id, pair_id, message, emoji, created_at)
+     VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+    [id, userId, receiverId, pairId, hugMessage, "🤗", now]
+  );
+
+  const notificationId = generateId();
+  await query(
+    `INSERT INTO notifications (id, user_id, pair_id, message, type, read, created_at)
+     VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+    [notificationId, receiverId, pairId, `Virtual hug from your partner: ${hugMessage}`, "hug", false, now]
+  );
+
+  return { id, message: hugMessage, emoji: "🤗", createdAt: now };
+}
+
+export async function getHugs(pairId: string) {
+  const result = await getAll(`
+    SELECT id, sender_id, receiver_id, message, emoji, created_at as "createdAt"
+    FROM ldr_hugs
+    WHERE pair_id = $1
+    ORDER BY created_at DESC
+    LIMIT 20
+  `, [pairId]);
+  return result;
+}
+
+export async function updateLoveMeter(userId: string, pairId: string, percentage: number) {
+  const id = generateId();
+  const now = new Date().toISOString();
+  await query(
+    `INSERT INTO ldr_love_meter (id, user_id, pair_id, percentage, created_at)
+     VALUES ($1, $2, $3, $4, $5)`,
+    [id, userId, pairId, percentage, now]
+  );
+
+  const notificationId = generateId();
+  await query(
+    `INSERT INTO notifications (id, user_id, pair_id, message, type, read, created_at)
+     VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+    [notificationId, userId, pairId, `Love meter updated: ${percentage}%`, "love_meter", false, now]
+  );
+
+  return { id, percentage, createdAt: now };
+}
+
+export async function getLoveMeter(pairId: string) {
+  const result = await getAll(`
+    SELECT user_id, percentage, created_at as "createdAt"
+    FROM ldr_love_meter
+    WHERE pair_id = $1
+    ORDER BY created_at DESC
+    LIMIT 10
+  `, [pairId]);
   return result;
 }

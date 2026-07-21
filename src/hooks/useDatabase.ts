@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import type { MoodEntry, Activity, GalleryItem, CalendarEvent, Letter } from "@/types";
+import type { MoodEntry, Activity, GalleryItem, CalendarEvent, Letter, Hug, StatusUpdate } from "@/types";
 
 async function callDb(action: string, token: string, params?: any) {
   const result = await fetch("/api/db", {
@@ -176,7 +176,19 @@ export function useCalendarEvents(token: string) {
     fetchEvents();
   }, [token, fetchEvents]);
 
-  return { events, loading, addCalendarEvent };
+  const updateCalendarEvent = useCallback(async (eventId: string, data: { title?: string; date?: Date; type?: CalendarEvent["type"]; description?: string }) => {
+    const payload: any = { eventId, data };
+    if (data.date instanceof Date) payload.data.date = data.date.toISOString();
+    await callDb("updateCalendarEvent", token, payload);
+    fetchEvents();
+  }, [token, fetchEvents]);
+
+  const deleteCalendarEvent = useCallback(async (eventId: string) => {
+    await callDb("deleteCalendarEvent", token, { eventId });
+    fetchEvents();
+  }, [token, fetchEvents]);
+
+  return { events, loading, addCalendarEvent, updateCalendarEvent, deleteCalendarEvent };
 }
 
 export function useLetters(token: string) {
@@ -216,4 +228,154 @@ export function useLetters(token: string) {
   }, [token, fetchLetters]);
 
   return { letters, loading, refetch: fetchLetters, createLetter };
+}
+
+export function usePresence(token: string) {
+  const [presence, setPresence] = useState<{ userId: string; status: string; lastSeen: string }[]>([]);
+
+  const fetchPresence = useCallback(async () => {
+    try {
+      const data = await callDb("getPresence", token);
+      setPresence(data);
+    } catch (error) {
+      console.error("Error fetching presence:", error);
+    }
+  }, [token]);
+
+  useEffect(() => {
+    if (!token) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchPresence();
+    const interval = setInterval(fetchPresence, 3000);
+    return () => clearInterval(interval);
+  }, [fetchPresence, token]);
+
+  const updatePresence = useCallback(async (status: string) => {
+    await callDb("updatePresence", token, { status });
+    fetchPresence();
+  }, [token, fetchPresence]);
+
+  return { presence, updatePresence };
+}
+
+export function useStatusUpdates(token: string) {
+  const [updates, setUpdates] = useState<StatusUpdate[]>([]);
+
+  const fetchUpdates = useCallback(async () => {
+    try {
+      const data = await callDb("getStatusUpdates", token);
+      setUpdates(data);
+    } catch (error) {
+      console.error("Error fetching status updates:", error);
+    }
+  }, [token]);
+
+  useEffect(() => {
+    if (!token) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchUpdates();
+    const interval = setInterval(fetchUpdates, 3000);
+    return () => clearInterval(interval);
+  }, [fetchUpdates, token]);
+
+  const addUpdate = useCallback(async (message: string, emoji?: string) => {
+    await callDb("addStatusUpdate", token, { message, emoji });
+    fetchUpdates();
+  }, [token, fetchUpdates]);
+
+  return { updates, addUpdate, refetch: fetchUpdates };
+}
+
+export function useHugs(token: string) {
+  const [hugs, setHugs] = useState<Hug[]>([]);
+
+  const fetchHugs = useCallback(async () => {
+    try {
+      const data = await callDb("getHugs", token);
+      setHugs(data.map((h: any) => ({
+        id: h.id,
+        senderId: h.sender_id,
+        receiverId: h.receiver_id,
+        message: h.message,
+        emoji: h.emoji,
+        createdAt: new Date(h.createdAt),
+      })));
+    } catch (error) {
+      console.error("Error fetching hugs:", error);
+    }
+  }, [token]);
+
+  useEffect(() => {
+    if (!token) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchHugs();
+    const interval = setInterval(fetchHugs, 3000);
+    return () => clearInterval(interval);
+  }, [fetchHugs, token]);
+
+  const sendHug = useCallback(async (receiverId: string, message?: string) => {
+    await callDb("sendHug", token, { receiverId, message });
+    fetchHugs();
+  }, [token, fetchHugs]);
+
+  return { hugs, sendHug, refetch: fetchHugs };
+}
+
+export function useLoveMeter(token: string) {
+  const [history, setHistory] = useState<{ userId: string; percentage: number; createdAt: Date }[]>([]);
+
+  const fetchHistory = useCallback(async () => {
+    try {
+      const data = await callDb("getLoveMeter", token);
+      setHistory(data.map((l: any) => ({
+        userId: l.userId,
+        percentage: l.percentage,
+        createdAt: new Date(l.createdAt),
+      })));
+    } catch (error) {
+      console.error("Error fetching love meter:", error);
+    }
+  }, [token]);
+
+  useEffect(() => {
+    if (!token) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchHistory();
+    const interval = setInterval(fetchHistory, 3000);
+    return () => clearInterval(interval);
+  }, [fetchHistory, token]);
+
+  const update = useCallback(async (percentage: number) => {
+    await callDb("updateLoveMeter", token, { percentage });
+    fetchHistory();
+  }, [token, fetchHistory]);
+
+  const currentPercentage = history.length > 0 ? history[0].percentage : 0;
+
+  return { history, currentPercentage, update, refetch: fetchHistory };
+}
+
+export function useNotifications(token: string) {
+  const [notifications, setNotifications] = useState<{ id: string; message: string; type: string; read: boolean; createdAt: string }[]>([]);
+
+  const fetchNotifications = useCallback(async () => {
+    try {
+      const data = await callDb("getNotifications", token);
+      setNotifications(data);
+    } catch (error) {
+      console.error("Error fetching notifications:", error);
+    }
+  }, [token]);
+
+  useEffect(() => {
+    if (!token) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchNotifications();
+    const interval = setInterval(fetchNotifications, 3000);
+    return () => clearInterval(interval);
+  }, [fetchNotifications, token]);
+
+  const unreadCount = notifications.filter((n) => !n.read).length;
+
+  return { notifications, unreadCount, refetch: fetchNotifications };
 }
