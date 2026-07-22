@@ -76,7 +76,7 @@ export default function GardenPage() {
                   <button
                     key={milestone.id}
                     onClick={() => setSelected(milestone)}
-                    className="group relative flex flex-col items-center animate-fade-in-up hover:scale-110 transition-all cursor-pointer"
+                    className="group relative flex flex-col items-center animate-fade-in-up hover:scale-110 transition-all cursor-pointer min-h-[60px]"
                     style={{ animationDelay: `${i * 0.1}s` }}
                   >
                     <div className={`relative ${isEven ? "mt-4" : "mb-4"}`}>
@@ -97,10 +97,10 @@ export default function GardenPage() {
             </div>
 
             <div className="mt-8 flex justify-center">
-              <button
-                onClick={() => setShowForm(true)}
-                className="px-6 py-3 rounded-full bg-gradient-to-r from-green-500 to-emerald-500 text-white font-bold hover:from-green-600 hover:to-emerald-600 transition-all shadow-lg cursor-pointer flex items-center gap-2 hover:scale-105 transform"
-              >
+               <button
+                 onClick={() => setShowForm(true)}
+                 className="px-6 py-3 rounded-full bg-gradient-to-r from-green-500 to-emerald-500 text-white font-bold hover:from-green-600 hover:to-emerald-600 transition-all shadow-lg cursor-pointer flex items-center gap-2 hover:scale-105 transform min-h-[44px]"
+               >
                 <Plus size={18} /> Add Milestone
               </button>
             </div>
@@ -115,9 +115,9 @@ export default function GardenPage() {
               <h3 className="text-lg font-bold text-green-900 flex items-center gap-2">
                 <Leaf className="text-green-500" size={20} /> {selected.title}
               </h3>
-              <button onClick={() => setSelected(null)} className="text-green-400 hover:text-green-600 cursor-pointer">
-                <X size={20} />
-              </button>
+               <button onClick={() => setSelected(null)} className="text-green-400 hover:text-green-600 cursor-pointer p-2 min-h-[44px] min-w-[44px] flex items-center justify-center">
+                 <X size={20} />
+               </button>
             </div>
             <p className="text-green-600/70 text-sm mb-2">
               {new Date(selected.date).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })}
@@ -132,7 +132,7 @@ export default function GardenPage() {
           <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-6 border-2 border-green-200 shadow-xl max-w-md w-full animate-scale-in" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-bold text-green-900">Add Milestone 🌱</h3>
-              <button onClick={() => setShowForm(false)} className="text-green-400 hover:text-green-600 cursor-pointer">
+              <button onClick={() => setShowForm(false)} className="text-green-400 hover:text-green-600 cursor-pointer p-2 min-h-[44px] min-w-[44px] flex items-center justify-center">
                 <X size={20} />
               </button>
             </div>

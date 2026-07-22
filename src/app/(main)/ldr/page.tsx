@@ -62,7 +62,7 @@ export default function LdrPage() {
   const [hearts, setHearts] = useState<FloatingHeart[]>([]);
   const [statusText, setStatusText] = useState("");
   const [statusEmoji, setStatusEmoji] = useState("💬");
-  const [settings, setSettings] = useState<{ distance?: string; nextMeetupDate?: string }>({});
+  const [settings, setSettings] = useState<{ relationshipStartDate?: string; distance?: string; nextMeetupDate?: string }>({});
   const [hugMsg, setHugMsg] = useState<string | null>(null);
   const [showNotifPanel, setShowNotifPanel] = useState(false);
   const [letter, setLetter] = useState("");
@@ -100,12 +100,23 @@ export default function LdrPage() {
   }, [token, updatePresence]);
 
   useEffect(() => {
-    const stored = localStorage.getItem("ryora-settings");
-    if (stored) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      try { setSettings(JSON.parse(stored)); } catch {}
-    }
-  }, []);
+    if (!token) return;
+    fetch("/api/db", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "getUserSettings", token }),
+    })
+      .then((res) => res.ok ? res.json() : null)
+      .then((data) => {
+        if (data) {
+          setSettings(data);
+          if (typeof window !== "undefined") {
+            localStorage.setItem("ryora-settings", JSON.stringify(data));
+          }
+        }
+      })
+      .catch(() => {});
+  }, [token]);
 
   useEffect(() => {
     const targetDate: Date = settings.nextMeetupDate ? new Date(settings.nextMeetupDate) : (() => {
@@ -244,7 +255,7 @@ export default function LdrPage() {
               });
             }
           }}
-          className="relative p-3 bg-white/90 backdrop-blur-sm rounded-full border-2 border-pink-200 shadow-lg hover:shadow-xl transition-all"
+          className="relative p-3 bg-white/90 backdrop-blur-sm rounded-full border-2 border-pink-200 shadow-lg hover:shadow-xl transition-all min-h-[44px] min-w-[44px] flex items-center justify-center"
         >
           <Bell className="text-pink-500" size={22} />
           {unreadCount > 0 && (
@@ -260,7 +271,7 @@ export default function LdrPage() {
               <h3 className="font-bold text-pink-700 flex items-center gap-2">
                 <Bell size={18} /> Notifikasi
               </h3>
-              <button onClick={() => setShowNotifPanel(false)} className="text-pink-400 hover:text-pink-600">
+              <button onClick={() => setShowNotifPanel(false)} className="text-pink-400 hover:text-pink-600 p-2 min-h-[44px] min-w-[44px] flex items-center justify-center">
                 <X size={18} />
               </button>
             </div>
@@ -355,7 +366,7 @@ export default function LdrPage() {
             <p className="text-2xl text-center py-8 text-pink-600 font-medium animate-pulse">{animal}</p>
           </div>
 
-          <div className="animate-fade-in-up bg-gradient-to-br from-pink-400 to-fuchsia-500 p-6 rounded-3xl shadow-xl text-center" style={{ animationDelay: "0.2s" }}>
+          <div className="animate-fade-in-up bg-gradient-to-br from-pink-400 to-fuchsia-500 p-6 rounded-2xl shadow-xl text-center" style={{ animationDelay: "0.2s" }}>
             <h2 className="text-xl font-bold text-white mb-4">💌 Quote Receh LDR</h2>
             <p className="text-4xl mb-4">{LDR_QUOTES[quoteIdx].emoji}</p>
             <p className="text-white text-lg md:text-xl font-medium leading-relaxed mb-6">{LDR_QUOTES[quoteIdx].text}</p>
@@ -369,7 +380,7 @@ export default function LdrPage() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          <div className="animate-fade-in-up bg-white/80 backdrop-blur-sm p-6 rounded-3xl border-2 border-pink-200 shadow-xl" style={{ animationDelay: "0.25s" }}>
+          <div className="animate-fade-in-up bg-white/80 backdrop-blur-sm p-6 rounded-2xl border-2 border-pink-200 shadow-xl" style={{ animationDelay: "0.25s" }}>
             <h2 className="text-xl font-bold text-center text-pink-700 mb-4">💗 Love Meter Hari Ini</h2>
             <div className="text-center mb-4">
               <p className="text-6xl font-bold bg-gradient-to-r from-pink-500 to-rose-500 bg-clip-text text-transparent mb-3">{currentPercentage}%</p>

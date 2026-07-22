@@ -54,13 +54,15 @@ export default function SettingsPage() {
   }, [token]);
 
   const updateSetting = <K extends keyof Settings>(key: K, value: Settings[K]) => {
-    setSettings((prev) => {
-      const next = { ...prev, [key]: value };
-      if (key === "secretPin" && typeof window !== "undefined") {
-        localStorage.setItem("ryora-secret-pin", value);
-      }
-      return next;
-    });
+    const prev = settings;
+    const next = { ...prev, [key]: value };
+    setSettings(next);
+    if (key === "secretPin" && typeof window !== "undefined") {
+      localStorage.setItem("ryora-secret-pin", value);
+    }
+    if (typeof window !== "undefined") {
+      localStorage.setItem("ryora-settings", JSON.stringify(next));
+    }
 
     if (token) {
       (async () => {
@@ -69,7 +71,7 @@ export default function SettingsPage() {
           const res = await fetch("/api/db", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ action: "updateSettings", token, data: { ...settings, [key]: value } }),
+            body: JSON.stringify({ action: "updateSettings", token, data: { [key]: value } }),
           });
           if (!res.ok) throw new Error("Failed to save");
         } catch {
@@ -188,12 +190,12 @@ export default function SettingsPage() {
               { value: "light", label: "Light", icon: <Sun size={18} /> },
               { value: "aurora", label: "Aurora", icon: <Sun size={18} /> },
              ].map((t, i) => (
-               <button
-                 key={t.value}
-                 onClick={() => changeTheme(t.value as Theme)}
-                 className={`settings-item animate-fade-in-left p-4 rounded-xl border-2 transition-all cursor-pointer flex items-center gap-3 ${theme === t.value ? "border-gray-400 bg-gray-100" : "border-gray-200 hover:border-gray-300"}`}
-                 style={{ animationDelay: `${i * 0.1}s` }}
-              >
+                <button
+                  key={t.value}
+                  onClick={() => changeTheme(t.value as Theme)}
+                  className={`settings-item animate-fade-in-left p-4 rounded-xl border-2 transition-all cursor-pointer flex items-center gap-3 min-h-[44px] ${theme === t.value ? "border-gray-400 bg-gray-100" : "border-gray-200 hover:border-gray-300"}`}
+                  style={{ animationDelay: `${i * 0.1}s` }}
+               >
                 <div className={theme === t.value ? "text-gray-700" : "text-gray-400"}>{t.icon}</div>
                 <span className="text-gray-800 font-medium">{t.label}</span>
               </button>
@@ -265,7 +267,7 @@ export default function SettingsPage() {
 
         <button
           onClick={handleLogout}
-          className="w-full py-3 rounded-xl border-2 border-red-200 text-red-500 hover:bg-red-50 transition-all cursor-pointer flex items-center justify-center gap-2 font-medium"
+          className="w-full py-3 rounded-xl border-2 border-red-200 text-red-500 hover:bg-red-50 transition-all cursor-pointer flex items-center justify-center gap-2 font-medium min-h-[44px]"
         >
           <LogOut size={18} />
           Logout

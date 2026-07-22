@@ -90,9 +90,9 @@ export default function HomePage() {
               <div className="absolute inset-0 bg-white/20 animate-pulse" />
             </div>
 
-            <div className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-4">
-              {ROOMS.map((room, i) => (
-                <button key={room.id} onClick={() => router.push(`/${room.id}`)} className={`room-btn animate-scale-in group relative p-4 rounded-2xl bg-gradient-to-br ${room.color} text-white shadow-lg hover:shadow-xl transition-all hover:scale-110 hover:-translate-y-1`} style={{ animationDelay: `${0.3 + i * 0.08}s` }}>
+             <div className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-4">
+               {ROOMS.map((room, i) => (
+                 <button key={room.id} onClick={() => router.push(`/${room.id}`)} className={`room-btn animate-scale-in group relative p-4 rounded-2xl bg-gradient-to-br ${room.color} text-white shadow-lg hover:shadow-xl transition-all hover:scale-110 hover:-translate-y-1 min-h-[44px]`} style={{ animationDelay: `${0.3 + i * 0.08}s` }}>
                   <div className="text-3xl mb-2 group-hover:scale-125 transition-transform">{room.emoji}</div>
                   <div className="text-xs font-semibold">{room.name}</div>
                 </button>

@@ -4,6 +4,7 @@
 import { useState, useEffect, useCallback } from "react";
 import type { MoodEntry, Activity, GalleryItem, CalendarEvent, Letter, Hug, StatusUpdate } from "@/types";
 import { useRetryQueue } from "./useRetryQueue";
+import { showToast } from "./useToast";
 
 async function callDb(action: string, token: string, params?: any) {
   const result = await fetch("/api/db", {
@@ -52,8 +53,14 @@ export function useMoods(token: string) {
   }, [fetchMoods, token]);
 
   const addMood = useCallback(async (mood: { mood: MoodEntry["mood"]; note?: string }) => {
-    await callDb("addMood", token, { mood: mood.mood, note: mood.note });
-    fetchMoods();
+    try {
+      await callDb("addMood", token, { mood: mood.mood, note: mood.note });
+      showToast("Mood saved 💭", "success");
+      fetchMoods();
+    } catch (error) {
+      showToast("Gagal menyimpan mood", "error");
+      console.error("Error adding mood:", error);
+    }
   }, [token, fetchMoods]);
 
   return { moods, loading, addMood, flushOffline: flush };
@@ -93,16 +100,49 @@ export function useActivities(token: string) {
   }, [fetchActivities, token]);
 
   const createActivity = useCallback(async (title: string, type: Activity["type"], date: Date, description?: string) => {
-    await callDb("createActivity", token, { title, type, date: date.toISOString(), description });
-    fetchActivities();
+    try {
+      await callDb("createActivity", token, { title, type, date: date.toISOString(), description });
+      showToast("Activity created 📅", "success");
+      fetchActivities();
+    } catch (error) {
+      showToast("Gagal membuat activity", "error");
+      console.error("Error creating activity:", error);
+    }
   }, [token, fetchActivities]);
 
   const toggleActivity = useCallback(async (id: string, completed: boolean) => {
-    await callDb("toggleActivity", token, { activityId: id, completed });
-    fetchActivities();
+    try {
+      await callDb("toggleActivity", token, { activityId: id, completed });
+      fetchActivities();
+    } catch (error) {
+      showToast("Gagal mengubah activity", "error");
+      console.error("Error toggling activity:", error);
+    }
   }, [token, fetchActivities]);
 
-  return { activities, loading, createActivity, toggleActivity, flushOffline: flush };
+  const updateActivity = useCallback(async (id: string, updates: { title?: string; description?: string }) => {
+    try {
+      await callDb("updateActivity", token, { activityId: id, ...updates });
+      showToast("Activity diperbarui ✅", "success");
+      fetchActivities();
+    } catch (error) {
+      showToast("Gagal memperbarui activity", "error");
+      console.error("Error updating activity:", error);
+    }
+  }, [token, fetchActivities]);
+
+  const deleteActivity = useCallback(async (id: string) => {
+    try {
+      await callDb("deleteActivity", token, { activityId: id });
+      showToast("Activity dihapus 🗑️", "success");
+      fetchActivities();
+    } catch (error) {
+      showToast("Gagal menghapus activity", "error");
+      console.error("Error deleting activity:", error);
+    }
+  }, [token, fetchActivities]);
+
+  return { activities, loading, createActivity, toggleActivity, updateActivity, deleteActivity, flushOffline: flush };
 }
 
 export function useGallery(token: string) {
@@ -137,13 +177,25 @@ export function useGallery(token: string) {
   }, [fetchGallery, token]);
 
   const addPhoto = useCallback(async (url: string, caption?: string) => {
-    await callDb("addPhoto", token, { url, caption });
-    fetchGallery();
+    try {
+      await callDb("addPhoto", token, { url, caption });
+      showToast("Foto berhasil diupload 📸", "success");
+      fetchGallery();
+    } catch (error) {
+      showToast("Gagal upload foto", "error");
+      console.error("Error adding photo:", error);
+    }
   }, [token, fetchGallery]);
 
   const deletePhoto = useCallback(async (id: string) => {
-    await callDb("deletePhoto", token, { photoId: id });
-    fetchGallery();
+    try {
+      await callDb("deletePhoto", token, { photoId: id });
+      showToast("Foto dihapus 🗑️", "success");
+      fetchGallery();
+    } catch (error) {
+      showToast("Gagal menghapus foto", "error");
+      console.error("Error deleting photo:", error);
+    }
   }, [token, fetchGallery]);
 
   return { photos, loading, addPhoto, deletePhoto, flushOffline: flush };
@@ -181,20 +233,38 @@ export function useCalendarEvents(token: string) {
   }, [fetchEvents, token]);
 
   const addCalendarEvent = useCallback(async (title: string, date: Date, type: CalendarEvent["type"], description?: string) => {
-    await callDb("addCalendarEvent", token, { title, date: date.toISOString(), type, description });
-    fetchEvents();
+    try {
+      await callDb("addCalendarEvent", token, { title, date: date.toISOString(), type, description });
+      showToast("Event ditambahkan 📅", "success");
+      fetchEvents();
+    } catch (error) {
+      showToast("Gagal menambahkan event", "error");
+      console.error("Error adding event:", error);
+    }
   }, [token, fetchEvents]);
 
   const updateCalendarEvent = useCallback(async (eventId: string, data: { title?: string; date?: Date; type?: CalendarEvent["type"]; description?: string }) => {
-    const payload: any = { eventId, data };
-    if (data.date instanceof Date) payload.data.date = data.date.toISOString();
-    await callDb("updateCalendarEvent", token, payload);
-    fetchEvents();
+    try {
+      const payload: any = { eventId, data };
+      if (data.date instanceof Date) payload.data.date = data.date.toISOString();
+      await callDb("updateCalendarEvent", token, payload);
+      showToast("Event diperbarui 📅", "success");
+      fetchEvents();
+    } catch (error) {
+      showToast("Gagal memperbarui event", "error");
+      console.error("Error updating event:", error);
+    }
   }, [token, fetchEvents]);
 
   const deleteCalendarEvent = useCallback(async (eventId: string) => {
-    await callDb("deleteCalendarEvent", token, { eventId });
-    fetchEvents();
+    try {
+      await callDb("deleteCalendarEvent", token, { eventId });
+      showToast("Event dihapus 🗑️", "success");
+      fetchEvents();
+    } catch (error) {
+      showToast("Gagal menghapus event", "error");
+      console.error("Error deleting event:", error);
+    }
   }, [token, fetchEvents]);
 
   return { events, loading, addCalendarEvent, updateCalendarEvent, deleteCalendarEvent, flushOffline: flush };
@@ -234,8 +304,14 @@ export function useLetters(token: string) {
   }, [fetchLetters, token]);
 
   const createLetter = useCallback(async (letter: { title: string; content: string; type: Letter["type"]; openDate?: Date }) => {
-    await callDb("createLetter", token, { letter: { ...letter, openDate: letter.openDate?.toISOString() } });
-    fetchLetters();
+    try {
+      await callDb("createLetter", token, { letter: { ...letter, openDate: letter.openDate?.toISOString() } });
+      showToast("Surat terkirim 💌", "success");
+      fetchLetters();
+    } catch (error) {
+      showToast("Gagal mengirim surat", "error");
+      console.error("Error creating letter:", error);
+    }
   }, [token, fetchLetters]);
 
   return { letters, loading, refetch: fetchLetters, createLetter, flushOffline: flush };
@@ -268,8 +344,12 @@ export function usePresence(token: string) {
   }, [fetchPresence, token]);
 
   const updatePresence = useCallback(async (status: string) => {
-    await callDb("updatePresence", token, { status });
-    fetchPresence();
+    try {
+      await callDb("updatePresence", token, { status });
+      fetchPresence();
+    } catch (error) {
+      console.error("Error updating presence:", error);
+    }
   }, [token, fetchPresence]);
 
   return { presence, updatePresence, flushOffline: flush };
@@ -298,8 +378,14 @@ export function useStatusUpdates(token: string) {
   }, [fetchUpdates, token]);
 
   const addUpdate = useCallback(async (message: string, emoji?: string) => {
-    await callDb("addStatusUpdate", token, { message, emoji });
-    fetchUpdates();
+    try {
+      await callDb("addStatusUpdate", token, { message, emoji });
+      showToast("Status updated 💬", "success");
+      fetchUpdates();
+    } catch (error) {
+      showToast("Gagal update status", "error");
+      console.error("Error adding status update:", error);
+    }
   }, [token, fetchUpdates]);
 
   return { updates, addUpdate, refetch: fetchUpdates, flushOffline: flush };
@@ -335,8 +421,14 @@ export function useHugs(token: string) {
   }, [fetchHugs, token]);
 
   const sendHug = useCallback(async (receiverId: string, message?: string) => {
-    await callDb("sendHug", token, { receiverId, message });
-    fetchHugs();
+    try {
+      await callDb("sendHug", token, { receiverId, message });
+      showToast("Peluk terkirim! 🤗", "success");
+      fetchHugs();
+    } catch (error) {
+      showToast("Gagal mengirim peluk", "error");
+      console.error("Error sending hug:", error);
+    }
   }, [token, fetchHugs]);
 
   return { hugs, sendHug, refetch: fetchHugs, flushOffline: flush };
@@ -369,8 +461,14 @@ export function useLoveMeter(token: string) {
   }, [fetchHistory, token]);
 
   const update = useCallback(async (percentage: number) => {
-    await callDb("updateLoveMeter", token, { percentage });
-    fetchHistory();
+    try {
+      await callDb("updateLoveMeter", token, { percentage });
+      showToast(`Love meter updated: ${percentage}% 💗`, "success");
+      fetchHistory();
+    } catch (error) {
+      showToast("Gagal update love meter", "error");
+      console.error("Error updating love meter:", error);
+    }
   }, [token, fetchHistory]);
 
   const currentPercentage = history.length > 0 ? history[0].percentage : 0;
@@ -408,17 +506,30 @@ export function useNotifications(token: string) {
 export function usePartnerId(token: string, userId?: string) {
   const [partnerId, setPartnerId] = useState<string | null>(null);
   const [pairId, setPairId] = useState<string>("");
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!token || !userId) return;
     let cancelled = false;
-    (async () => {
+    let retryCount = 0;
+    const maxRetries = 3;
+
+    const fetchPartnerId = async () => {
       try {
+        setError(null);
         const sessionRes = await fetch("/api/auth", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ action: "verify", token }),
         });
+        if (!sessionRes.ok) {
+          if (retryCount < maxRetries) {
+            retryCount++;
+            setTimeout(fetchPartnerId, 1000 * retryCount);
+            return;
+          }
+          throw new Error("Session verification failed");
+        }
         const sessionData = await sessionRes.json();
         const currentPairId = sessionData.user?.pair_id || "";
         const currentUserId = sessionData.user?.id || userId;
@@ -429,14 +540,37 @@ export function usePartnerId(token: string, userId?: string) {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ action: "getPartnerId", token, userId: currentUserId, pairId: currentPairId }),
         });
+        if (!res.ok) {
+          if (retryCount < maxRetries) {
+            retryCount++;
+            setTimeout(fetchPartnerId, 1000 * retryCount);
+            return;
+          }
+          throw new Error("Failed to get partner ID");
+        }
         const data = await res.json();
-        if (!cancelled) setPartnerId(data.partnerId || null);
-      } catch {}
-    })();
+        if (!cancelled) {
+          setPartnerId(data.partnerId || null);
+          if (!data.partnerId) {
+            showToast("Partner belum terhubung. Pastikan pasangan sudah mendaftarkan pair ID 💞", "warning");
+          }
+        }
+      } catch (error) {
+        if (!cancelled) {
+          console.error("Error fetching partner ID:", error);
+          setError("Gagal memuat data partner");
+          if (retryCount >= maxRetries) {
+            showToast("Gagal memuat data partner. Coba refresh halaman.", "error");
+          }
+        }
+      }
+    };
+
+    fetchPartnerId();
     return () => { cancelled = true; };
   }, [token, userId]);
 
-  return { partnerId, pairId };
+  return { partnerId, pairId, error };
 }
 
 export function useLocations(token: string) {
@@ -462,17 +596,27 @@ export function useLocations(token: string) {
   }, [fetchLocations, token]);
 
   const addLocation = useCallback(async (place: string, note?: string) => {
-    await callDb("addLocation", token, { place, note });
-    fetchLocations();
+    try {
+      await callDb("addLocation", token, { place, note });
+      showToast("Lokasi dibagikan 📍", "success");
+      fetchLocations();
+    } catch (error) {
+      showToast("Gagal membagikan lokasi", "error");
+      console.error("Error adding location:", error);
+    }
   }, [token, fetchLocations]);
 
   const markAsRead = useCallback(async () => {
     if (!token) return;
-    await fetch("/api/db", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "markNotificationsAsRead", token }),
-    });
+    try {
+      await fetch("/api/db", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "markNotificationsAsRead", token }),
+      });
+    } catch (error) {
+      console.error("Error marking notifications as read:", error);
+    }
   }, [token]);
 
   return { locations, addLocation, refetch: fetchLocations, markAsRead, flushOffline: flush };

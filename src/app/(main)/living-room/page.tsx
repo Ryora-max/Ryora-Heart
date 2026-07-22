@@ -32,9 +32,11 @@ export default function LivingRoomPage() {
   const [showAddForm, setShowAddForm] = useState(false);
   const [newActivityTitle, setNewActivityTitle] = useState("");
   const [newActivityType, setNewActivityType] = useState<"schedule" | "reminder" | "milestone">("schedule");
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editTitle, setEditTitle] = useState("");
   const [confetti, setConfetti] = useState<ConfettiHeart[]>([]);
   const { token } = useAuthStore();
-  const { activities, loading: activitiesLoading, createActivity, toggleActivity } = useActivities(token || "");
+  const { activities, loading: activitiesLoading, createActivity, toggleActivity, updateActivity, deleteActivity } = useActivities(token || "");
   const { moods, loading: moodsLoading, addMood } = useMoods(token || "");
 
   const spawnConfetti = useCallback(() => {
@@ -69,6 +71,23 @@ export default function LivingRoomPage() {
     await createActivity(newActivityTitle.trim(), newActivityType, new Date());
     setNewActivityTitle("");
     setShowAddForm(false);
+  };
+
+  const handleStartEdit = (id: string, title: string) => {
+    setEditingId(id);
+    setEditTitle(title);
+  };
+
+  const handleSaveEdit = async (id: string) => {
+    if (!editTitle.trim()) return;
+    await updateActivity(id, { title: editTitle.trim() });
+    setEditingId(null);
+    setEditTitle("");
+  };
+
+  const handleDeleteActivity = async (id: string) => {
+    if (!confirm("Hapus activity ini?")) return;
+    await deleteActivity(id);
   };
 
   const todayActivities = activities.filter((a) => {
@@ -160,16 +179,44 @@ export default function LivingRoomPage() {
                 {filteredActivities.map((activity) => (
                   <div
                      key={activity.id}
-                     onClick={() => handleToggleActivity(activity.id, !activity.completed)}
-                     className="flex items-center gap-3 p-3 rounded-xl bg-blue-50/50 hover:bg-blue-50 transition-all cursor-pointer group"
+                     className="flex items-center gap-3 p-3 rounded-xl bg-blue-50/50 hover:bg-blue-50 transition-all group"
                    >
-                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all group-hover:scale-110 ${activity.completed ? "border-green-400 bg-green-400/20" : "border-blue-300"}`}>
+                    <div
+                      onClick={() => handleToggleActivity(activity.id, !activity.completed)}
+                      className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all group-hover:scale-110 cursor-pointer flex-shrink-0 ${activity.completed ? "border-green-400 bg-green-400/20" : "border-blue-300"}`}
+                    >
                       {activity.completed && <CheckCircle2 size={12} className="text-green-500" />}
                     </div>
-                    <div className="flex-1">
-                      <p className={`text-sm transition-all ${activity.completed ? "text-blue-600/50 line-through" : "text-blue-900 font-medium group-hover:text-blue-600"}`}>{activity.title}</p>
+                    <div className="flex-1 min-w-0">
+                      {editingId === activity.id ? (
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            value={editTitle}
+                            onChange={(e) => setEditTitle(e.target.value)}
+                            onBlur={() => handleSaveEdit(activity.id)}
+                            onKeyDown={(e) => { if (e.key === "Enter") handleSaveEdit(activity.id); if (e.key === "Escape") { setEditingId(null); setEditTitle(""); }}}
+                            autoFocus
+                            className="flex-1 px-2 py-1.5 bg-white border-2 border-blue-300 rounded-lg text-sm focus:border-blue-400 focus:outline-none text-blue-900 min-h-[44px]"
+                          />
+                          <button onClick={() => handleSaveEdit(activity.id)} className="px-2 py-1.5 bg-blue-500 text-white text-xs font-bold rounded-lg cursor-pointer min-h-[44px]">Save</button>
+                          <button onClick={() => { setEditingId(null); setEditTitle(""); }} className="px-2 py-1.5 bg-gray-200 text-gray-700 text-xs font-bold rounded-lg cursor-pointer min-h-[44px]">Cancel</button>
+                        </div>
+                      ) : (
+                        <div className="flex items-center justify-between gap-2">
+                          <p className={`text-sm transition-all truncate ${activity.completed ? "text-blue-600/50 line-through" : "text-blue-900 font-medium"}`}>{activity.title}</p>
+                          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
+                            <button onClick={(e) => { e.stopPropagation(); handleStartEdit(activity.id, activity.title); }} className="p-1.5 rounded-lg hover:bg-blue-100 text-blue-400 hover:text-blue-600 cursor-pointer" title="Edit">
+                              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
+                            </button>
+                            <button onClick={(e) => { e.stopPropagation(); handleDeleteActivity(activity.id); }} className="p-1.5 rounded-lg hover:bg-red-50 text-red-400 hover:text-red-600 cursor-pointer" title="Delete">
+                              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                            </button>
+                          </div>
+                        </div>
+                      )}
                     </div>
-                    <span className="text-xs text-blue-400">
+                    <span className="text-xs text-blue-400 flex-shrink-0">
                       {new Date(activity.date).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}
                     </span>
                   </div>
@@ -192,9 +239,9 @@ export default function LivingRoomPage() {
                   className="w-full px-4 py-2.5 rounded-xl border-2 border-pink-200 focus:border-pink-400 focus:outline-none text-pink-900 placeholder-pink-300 resize-none text-sm min-h-[44px]"
                 />
                 <div className="flex gap-2">
-                  <button onClick={() => setSelectedMood(null)} className="flex-1 py-2 rounded-xl border-2 border-pink-200 text-pink-600 hover:bg-pink-50 transition-all text-sm">Cancel</button>
+                  <button onClick={() => setSelectedMood(null)} className="flex-1 py-2 rounded-xl border-2 border-pink-200 text-pink-600 hover:bg-pink-50 transition-all text-sm min-h-[44px]">Cancel</button>
                   <MagneticButton>
-                    <button onClick={handleMoodSubmit} className="flex-1 py-2 rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 text-white font-bold hover:from-pink-600 hover:to-rose-600 transition-all text-sm">Save</button>
+                    <button onClick={handleMoodSubmit} className="flex-1 py-2 rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 text-white font-bold hover:from-pink-600 hover:to-rose-600 transition-all text-sm min-h-[44px]">Save</button>
                   </MagneticButton>
                 </div>
               </div>

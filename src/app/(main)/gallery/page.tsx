@@ -118,7 +118,7 @@ export default function GalleryPage() {
                         {selectedPhoto.createdAt.toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })}
                       </p>
                     </div>
-                    <button onClick={() => { deletePhoto(selectedPhoto.id); setSelectedPhoto(null); }} className="text-red-400 hover:text-red-300 text-sm cursor-pointer font-semibold">Delete</button>
+                    <button onClick={() => { deletePhoto(selectedPhoto.id); setSelectedPhoto(null); }} className="text-red-400 hover:text-red-300 text-sm cursor-pointer font-semibold p-2 min-h-[44px] flex items-center justify-center">Delete</button>
                   </div>
                 )}
               </div>

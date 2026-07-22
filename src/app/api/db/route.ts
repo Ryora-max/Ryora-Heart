@@ -6,6 +6,8 @@ import {
   getActivities,
   createActivity,
   toggleActivity,
+  updateActivity,
+  deleteActivity,
   getGallery,
   addPhoto,
   deletePhoto,
@@ -56,6 +58,10 @@ export async function POST(request: NextRequest) {
         return NextResponse.json(await createActivity(userId, pairId, params.title, params.type, params.date, params.description));
       case "toggleActivity":
         return NextResponse.json(await toggleActivity(userId, pairId, params.activityId, params.completed));
+      case "updateActivity":
+        return NextResponse.json(await updateActivity(userId, pairId, params.activityId, params.title, params.description));
+      case "deleteActivity":
+        return NextResponse.json(await deleteActivity(userId, pairId, params.activityId));
       case "getGallery":
         return NextResponse.json(await getGallery(pairId));
       case "addPhoto":

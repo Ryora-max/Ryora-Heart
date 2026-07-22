@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ComponentType } from "react";
 import { Video, Cake, Heart, Bell, ChevronLeft, ChevronRight, Plus, X, Pencil, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { MagneticButton } from "@/components/animations/MagneticButton";
@@ -11,7 +11,7 @@ import type { CalendarEvent } from "@/types";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ListItemSkeleton } from "@/components/ui/LoadingSkeleton";
 
-const EVENT_TYPES = {
+const EVENT_TYPES: Record<string, { label: string; color: string; icon: ComponentType<{ size?: number }> }> = {
   vc: { label: "Video Call", color: "bg-blue-100 text-blue-600 border-blue-200", icon: Video },
   birthday: { label: "Birthday", color: "bg-pink-100 text-pink-600 border-pink-200", icon: Cake },
   anniversary: { label: "Anniversary", color: "bg-red-100 text-red-600 border-red-200", icon: Heart },
@@ -108,7 +108,7 @@ export default function CalendarPage() {
             <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-6 border-2 border-blue-200 shadow-xl max-w-md w-full animate-scale-in" onClick={(e) => e.stopPropagation()}>
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-bold text-blue-900">Add Event 📅</h3>
-                <button onClick={() => setShowAddEvent(false)} className="text-blue-400 hover:text-blue-600"><X size={20} /></button>
+                <button onClick={() => setShowAddEvent(false)} className="text-blue-400 hover:text-blue-600 p-2 min-h-[44px] min-w-[44px] flex items-center justify-center"><X size={20} /></button>
               </div>
               <div className="space-y-3">
                  <input
@@ -172,7 +172,7 @@ export default function CalendarPage() {
             <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-6 border-2 border-blue-200 shadow-xl max-w-md w-full animate-scale-in" onClick={(e) => e.stopPropagation()}>
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-bold text-blue-900">Edit Event 📅</h3>
-                <button onClick={() => setEditingEvent(null)} className="text-blue-400 hover:text-blue-600"><X size={20} /></button>
+                <button onClick={() => setEditingEvent(null)} className="text-blue-400 hover:text-blue-600 p-2 min-h-[44px] min-w-[44px] flex items-center justify-center"><X size={20} /></button>
               </div>
               <div className="space-y-3">
                  <input
@@ -255,12 +255,12 @@ export default function CalendarPage() {
               <h2 className="text-2xl font-bold text-blue-900">{monthName}</h2>
               <div className="flex gap-2">
                 <MagneticButton>
-                  <button onClick={() => setCurrentDate(new Date(year, month - 1, 1))} className="w-10 h-10 rounded-xl bg-blue-50 hover:bg-blue-100 flex items-center justify-center transition-all">
+                  <button onClick={() => setCurrentDate(new Date(year, month - 1, 1))} className="w-10 h-10 rounded-xl bg-blue-50 hover:bg-blue-100 flex items-center justify-center transition-all min-h-[44px] min-w-[44px]">
                     <ChevronLeft size={20} className="text-blue-600" />
                   </button>
                 </MagneticButton>
                 <MagneticButton>
-                  <button onClick={() => setCurrentDate(new Date(year, month + 1, 1))} className="w-10 h-10 rounded-xl bg-blue-50 hover:bg-blue-100 flex items-center justify-center transition-all">
+                  <button onClick={() => setCurrentDate(new Date(year, month + 1, 1))} className="w-10 h-10 rounded-xl bg-blue-50 hover:bg-blue-100 flex items-center justify-center transition-all min-h-[44px] min-w-[44px]">
                     <ChevronRight size={20} className="text-blue-600" />
                   </button>
                 </MagneticButton>
@@ -327,12 +327,12 @@ export default function CalendarPage() {
                            {event.description && <p className="text-blue-500 text-xs mt-1 line-clamp-2">{event.description}</p>}
                          </div>
                          <div className="flex items-center gap-1 flex-shrink-0">
-                           <button onClick={() => openEdit(event)} className="w-8 h-8 rounded-lg bg-blue-50 hover:bg-blue-100 flex items-center justify-center transition-all text-blue-600">
-                             <Pencil size={14} />
-                           </button>
-                           <button onClick={() => setDeleteConfirm(event.id)} className="w-8 h-8 rounded-lg bg-red-50 hover:bg-red-100 flex items-center justify-center transition-all text-red-600">
-                             <Trash2 size={14} />
-                           </button>
+                            <button onClick={() => openEdit(event)} className="w-8 h-8 rounded-lg bg-blue-50 hover:bg-blue-100 flex items-center justify-center transition-all text-blue-600 min-h-[44px] min-w-[44px]">
+                              <Pencil size={14} />
+                            </button>
+                            <button onClick={() => setDeleteConfirm(event.id)} className="w-8 h-8 rounded-lg bg-red-50 hover:bg-red-100 flex items-center justify-center transition-all text-red-600 min-h-[44px] min-w-[44px]">
+                              <Trash2 size={14} />
+                            </button>
                          </div>
                        </div>
                      </div>

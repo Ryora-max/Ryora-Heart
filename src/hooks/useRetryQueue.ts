@@ -41,10 +41,10 @@ export function useRetryQueue() {
           }
         } catch {
           if (i === 0) {
-        setTimeout(() => {
-          setQueue((prev) => prev.filter((q) => !successful.includes(q.action + q.timestamp)));
-          setPendingCount((prev) => Math.max(0, prev - successful.length));
-        }, 2000);
+            setTimeout(() => {
+              setQueue((prev) => prev.filter((q) => !successful.includes(q.action + q.timestamp)));
+              setPendingCount((prev) => Math.max(0, prev - successful.length));
+            }, 2000);
             return;
           }
         }

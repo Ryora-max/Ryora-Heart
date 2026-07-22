@@ -87,6 +87,36 @@ export async function toggleActivity(userId: string, pairId: string, activityId:
   return { success: true };
 }
 
+export async function updateActivity(userId: string, pairId: string, activityId: string, title?: string, description?: string) {
+  const updates: string[] = [];
+  const values: any[] = [];
+  let idx = 1;
+
+  if (title !== undefined) { updates.push(`title = $${idx++}`); values.push(title); }
+  if (description !== undefined) { updates.push(`description = $${idx++}`); values.push(description || null); }
+
+  if (updates.length === 0) return { success: true };
+
+  values.push(activityId, pairId);
+  await query(`UPDATE activities SET ${updates.join(", ")} WHERE id = $${idx++} AND pair_id = $${idx}`, values);
+
+  const activity = await getOne("SELECT * FROM activities WHERE id = $1", [activityId]);
+  if (activity && title) {
+    await notifyPartner(userId, pairId, `Activity updated: ${title}`, "activity");
+  }
+
+  return { success: true };
+}
+
+export async function deleteActivity(userId: string, pairId: string, activityId: string) {
+  const activity = await getOne("SELECT * FROM activities WHERE id = $1", [activityId]);
+  await query("DELETE FROM activities WHERE id = $1 AND pair_id = $2", [activityId, pairId]);
+  if (activity) {
+    await notifyPartner(userId, pairId, `Activity deleted: ${activity.title}`, "activity");
+  }
+  return { success: true };
+}
+
 export async function getGallery(pairId: string) {
   const result = await getAll(`
     SELECT id, url, caption, created_at as "createdAt", created_by as "createdBy"

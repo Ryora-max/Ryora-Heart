@@ -48,8 +48,8 @@ export default function BedroomPage() {
   const filteredLetters = letters
     .filter((l) => {
       if (activeTab === "love") return l.type === "love_letter";
-      if (activeTab === "openwhen") return l.type === "open_when" && !l.content.startsWith("[VOICE:");
-      if (activeTab === "voice") return l.type === "open_when" && l.content.startsWith("[VOICE:");
+      if (activeTab === "openwhen") return l.type === "open_when" && l.content && !l.content.startsWith("[VOICE:");
+      if (activeTab === "voice") return l.type === "open_when" && l.content && l.content.startsWith("[VOICE:");
       if (activeTab === "secret") return l.type === "secret";
       return false;
     })
@@ -223,7 +223,7 @@ export default function BedroomPage() {
                 <h3 className={`text-lg font-bold ${nightMode ? "text-indigo-200" : "text-purple-900"}`}>
                   New {tabs.find((t) => t.key === activeTab)?.label.slice(0, -1)}
                 </h3>
-                <button onClick={() => setShowForm(false)} className={`${nightMode ? "text-indigo-400 hover:text-indigo-200" : "text-purple-400 hover:text-purple-600"} cursor-pointer`}>
+                <button onClick={() => setShowForm(false)} className={`${nightMode ? "text-indigo-400 hover:text-indigo-200" : "text-purple-400 hover:text-purple-600"} cursor-pointer p-2 min-h-[44px] min-w-[44px] flex items-center justify-center`}>
                   <X size={20} />
                 </button>
               </div>

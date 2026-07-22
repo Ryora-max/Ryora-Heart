@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { APP_CONFIG } from "@/config";
 import { useAuthStore } from "@/stores";
@@ -29,8 +29,25 @@ export default function DashboardPage() {
   const { moods, loading: moodsLoading, addMood } = useMoods(token || "");
   const { photos, loading: galleryLoading } = useGallery(token || "");
   const [searchQuery, setSearchQuery] = useState("");
+  const [relationshipStartDate, setRelationshipStartDate] = useState(APP_CONFIG.relationship.startDate);
 
-  const daysTogether = useMemo(() => calculateDaysTogether(APP_CONFIG.relationship.startDate), []);
+  useEffect(() => {
+    if (!token) return;
+    fetch("/api/db", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "getUserSettings", token }),
+    })
+      .then((res) => res.ok ? res.json() : null)
+      .then((data) => {
+        if (data?.relationshipStartDate) {
+          setRelationshipStartDate(data.relationshipStartDate);
+        }
+      })
+      .catch(() => {});
+  }, [token]);
+
+  const daysTogether = useMemo(() => calculateDaysTogether(relationshipStartDate), [relationshipStartDate]);
   const statsLoading = activitiesLoading || moodsLoading || galleryLoading;
   const stats = useMemo(() => [
     { label: "Days Together", value: daysTogether, icon: Heart, color: "from-pink-400 to-rose-400", emoji: "💝" },
@@ -121,7 +138,7 @@ export default function DashboardPage() {
                 <MagneticButton key={mood.value}>
                   <button
                     onClick={() => addMood({ mood: mood.value })}
-                    className="text-3xl hover:scale-125 transition-transform cursor-pointer p-2 hover:bg-white/50 rounded-xl"
+                    className="text-3xl hover:scale-125 transition-transform cursor-pointer p-2 hover:bg-white/50 rounded-xl min-h-[44px] min-w-[44px] flex items-center justify-center"
                   >
                     {mood.emoji}
                   </button>

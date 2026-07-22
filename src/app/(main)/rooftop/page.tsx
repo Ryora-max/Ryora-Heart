@@ -6,6 +6,7 @@ import { APP_CONFIG } from "@/config";
 import { calculateDaysTogether } from "@/lib/utils";
 import { MagneticButton } from "@/components/animations/MagneticButton";
 import { LdrBanner } from "@/components/ldr/LdrBanner";
+import { useAuthStore } from "@/stores";
 
 const DEFAULT_SETTINGS = {
   relationshipStartDate: APP_CONFIG.relationship.startDate,
@@ -19,17 +20,8 @@ interface DreamItem {
 }
 
 export default function RooftopPage() {
-  const [settings] = useState(() => {
-    if (typeof window === "undefined") return DEFAULT_SETTINGS;
-    try {
-      const stored = localStorage.getItem("ryora-settings");
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        return { ...DEFAULT_SETTINGS, ...parsed };
-      }
-    } catch {}
-    return DEFAULT_SETTINGS;
-  });
+  const { token } = useAuthStore();
+  const [settings, setSettings] = useState(DEFAULT_SETTINGS);
   const daysTogether = calculateDaysTogether(settings.relationshipStartDate);
   const [wishes, setWishes] = useState<string[]>(() => {
     if (typeof window === "undefined") return ["Visit Japan together 🌸", "Build a treehouse 🏡", "Stargaze in the desert ✨"];
@@ -92,6 +84,22 @@ export default function RooftopPage() {
     if (typeof window === "undefined") return;
     localStorage.setItem("ryora-wishes", JSON.stringify(wishes));
   }, [wishes]);
+
+  useEffect(() => {
+    if (!token) return;
+    fetch("/api/db", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "getUserSettings", token }),
+    })
+      .then((res) => res.ok ? res.json() : null)
+      .then((data) => {
+        if (data && data.relationshipStartDate) {
+          setSettings({ relationshipStartDate: data.relationshipStartDate });
+        }
+      })
+      .catch(() => {});
+  }, [token]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -182,9 +190,9 @@ export default function RooftopPage() {
                 <div key={i} className={`flex items-center gap-3 p-3 rounded-xl transition-all group ${stargazing ? "bg-yellow-900/20 hover:bg-yellow-900/30" : "bg-yellow-50/50 hover:bg-yellow-50"}`}>
                   <Star size={16} className={stargazing ? "text-yellow-300" : "text-yellow-500"} />
                   <p className={`text-sm flex-1 ${stargazing ? "text-yellow-100" : "text-yellow-900"}`}>{wish}</p>
-                  <button onClick={() => setWishes(wishes.filter((_, idx) => idx !== i))} className={`transition-colors opacity-0 group-hover:opacity-100 ${stargazing ? "text-yellow-400 hover:text-red-400" : "text-yellow-400 hover:text-red-400"}`}>
-                    <X size={14} />
-                  </button>
+                   <button onClick={() => setWishes(wishes.filter((_, idx) => idx !== i))} className={`transition-colors opacity-0 group-hover:opacity-100 p-2 min-h-[44px] min-w-[44px] flex items-center justify-center ${stargazing ? "text-yellow-400 hover:text-red-400" : "text-yellow-400 hover:text-red-400"}`}>
+                     <X size={14} />
+                   </button>
                 </div>
               ))}
             </div>
@@ -230,7 +238,7 @@ export default function RooftopPage() {
               <h3 className={`text-lg font-bold flex items-center gap-2 ${stargazing ? "text-indigo-200" : "text-pink-900"}`}>
                 <span className="text-3xl">{selectedDream.emoji}</span> Dream Note
               </h3>
-              <button onClick={() => setSelectedDream(null)} className={stargazing ? "text-indigo-400 hover:text-indigo-200 cursor-pointer" : "text-pink-400 hover:text-pink-600 cursor-pointer"}>
+              <button onClick={() => setSelectedDream(null)} className={stargazing ? "text-indigo-400 hover:text-indigo-200 cursor-pointer p-2 min-h-[44px] min-w-[44px] flex items-center justify-center" : "text-pink-400 hover:text-pink-600 cursor-pointer p-2 min-h-[44px] min-w-[44px] flex items-center justify-center"}>
                 <X size={20} />
               </button>
             </div>

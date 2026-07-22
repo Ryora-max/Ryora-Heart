@@ -163,15 +163,15 @@ export default function SecretBoxPage() {
                   ))}
                 </div>
 
-                <div className="relative mb-6">
-                  <input
-                    type={showPin ? "text" : "password"}
-                    maxLength={4}
-                    value={pin}
-                    onChange={(e) => { setPin(e.target.value.replace(/\D/g, "").slice(0, 4)); setPinError(""); }}
-                    className="w-full bg-pink-50 border-2 border-pink-200 rounded-xl px-4 py-3 text-center text-2xl tracking-[1em] text-pink-900 placeholder-pink-300 focus:outline-none focus:border-pink-400 transition-colors min-h-[48px]"
-                    placeholder="••••"
-                  />
+                 <div className="relative mb-6">
+                   <input
+                     type={showPin ? "text" : "password"}
+                     maxLength={4}
+                     value={pin}
+                     onChange={(e) => { setPin(e.target.value.replace(/\D/g, "").slice(0, 4)); setPinError(""); }}
+                     className="w-full bg-pink-50 border-2 border-pink-200 rounded-xl px-4 py-3 text-center text-2xl tracking-[1em] text-pink-900 placeholder-pink-300 focus:outline-none focus:border-pink-400 transition-colors min-h-[44px]"
+                     placeholder="••••"
+                   />
                   {pinError && <p className="text-red-500 text-xs mt-2 text-center">{pinError}</p>}
                   <button onClick={() => setShowPin(!showPin)} className="absolute right-4 top-1/2 -translate-y-1/2 text-pink-400 hover:text-pink-600 transition-colors p-2 min-h-[44px] min-w-[44px] flex items-center justify-center">
                     {showPin ? <EyeOff size={20} /> : <Eye size={20} />}
@@ -284,13 +284,13 @@ export default function SecretBoxPage() {
                   className="w-full px-4 py-3 rounded-xl border-2 border-pink-200 focus:border-pink-400 focus:outline-none text-pink-900 text-sm min-h-[44px]"
                 />
                 {secretTitleError && <p className="text-red-500 text-xs">{secretTitleError}</p>}
-                <textarea
-                  value={secretContent}
-                  onChange={(e) => { setSecretContent(e.target.value); setSecretContentError(""); }}
-                  placeholder="Write your secret here..."
-                  rows={4}
-                  className="w-full px-4 py-3 rounded-xl border-2 border-pink-200 focus:border-pink-400 focus:outline-none text-pink-900 text-sm resize-none"
-                />
+                 <textarea
+                   value={secretContent}
+                   onChange={(e) => { setSecretContent(e.target.value); setSecretContentError(""); }}
+                   placeholder="Write your secret here..."
+                   rows={4}
+                   className="w-full px-4 py-3 rounded-xl border-2 border-pink-200 focus:border-pink-400 focus:outline-none text-pink-900 text-sm resize-none min-h-[44px]"
+                 />
                 {secretContentError && <p className="text-red-500 text-xs">{secretContentError}</p>}
                 <div className="flex items-center gap-2">
                   <input
