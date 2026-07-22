@@ -6,7 +6,7 @@ export interface User {
   relationship: string;
   avatar_url?: string;
   token?: string;
-  pairId?: string;
+  pair_id?: string;
 }
 
 export interface RelationshipStats {

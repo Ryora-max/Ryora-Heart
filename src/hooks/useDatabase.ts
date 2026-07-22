@@ -236,7 +236,11 @@ export function usePresence(token: string) {
   const fetchPresence = useCallback(async () => {
     try {
       const data = await callDb("getPresence", token);
-      setPresence(data);
+      setPresence(data.map((p: any) => ({
+        userId: p.user_id,
+        status: p.status,
+        lastSeen: p.last_seen,
+      })));
     } catch (error) {
       console.error("Error fetching presence:", error);
     }
@@ -378,4 +382,106 @@ export function useNotifications(token: string) {
   const unreadCount = notifications.filter((n) => !n.read).length;
 
   return { notifications, unreadCount, refetch: fetchNotifications };
+}
+
+export function usePartnerId(token: string, userId?: string) {
+  const [partnerId, setPartnerId] = useState<string | null>(null);
+  const [pairId, setPairId] = useState<string>("");
+
+  useEffect(() => {
+    if (!token || !userId) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const sessionRes = await fetch("/api/auth", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "verify", token }),
+        });
+        const sessionData = await sessionRes.json();
+        const currentPairId = sessionData.user?.pair_id || "";
+        const currentUserId = sessionData.user?.id || userId;
+        if (cancelled || !currentPairId) return;
+        setPairId(currentPairId);
+        const res = await fetch("/api/db", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "getPartnerId", token, userId: currentUserId, pairId: currentPairId }),
+        });
+        const data = await res.json();
+        if (!cancelled) setPartnerId(data.partnerId || null);
+      } catch {}
+    })();
+    return () => { cancelled = true; };
+  }, [token, userId]);
+
+  return { partnerId, pairId };
+}
+
+export function useLocations(token: string) {
+  const [locations, setLocations] = useState<{ id: string; userId: string; place: string; note?: string; createdAt: string }[]>([]);
+
+  const fetchLocations = useCallback(async () => {
+    try {
+      const data = await callDb("getLocations", token);
+      setLocations(data);
+    } catch (error) {
+      console.error("Error fetching locations:", error);
+    }
+  }, [token]);
+
+  useEffect(() => {
+    if (!token) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchLocations();
+    const interval = setInterval(fetchLocations, 3000);
+    return () => clearInterval(interval);
+  }, [fetchLocations, token]);
+
+  const addLocation = useCallback(async (place: string, note?: string) => {
+    await callDb("addLocation", token, { place, note });
+    fetchLocations();
+  }, [token, fetchLocations]);
+
+  const markAsRead = useCallback(async () => {
+    if (!token) return;
+    await fetch("/api/db", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "markNotificationsAsRead", token }),
+    });
+  }, [token]);
+
+  return { locations, addLocation, refetch: fetchLocations, markAsRead };
+}
+
+export function useDailyReset() {
+  const [todayKey, setTodayKey] = useState(() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
+  });
+
+  useEffect(() => {
+    const check = () => {
+      const d = new Date();
+      const key = `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
+      setTodayKey((prev) => {
+        if (prev !== key) {
+          return key;
+        }
+        return prev;
+      });
+    };
+    check();
+    const interval = setInterval(check, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const isNewDay = useCallback(() => {
+    const d = new Date();
+    const key = `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
+    return todayKey !== key;
+  }, [todayKey]);
+
+  return { todayKey, isNewDay };
 }

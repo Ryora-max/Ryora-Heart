@@ -11,11 +11,20 @@ import { MagneticButton } from "@/components/animations/MagneticButton";
 import { LdrBanner } from "@/components/ldr/LdrBanner";
 import { useActivities, useMoods } from "@/hooks/useDatabase";
 
+const MOOD_EMOJIS = [
+  { value: "happy", emoji: "😊" },
+  { value: "love", emoji: "😍" },
+  { value: "excited", emoji: "🤩" },
+  { value: "calm", emoji: "😌" },
+  { value: "miss", emoji: "🥺" },
+  { value: "sad", emoji: "😢" },
+] as const;
+
 export default function DashboardPage() {
   const router = useRouter();
   const { user, token } = useAuthStore();
   const { activities, loading: activitiesLoading } = useActivities(token || "");
-  const { moods, loading: moodsLoading } = useMoods(token || "");
+  const { moods, loading: moodsLoading, addMood } = useMoods(token || "");
   const [searchQuery, setSearchQuery] = useState("");
 
   const daysTogether = useMemo(() => calculateDaysTogether(APP_CONFIG.relationship.startDate), []);
@@ -100,9 +109,14 @@ export default function DashboardPage() {
           <GlassPanel className="dashboard-card animate-fade-in-up p-6 bg-white/80 backdrop-blur-sm border-2 border-white/50 shadow-xl" style={{ animationDelay: "0.6s" }}>
             <h3 className="text-lg font-bold text-gray-800 mb-4">Mood 💭</h3>
             <div className="flex justify-between mb-4">
-              {["😊", "😍", "🥰", "😢", "✨"].map((emoji, i) => (
-                <MagneticButton key={i}>
-                  <button className="text-3xl hover:scale-125 transition-transform cursor-pointer p-2 hover:bg-white/50 rounded-xl">{emoji}</button>
+              {MOOD_EMOJIS.map((mood) => (
+                <MagneticButton key={mood.value}>
+                  <button
+                    onClick={() => addMood({ mood: mood.value })}
+                    className="text-3xl hover:scale-125 transition-transform cursor-pointer p-2 hover:bg-white/50 rounded-xl"
+                  >
+                    {mood.emoji}
+                  </button>
                 </MagneticButton>
               ))}
             </div>

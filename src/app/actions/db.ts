@@ -6,6 +6,22 @@ import { initializeDatabase } from "@/lib/db/init";
 
 initializeDatabase();
 
+export async function getPartnerId(userId: string, pairId: string): Promise<string | null> {
+  const result = await getOne("SELECT id FROM users WHERE pair_id = $1 AND id != $2 LIMIT 1", [pairId, userId]);
+  return result?.id || null;
+}
+
+async function notifyPartner(userId: string, pairId: string, message: string, type: string) {
+  const partnerId = await getPartnerId(userId, pairId);
+  if (!partnerId) return;
+  const notificationId = generateId();
+  await query(
+    `INSERT INTO notifications (id, user_id, pair_id, message, type, read, created_at)
+     VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+    [notificationId, partnerId, pairId, message, type, false, new Date().toISOString()]
+  );
+}
+
 export async function getMoods(pairId: string) {
   const result = await getAll(`
     SELECT id, user_id as "userId", mood, note, created_at as "createdAt"
@@ -27,12 +43,7 @@ export async function addMood(userId: string, pairId: string, mood: string, note
     [id, userId, pairId, mood, note || null, now]
   );
 
-  const notificationId = generateId();
-  await query(
-    `INSERT INTO notifications (id, user_id, pair_id, message, type, read, created_at)
-     VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-    [notificationId, userId, pairId, `New mood added: ${mood}`, "mood", false, now]
-  );
+  await notifyPartner(userId, pairId, `New mood added: ${mood}`, "mood");
 
   return { id, userId, mood, note, createdAt: now };
 }
@@ -50,7 +61,6 @@ export async function getActivities(pairId: string) {
 
 export async function createActivity(userId: string, pairId: string, title: string, type: string, date: string, description?: string) {
   const id = generateId();
-  const now = new Date().toISOString();
 
   await query(
     `INSERT INTO activities (id, pair_id, title, description, type, date, completed, created_by)
@@ -58,12 +68,7 @@ export async function createActivity(userId: string, pairId: string, title: stri
     [id, pairId, title, description || null, type, date, false, userId]
   );
 
-  const notificationId = generateId();
-  await query(
-    `INSERT INTO notifications (id, user_id, pair_id, message, type, read, created_at)
-     VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-    [notificationId, userId, pairId, `New activity created: ${title}`, "activity", false, now]
-  );
+  await notifyPartner(userId, pairId, `New activity created: ${title}`, "activity");
 
   return { id, pair_id: pairId, title, description, type, date, completed: false, createdBy: userId };
 }
@@ -76,12 +81,7 @@ export async function toggleActivity(userId: string, pairId: string, activityId:
 
   const activity = await getOne("SELECT * FROM activities WHERE id = $1", [activityId]);
   if (activity) {
-    const notificationId = generateId();
-    await query(
-      `INSERT INTO notifications (id, user_id, pair_id, message, type, read, created_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-      [notificationId, userId, pairId, `${activity.title} marked as ${completed ? "completed" : "incomplete"}`, "activity", false, new Date().toISOString()]
-    );
+    await notifyPartner(userId, pairId, `${activity.title} marked as ${completed ? "completed" : "incomplete"}`, "activity");
   }
 
   return { success: true };
@@ -107,12 +107,7 @@ export async function addPhoto(userId: string, pairId: string, url: string, capt
     [id, pairId, url, caption || null, now, userId]
   );
 
-  const notificationId = generateId();
-  await query(
-    `INSERT INTO notifications (id, user_id, pair_id, message, type, read, created_at)
-     VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-    [notificationId, userId, pairId, "New photo added to gallery", "gallery", false, now]
-  );
+  await notifyPartner(userId, pairId, "New photo added to gallery", "gallery");
 
   return { id, url, caption, createdAt: now, createdBy: userId };
 }
@@ -142,12 +137,7 @@ export async function addCalendarEvent(userId: string, pairId: string, title: st
     [id, pairId, title, date, type, description || null, now]
   );
 
-  const notificationId = generateId();
-  await query(
-    `INSERT INTO notifications (id, user_id, pair_id, message, type, read, created_at)
-     VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-    [notificationId, userId, pairId, `New event: ${title}`, "calendar", false, now]
-  );
+  await notifyPartner(userId, pairId, `New event: ${title}`, "calendar");
 
   return { id, title, date, type, description };
 }
@@ -169,12 +159,7 @@ export async function updateCalendarEvent(userId: string, pairId: string, eventI
   values.push(eventId);
   await query(`UPDATE calendar_events SET ${fields.join(", ")} WHERE id = $${values.length}`, values);
 
-  const notificationId = generateId();
-  await query(
-    `INSERT INTO notifications (id, user_id, pair_id, message, type, read, created_at)
-     VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-    [notificationId, userId, pairId, `Event updated: ${data.title || event.title}`, "calendar", false, new Date().toISOString()]
-  );
+  await notifyPartner(userId, pairId, `Event updated: ${data.title || event.title}`, "calendar");
 
   return await getOne("SELECT * FROM calendar_events WHERE id = $1", [eventId]);
 }
@@ -185,12 +170,7 @@ export async function deleteCalendarEvent(userId: string, pairId: string, eventI
 
   await query("DELETE FROM calendar_events WHERE id = $1 AND pair_id = $2", [eventId, pairId]);
 
-  const notificationId = generateId();
-  await query(
-    `INSERT INTO notifications (id, user_id, pair_id, message, type, read, created_at)
-     VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-    [notificationId, userId, pairId, `Event deleted: ${event.title}`, "calendar", false, new Date().toISOString()]
-  );
+  await notifyPartner(userId, pairId, `Event deleted: ${event.title}`, "calendar");
 
   return true;
 }
@@ -215,12 +195,7 @@ export async function createLetter(userId: string, pairId: string, letter: { tit
     [id, pairId, letter.title, letter.content, letter.type, letter.openDate || null, now, userId]
   );
 
-  const notificationId = generateId();
-  await query(
-    `INSERT INTO notifications (id, user_id, pair_id, message, type, read, created_at)
-     VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-    [notificationId, userId, pairId, `New letter: ${letter.title}`, "letter", false, now]
-  );
+  await notifyPartner(userId, pairId, `New letter: ${letter.title}`, "letter");
 
   return { id, title: letter.title, content: letter.content, type: letter.type, openDate: letter.openDate, createdAt: now, createdBy: userId };
 }
@@ -234,6 +209,11 @@ export async function getNotifications(userId: string) {
     LIMIT 20
   `, [userId]);
   return result;
+}
+
+export async function markNotificationsAsRead(userId: string) {
+  await query("UPDATE notifications SET read = true WHERE user_id = $1 AND read = false", [userId]);
+  return { success: true };
 }
 
 export async function deleteLetter(userId: string, pairId: string, letterId: string) {
@@ -267,12 +247,7 @@ export async function addStatusUpdate(userId: string, pairId: string, message: s
     [id, userId, pairId, message, emoji || "💬", now]
   );
 
-  const notificationId = generateId();
-  await query(
-    `INSERT INTO notifications (id, user_id, pair_id, message, type, read, created_at)
-     VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-    [notificationId, userId, pairId, `Status update: ${message}`, "status", false, now]
-  );
+  await notifyPartner(userId, pairId, `Status update: ${message}`, "status");
 
   return { id, message, emoji: emoji || "💬", createdAt: now };
 }
@@ -329,12 +304,7 @@ export async function updateLoveMeter(userId: string, pairId: string, percentage
     [id, userId, pairId, percentage, now]
   );
 
-  const notificationId = generateId();
-  await query(
-    `INSERT INTO notifications (id, user_id, pair_id, message, type, read, created_at)
-     VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-    [notificationId, userId, pairId, `Love meter updated: ${percentage}%`, "love_meter", false, now]
-  );
+  await notifyPartner(userId, pairId, `Love meter updated: ${percentage}%`, "love_meter");
 
   return { id, percentage, createdAt: now };
 }
@@ -346,6 +316,29 @@ export async function getLoveMeter(pairId: string) {
     WHERE pair_id = $1
     ORDER BY created_at DESC
     LIMIT 10
+  `, [pairId]);
+  return result;
+}
+
+export async function addLocation(userId: string, pairId: string, place: string, note?: string) {
+  const id = generateId();
+  const now = new Date().toISOString();
+  await query(
+    `INSERT INTO ldr_locations (id, user_id, pair_id, place, note, created_at)
+     VALUES ($1, $2, $3, $4, $5, $6)`,
+    [id, userId, pairId, place, note || null, now]
+  );
+  await notifyPartner(userId, pairId, `Location update: ${place}`, "location");
+  return { id, userId, place, note, createdAt: now };
+}
+
+export async function getLocations(pairId: string) {
+  const result = await getAll(`
+    SELECT id, user_id, place, note, created_at as "createdAt"
+    FROM ldr_locations
+    WHERE pair_id = $1
+    ORDER BY created_at DESC
+    LIMIT 20
   `, [pairId]);
   return result;
 }

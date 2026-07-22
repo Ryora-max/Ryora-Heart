@@ -7,6 +7,7 @@ import { APP_CONFIG, ROOMS } from "@/config";
 import { cn } from "@/lib/utils";
 import { Menu, LogOut, Home } from "lucide-react";
 import CustomCursor from "@/components/ui/CustomCursor";
+import { NotificationButton } from "@/components/ui/NotificationButton";
 
 export default function MainLayout({
   children,
@@ -157,6 +158,7 @@ export default function MainLayout({
                   <p className="text-sm font-medium text-white truncate">{user.name}</p>
                   <p className="text-xs text-white/70 truncate">@{user.username}</p>
                 </div>
+                <NotificationButton />
               </div>
               <button
                 onClick={handleLogout}

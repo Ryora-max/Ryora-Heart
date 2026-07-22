@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { Plane, Heart, MapPin, Clock, MessageCircle, Video, Gift, Star, Sparkles, Send, HeartHandshake, Bell, X } from "lucide-react";
+import { Plane, Heart, MapPin, Clock, MessageCircle, Video, Gift, Star, Sparkles, Send, HeartHandshake, Bell, X, Navigation } from "lucide-react";
 import { useAuthStore } from "@/stores";
-import { usePresence, useStatusUpdates, useHugs, useLoveMeter, useNotifications } from "@/hooks/useDatabase";
+import { usePresence, useStatusUpdates, useHugs, useLoveMeter, useNotifications, usePartnerId, useLocations } from "@/hooks/useDatabase";
 import type { Hug, StatusUpdate } from "@/types";
 
 const ANIMALS = [
@@ -73,6 +73,8 @@ export default function LdrPage() {
   const [toasts, setToasts] = useState<ToastNotification[]>([]);
   const [showNotifPanel, setShowNotifPanel] = useState(false);
   const [letter, setLetter] = useState("");
+  const [currentPlace, setCurrentPlace] = useState("");
+  const [placeNote, setPlaceNote] = useState("");
 
   const prevNotificationsRef = useRef<string>("");
   const toastIdRef = useRef(0);
@@ -82,14 +84,25 @@ export default function LdrPage() {
   const { hugs, sendHug } = useHugs(token);
   const { currentPercentage, update: updateLoveMeter } = useLoveMeter(token);
   const { notifications, unreadCount } = useNotifications(token);
-
-  const partnerId = user?.pairId ? (user.role === "owner" ? "user-2" : "user-1") : undefined;
+  const { partnerId } = usePartnerId(token, user?.id);
+  const { locations, addLocation } = useLocations(token);
 
   useEffect(() => {
     if (!token) return;
     updatePresence("online");
     const interval = setInterval(() => updatePresence("online"), 30000);
-    return () => clearInterval(interval);
+
+    const handleOffline = () => updatePresence("offline");
+    window.addEventListener("beforeunload", handleOffline);
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) updatePresence("offline");
+      else updatePresence("online");
+    });
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("beforeunload", handleOffline);
+    };
   }, [token, updatePresence]);
 
   useEffect(() => {
@@ -176,6 +189,13 @@ export default function LdrPage() {
     setStatusText("");
   }, [statusText, statusEmoji, addUpdate]);
 
+  const handleShareLocation = useCallback(async () => {
+    if (!currentPlace.trim() || !partnerId) return;
+    await addLocation(currentPlace.trim(), placeNote || undefined);
+    setCurrentPlace("");
+    setPlaceNote("");
+  }, [currentPlace, placeNote, partnerId, addLocation]);
+
   const getLastSeenText = (lastSeen: string) => {
     // eslint-disable-next-line react-hooks/purity
     const diff = Date.now() - new Date(lastSeen).getTime();
@@ -186,7 +206,11 @@ export default function LdrPage() {
   };
 
   const partnerPresence = presence.find((p) => p.userId === partnerId);
-  const isPartnerOnline = partnerPresence?.status === "online";
+  const isPartnerOnline = partnerPresence?.status === "online" && partnerPresence?.lastSeen ? (() => {
+    // eslint-disable-next-line react-hooks/purity
+    const diff = Date.now() - new Date(partnerPresence.lastSeen).getTime();
+    return diff < 60000;
+  })() : false;
 
   const getNotifIcon = (type: string) => {
     switch (type) {
@@ -451,6 +475,55 @@ export default function LdrPage() {
                     </span>
                   </div>
                   <p className="text-pink-800 text-sm">{u.message}</p>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+
+        <div className="animate-fade-in-up bg-white/80 backdrop-blur-sm p-6 rounded-3xl border-2 border-pink-200 shadow-xl mb-8" style={{ animationDelay: "0.42s" }}>
+          <h2 className="text-xl font-bold text-center text-pink-700 mb-4 flex items-center gap-2">
+            <Navigation size={20} /> Lokasi Saat Ini
+          </h2>
+          <p className="text-pink-600/70 text-sm text-center mb-4">Beri tau partner kamu lagi di mana 💕</p>
+          <div className="flex flex-wrap gap-2 mb-4">
+            <input
+              type="text"
+              value={currentPlace}
+              onChange={(e) => setCurrentPlace(e.target.value)}
+              placeholder="Contoh: Kantor, Rumah, Kafe..."
+              className="flex-1 min-w-[160px] px-4 py-2.5 rounded-xl border-2 border-pink-200 focus:border-pink-400 focus:outline-none text-pink-900 text-sm min-h-[44px]"
+              onKeyDown={(e) => e.key === "Enter" && handleShareLocation()}
+            />
+            <input
+              type="text"
+              value={placeNote}
+              onChange={(e) => setPlaceNote(e.target.value)}
+              placeholder="Catatan (opsional)"
+              className="flex-1 min-w-[160px] px-4 py-2.5 rounded-xl border-2 border-pink-200 focus:border-pink-400 focus:outline-none text-pink-900 text-sm min-h-[44px]"
+            />
+            <button
+              onClick={handleShareLocation}
+              disabled={!currentPlace.trim()}
+              className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 text-white font-bold hover:from-pink-600 hover:to-rose-600 disabled:opacity-50 transition-all hover:scale-105 transform min-h-[44px] text-sm"
+            >
+              Share
+            </button>
+          </div>
+          <div className="space-y-2 max-h-48 overflow-y-auto">
+            {locations.length === 0 ? (
+              <p className="text-pink-600/70 text-center py-3 text-sm">Belum ada lokasi yang dibagikan 📍</p>
+            ) : (
+              locations.slice(0, 10).map((loc) => (
+                <div key={loc.id} className="bg-pink-50 rounded-xl p-3 border-2 border-pink-100 flex items-center gap-3">
+                  <span className="text-xl">📍</span>
+                  <div className="flex-1">
+                    <p className="text-pink-800 text-sm font-medium">{loc.place}</p>
+                    {loc.note && <p className="text-pink-500 text-xs">{loc.note}</p>}
+                  </div>
+                  <span className="text-pink-400/70 text-xs">
+                    {new Date(loc.createdAt).toLocaleString("id-ID", { hour: "2-digit", minute: "2-digit", day: "numeric", month: "short" })}
+                  </span>
                 </div>
               ))
             )}

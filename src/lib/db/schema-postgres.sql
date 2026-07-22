@@ -135,6 +135,16 @@ CREATE TABLE IF NOT EXISTS ldr_love_meter (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- LDR locations table
+CREATE TABLE IF NOT EXISTS ldr_locations (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL REFERENCES users(id),
+  pair_id TEXT NOT NULL,
+  place TEXT NOT NULL,
+  note TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Indexes
 CREATE INDEX IF NOT EXISTS idx_moods_pair_id ON moods(pair_id);
 CREATE INDEX IF NOT EXISTS idx_activities_pair_id ON activities(pair_id);
@@ -147,6 +157,7 @@ CREATE INDEX IF NOT EXISTS idx_ldr_presence_pair_id ON ldr_presence(pair_id);
 CREATE INDEX IF NOT EXISTS idx_ldr_status_pair_id ON ldr_status_updates(pair_id);
 CREATE INDEX IF NOT EXISTS idx_ldr_hugs_pair_id ON ldr_hugs(pair_id);
 CREATE INDEX IF NOT EXISTS idx_ldr_love_meter_pair_id ON ldr_love_meter(pair_id);
+CREATE INDEX IF NOT EXISTS idx_ldr_locations_pair_id ON ldr_locations(pair_id);
 
 -- Seed data
 INSERT INTO users (id, username, password, name, role, relationship, pair_id, created_at)

@@ -148,10 +148,16 @@ export async function updateSettings(userId: string, data: { relationshipStartDa
 export async function getUserSettings(userId: string) {
   const settings = await getOne("SELECT * FROM user_settings WHERE user_id = $1", [userId]);
   if (!settings) return null;
+  const formatDate = (d: string | Date | null) => {
+    if (!d) return "";
+    const date = new Date(d);
+    if (isNaN(date.getTime())) return "";
+    return date.toISOString().split("T")[0];
+  };
   return {
-    relationshipStartDate: settings.relationship_start_date ? new Date(settings.relationship_start_date).toISOString() : "",
+    relationshipStartDate: formatDate(settings.relationship_start_date),
     distance: settings.distance_km || "",
-    nextMeetupDate: settings.next_meetup_date ? new Date(settings.next_meetup_date).toISOString() : "",
+    nextMeetupDate: formatDate(settings.next_meetup_date),
     secretPin: settings.secret_pin || "0101",
   };
 }

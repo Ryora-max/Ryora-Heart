@@ -17,6 +17,8 @@ import {
   createLetter,
   deleteLetter,
   getNotifications,
+  markNotificationsAsRead,
+  getPartnerId,
   updatePresence,
   getPresence,
   addStatusUpdate,
@@ -25,6 +27,8 @@ import {
   getHugs,
   updateLoveMeter,
   getLoveMeter,
+  addLocation,
+  getLocations,
 } from "@/app/actions/db";
 import { updateProfile, updateSettings, getUserSettings } from "@/app/actions/auth";
 
@@ -74,6 +78,10 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ success: await deleteLetter(userId, pairId, params.letterId) });
       case "getNotifications":
         return NextResponse.json(await getNotifications(userId));
+      case "markNotificationsAsRead":
+        return NextResponse.json(await markNotificationsAsRead(userId));
+      case "getPartnerId":
+        return NextResponse.json({ partnerId: await getPartnerId(userId, pairId) });
       case "updatePresence":
         await updatePresence(userId, pairId, params.status);
         return NextResponse.json({ success: true });
@@ -91,6 +99,10 @@ export async function POST(request: NextRequest) {
         return NextResponse.json(await updateLoveMeter(userId, pairId, params.percentage));
       case "getLoveMeter":
         return NextResponse.json(await getLoveMeter(pairId));
+      case "addLocation":
+        return NextResponse.json(await addLocation(userId, pairId, params.place, params.note));
+      case "getLocations":
+        return NextResponse.json(await getLocations(pairId));
       case "updateProfile":
         await updateProfile(userId, params.data);
         return NextResponse.json({ success: true });

@@ -31,6 +31,8 @@ export default function SettingsPage() {
   const [relationship, setRelationship] = useState(user?.relationship || "");
   const [avatarUrl, setAvatarUrl] = useState(user?.avatar_url || "");
   const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!token) return;
@@ -48,15 +50,23 @@ export default function SettingsPage() {
       .catch(() => {});
   }, [token]);
 
-  const updateSetting = <K extends keyof Settings>(key: K, value: Settings[K]) => {
+  const updateSetting = async <K extends keyof Settings>(key: K, value: Settings[K]) => {
     setSettings((prev) => {
       const next = { ...prev, [key]: value };
       if (token) {
-        fetch("/api/db", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action: "updateSettings", token, data: next }),
-        }).catch(() => {});
+        (async () => {
+          try {
+            setSaveError(null);
+            const res = await fetch("/api/db", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ action: "updateSettings", token, data: next }),
+            });
+            if (!res.ok) throw new Error("Failed to save");
+          } catch {
+            setSaveError("Failed to save setting");
+          }
+        })();
       }
       if (key === "secretPin" && typeof window !== "undefined") {
         localStorage.setItem("ryora-secret-pin", value);
@@ -67,11 +77,21 @@ export default function SettingsPage() {
 
   const handleSave = async () => {
     if (!user || !token) return;
-    await fetch("/api/db", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "updateProfile", token, data: { name, relationship, avatar_url: avatarUrl } }),
-    });
+    setSaving(true);
+    setSaveError(null);
+    try {
+      await fetch("/api/db", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "updateProfile", token, data: { name, relationship, avatar_url: avatarUrl } }),
+      });
+      const updatedUser = { ...user, name, relationship, avatar_url: avatarUrl };
+      useAuthStore.getState().setUser(updatedUser);
+    } catch {
+      setSaveError("Failed to save profile");
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleLogout = async () => {
@@ -120,12 +140,16 @@ export default function SettingsPage() {
                   className="w-full px-4 py-2 rounded-xl border-2 border-gray-200 focus:border-gray-400 focus:outline-none text-gray-900"
                 />
               </div>
-              <button
-                onClick={handleSave}
-                className="w-full py-2 rounded-xl bg-gradient-to-r from-gray-500 to-slate-600 text-white font-bold hover:from-gray-600 hover:to-slate-700 transition-all shadow-lg hover:shadow-xl"
-              >
-                Save Changes
-              </button>
+                <button
+                  onClick={handleSave}
+                  disabled={saving}
+                  className="w-full py-2 rounded-xl bg-gradient-to-r from-gray-500 to-slate-600 text-white font-bold hover:from-gray-600 hover:to-slate-700 transition-all shadow-lg hover:shadow-xl disabled:opacity-50"
+                >
+                  {saving ? "Saving..." : "Save Changes"}
+                </button>
+                {saveError && (
+                  <p className="text-red-500 text-xs mt-2 text-center">{saveError}</p>
+                )}
             </div>
           </div>
         </div>
