@@ -39,5 +39,7 @@ export function useToast() {
 }
 
 export function showToast(message: string, type: ToastType = "info", duration?: number) {
-  addToastGlobal({ message, type, duration });
+  if (typeof addToastGlobal === "function") {
+    addToastGlobal({ message, type, duration });
+  }
 }
