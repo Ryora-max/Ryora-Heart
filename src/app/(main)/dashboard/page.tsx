@@ -9,7 +9,7 @@ import { Heart, Calendar, MapPin, Music, Activity, Search } from "lucide-react";
 import { GlassPanel } from "@/components/ui/GlassPanel";
 import { MagneticButton } from "@/components/animations/MagneticButton";
 import { LdrBanner } from "@/components/ldr/LdrBanner";
-import { useActivities, useMoods } from "@/hooks/useDatabase";
+import { useActivities, useMoods, useGallery } from "@/hooks/useDatabase";
 
 const MOOD_EMOJIS = [
   { value: "happy", emoji: "😊" },
@@ -25,15 +25,16 @@ export default function DashboardPage() {
   const { user, token } = useAuthStore();
   const { activities, loading: activitiesLoading } = useActivities(token || "");
   const { moods, loading: moodsLoading, addMood } = useMoods(token || "");
+  const { photos } = useGallery(token || "");
   const [searchQuery, setSearchQuery] = useState("");
 
   const daysTogether = useMemo(() => calculateDaysTogether(APP_CONFIG.relationship.startDate), []);
   const stats = useMemo(() => [
     { label: "Days Together", value: daysTogether, icon: Heart, color: "from-pink-400 to-rose-400", emoji: "💝" },
     { label: "Activities", value: activities.length, icon: Calendar, color: "from-purple-400 to-pink-400", emoji: "📋" },
-    { label: "Photos", value: 0, icon: MapPin, color: "from-blue-400 to-cyan-400", emoji: "📸" },
+    { label: "Photos", value: photos.length, icon: MapPin, color: "from-blue-400 to-cyan-400", emoji: "📸" },
     { label: "Moods", value: moods.length, icon: Music, color: "from-amber-400 to-orange-400", emoji: "💭" },
-  ], [daysTogether, activities.length, moods.length]);
+  ], [daysTogether, activities.length, photos.length, moods.length]);
 
   const filteredActivities = activities.filter((a) => a.title.toLowerCase().includes(searchQuery.toLowerCase()));
 
@@ -42,7 +43,7 @@ export default function DashboardPage() {
       <div className="max-w-7xl mx-auto">
         <div className="dashboard-card animate-fade-in-up mb-12 text-center">
           <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent mb-3">
-            Welcome Home, <span className="bg-gradient-to-r from-pink-600 to-rose-600 bg-clip-text text-transparent">{user?.name.split(" ")[0]}!</span>
+            Welcome Home, <span className="bg-gradient-to-r from-pink-600 to-rose-600 bg-clip-text text-transparent">{user?.name?.split(" ")[0] || "Guest"}!</span>
           </h1>
           <p className="text-purple-600/70 text-lg">Here&apos;s what&apos;s happening in your world today 💕</p>
         </div>
@@ -51,7 +52,7 @@ export default function DashboardPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           {stats.map((stat, i) => (
-            <GlassPanel key={i} className="dashboard-card animate-fade-in-up p-5 bg-white/80 backdrop-blur-sm border-2 border-white/50 shadow-xl hover:shadow-2xl transition-all hover:scale-105 cursor-pointer" style={{ animationDelay: `${i * 0.1}s` }}>
+            <GlassPanel key={i} className="dashboard-card animate-fade-in-up p-5 bg-white/80 backdrop-blur-sm border-2 border-white/50 shadow-xl hover:shadow-2xl transition-all hover:scale-105" style={{ animationDelay: `${i * 0.1}s` }}>
               <div className="flex items-center justify-between mb-3">
                 <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${stat.color} flex items-center justify-center text-xl shadow-lg`}>
                   {stat.emoji}

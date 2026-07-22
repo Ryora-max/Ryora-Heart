@@ -31,21 +31,23 @@ export default function SecretBoxPage() {
     if (typeof window === "undefined") return false;
     return localStorage.getItem("ryora-disguise-mode") === "true";
   });
+  const [pinMessage, setPinMessage] = useState<string | null>(null);
   const { token } = useAuthStore();
-  const { letters, loading, createLetter } = useLetters(token || "");
+  const { letters, loading, createLetter, refetch } = useLetters(token || "");
 
   const savedPin = typeof window !== "undefined" ? localStorage.getItem("ryora-secret-pin") || DEFAULT_PIN : DEFAULT_PIN;
 
   const secretLetters = letters.filter((l) => l.type === "secret");
 
   useEffect(() => {
+    const originalTitle = typeof window !== "undefined" ? document.title : "RYORA";
     if (disguiseMode) {
       document.title = "Notes App";
       if (envelopeRef.current) {
         envelopeRef.current.style.display = "none";
       }
     } else {
-      document.title = typeof window !== "undefined" ? document.title : "RYORA";
+      document.title = originalTitle;
       if (envelopeRef.current) {
         envelopeRef.current.style.display = "";
       }
@@ -80,7 +82,8 @@ export default function SecretBoxPage() {
     setNewPin("");
     setConfirmPin("");
     setShowSettings(false);
-    alert("PIN updated successfully!");
+    setPinMessage("PIN updated successfully!");
+    setTimeout(() => setPinMessage(null), 3000);
   };
 
   const toggleDisguiseMode = () => {
@@ -96,7 +99,7 @@ export default function SecretBoxPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action: "deleteLetter", token, letterId: id }),
     });
-    window.location.reload();
+    refetch();
   };
 
   return (
@@ -238,6 +241,9 @@ export default function SecretBoxPage() {
                 >
                   Update PIN
                 </button>
+                {pinMessage && (
+                  <p className="text-green-600 text-sm mt-2 text-center animate-fade-in-up">{pinMessage}</p>
+                )}
               </div>
             )}
 

@@ -53,7 +53,10 @@ export default function CalendarPage() {
   const days = [];
   for (let i = firstDay - 1; i >= 0; i--) days.push({ day: daysInPrevMonth - i, currentMonth: false });
   for (let i = 1; i <= daysInMonth; i++) days.push({ day: i, currentMonth: true });
-  while (days.length % 7 !== 0) days.push({ day: days.length - daysInMonth - firstDay + 1, currentMonth: false });
+  const remaining = 7 - (days.length % 7);
+  if (remaining < 7) {
+    for (let i = 1; i <= remaining; i++) days.push({ day: i, currentMonth: false });
+  }
 
   const openEdit = (event: CalendarEvent) => {
     setEditingEvent(event);

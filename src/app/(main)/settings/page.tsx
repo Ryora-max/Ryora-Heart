@@ -33,6 +33,7 @@ export default function SettingsPage() {
   const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [saveSuccess, setSaveSuccess] = useState<string | null>(null);
 
   useEffect(() => {
     if (!token) return;
@@ -50,35 +51,37 @@ export default function SettingsPage() {
       .catch(() => {});
   }, [token]);
 
-  const updateSetting = async <K extends keyof Settings>(key: K, value: Settings[K]) => {
+  const updateSetting = <K extends keyof Settings>(key: K, value: Settings[K]) => {
     setSettings((prev) => {
       const next = { ...prev, [key]: value };
-      if (token) {
-        (async () => {
-          try {
-            setSaveError(null);
-            const res = await fetch("/api/db", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ action: "updateSettings", token, data: next }),
-            });
-            if (!res.ok) throw new Error("Failed to save");
-          } catch {
-            setSaveError("Failed to save setting");
-          }
-        })();
-      }
       if (key === "secretPin" && typeof window !== "undefined") {
         localStorage.setItem("ryora-secret-pin", value);
       }
       return next;
     });
+
+    if (token) {
+      (async () => {
+        try {
+          setSaveError(null);
+          const res = await fetch("/api/db", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ action: "updateSettings", token, data: { ...settings, [key]: value } }),
+          });
+          if (!res.ok) throw new Error("Failed to save");
+        } catch {
+          setSaveError("Failed to save setting");
+        }
+      })();
+    }
   };
 
   const handleSave = async () => {
     if (!user || !token) return;
     setSaving(true);
     setSaveError(null);
+    setSaveSuccess(null);
     try {
       await fetch("/api/db", {
         method: "POST",
@@ -87,6 +90,8 @@ export default function SettingsPage() {
       });
       const updatedUser = { ...user, name, relationship, avatar_url: avatarUrl };
       useAuthStore.getState().setUser(updatedUser);
+      setSaveSuccess("Profile saved successfully!");
+      setTimeout(() => setSaveSuccess(null), 3000);
     } catch {
       setSaveError("Failed to save profile");
     } finally {
@@ -149,6 +154,9 @@ export default function SettingsPage() {
                 </button>
                 {saveError && (
                   <p className="text-red-500 text-xs mt-2 text-center">{saveError}</p>
+                )}
+                {saveSuccess && (
+                  <p className="text-green-600 text-xs mt-2 text-center">{saveSuccess}</p>
                 )}
             </div>
           </div>
@@ -226,7 +234,7 @@ export default function SettingsPage() {
             { icon: <Shield size={20} />, label: "Privacy & Security", description: "Control your data" },
             { icon: <Database size={20} />, label: "Data Management", description: "Export or clear data" },
           ].map((item, i) => (
-            <div key={i} className="settings-item animate-fade-in-left bg-white/80 backdrop-blur-sm p-4 rounded-xl border-2 border-gray-200 flex items-center gap-4 cursor-pointer hover:border-gray-300 hover:shadow-lg transition-all" style={{ animationDelay: `${0.3 + i * 0.1}s` }}>
+            <div key={i} className="settings-item animate-fade-in-left bg-white/80 backdrop-blur-sm p-4 rounded-xl border-2 border-gray-200 flex items-center gap-4 transition-all" style={{ animationDelay: `${0.3 + i * 0.1}s` }}>
               <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center text-gray-600">{item.icon}</div>
               <div className="flex-1">
                 <span className="text-gray-800 font-medium block">{item.label}</span>

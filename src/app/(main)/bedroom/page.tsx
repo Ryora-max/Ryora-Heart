@@ -34,7 +34,7 @@ export default function BedroomPage() {
     size: 8 + Math.random() * 8,
   })));
 
-  const { token } = useAuthStore();
+  const { token, user } = useAuthStore();
   const { letters, loading, createLetter } = useLetters(token || "");
 
   useEffect(() => {
@@ -386,7 +386,7 @@ export default function BedroomPage() {
                         {isVoice ? "voice note" : letter.type.replace("_", " ")}
                       </span>
                       <span className={`text-3xs ${nightMode ? "text-indigo-400" : "text-purple-400"}`}>
-                        From: {letter.createdBy === "user-1" ? "Ryo" : "Ara"}
+                        From: {letter.createdBy === user?.id ? (user?.name?.split(" ")[0] || "You") : "Partner"}
                       </span>
                     </div>
                   </div>

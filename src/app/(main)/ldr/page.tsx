@@ -252,7 +252,16 @@ export default function LdrPage() {
 
       <div className="fixed top-4 right-4 z-40">
         <button
-          onClick={() => setShowNotifPanel(!showNotifPanel)}
+          onClick={async () => {
+            setShowNotifPanel(!showNotifPanel);
+            if (!showNotifPanel && token) {
+              await fetch("/api/db", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ action: "markNotificationsAsRead", token }),
+              });
+            }
+          }}
           className="relative p-3 bg-white/90 backdrop-blur-sm rounded-full border-2 border-pink-200 shadow-lg hover:shadow-xl transition-all"
         >
           <Bell className="text-pink-500" size={22} />

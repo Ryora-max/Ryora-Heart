@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { CloudMoon, CalendarDays, Star, Heart, Plus, X, Moon } from "lucide-react";
 import { APP_CONFIG } from "@/config";
 import { calculateDaysTogether } from "@/lib/utils";
@@ -31,11 +31,25 @@ export default function RooftopPage() {
     return DEFAULT_SETTINGS;
   });
   const daysTogether = calculateDaysTogether(settings.relationshipStartDate);
-  const [wishes, setWishes] = useState(["Visit Japan together 🌸", "Build a treehouse 🏡", "Stargaze in the desert ✨"]);
+  const [wishes, setWishes] = useState<string[]>(() => {
+    if (typeof window === "undefined") return ["Visit Japan together 🌸", "Build a treehouse 🏡", "Stargaze in the desert ✨"];
+    try {
+      const stored = localStorage.getItem("ryora-wishes");
+      if (stored) return JSON.parse(stored);
+    } catch {}
+    return ["Visit Japan together 🌸", "Build a treehouse 🏡", "Stargaze in the desert ✨"];
+  });
   const [newWish, setNewWish] = useState("");
   const [showWishForm, setShowWishForm] = useState(false);
   const [stargazing, setStargazing] = useState(false);
-  const [dreams, setDreams] = useState<DreamItem[]>([]);
+  const [dreams, setDreams] = useState<DreamItem[]>(() => {
+    if (typeof window === "undefined") return [];
+    try {
+      const stored = localStorage.getItem("ryora-dreams");
+      if (stored) return JSON.parse(stored);
+    } catch {}
+    return [];
+  });
   const [selectedDream, setSelectedDream] = useState<{ emoji: string; note: string } | null>(null);
   const [dreamNote, setDreamNote] = useState("");
   const [stars] = useState(() => [...Array(30)].map(() => ({
@@ -74,26 +88,34 @@ export default function RooftopPage() {
     setDreamNote("");
   }, [selectedDream, dreamNote]);
 
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    localStorage.setItem("ryora-wishes", JSON.stringify(wishes));
+  }, [wishes]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    localStorage.setItem("ryora-dreams", JSON.stringify(dreams));
+  }, [dreams]);
+
   return (
     <div className={`relative min-h-screen p-3 sm:p-4 md:p-8 transition-all duration-500 ${stargazing ? "bg-gradient-to-br from-slate-950 via-indigo-950 to-purple-950" : "bg-gradient-to-br from-indigo-200 via-purple-200 to-pink-200"}`}>
-      {(stargazing || true) && (
-        <div className="fixed inset-0 pointer-events-none overflow-hidden">
-          {stars.map((star, i) => (
-            <div
-              key={i}
-              className={`absolute rounded-full ${stargazing ? "text-white animate-pulse" : "text-indigo-300/40"}`}
-              style={{
-                left: `${star.left}%`,
-                top: `${star.top}%`,
-                animationDelay: `${star.delay}s`,
-                animationDuration: `${star.duration}s`,
-              }}
-            >
-              <Star size={star.size} fill="currentColor" />
-            </div>
-          ))}
-        </div>
-      )}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        {stars.map((star, i) => (
+          <div
+            key={i}
+            className={`absolute rounded-full ${stargazing ? "text-white animate-pulse" : "text-indigo-300/40"}`}
+            style={{
+              left: `${star.left}%`,
+              top: `${star.top}%`,
+              animationDelay: `${star.delay}s`,
+              animationDuration: `${star.duration}s`,
+            }}
+          >
+            <Star size={star.size} fill="currentColor" />
+          </div>
+        ))}
+      </div>
 
       <div className="max-w-6xl mx-auto relative z-10">
         <div className="rooftop-card animate-fade-in-up text-center mb-8 sm:mb-12" style={{ animationDelay: "0s" }}>
