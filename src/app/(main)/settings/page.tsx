@@ -34,6 +34,8 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saveSuccess, setSaveSuccess] = useState<string | null>(null);
+  const [nameError, setNameError] = useState("");
+  const [relationshipError, setRelationshipError] = useState("");
 
   useEffect(() => {
     if (!token) return;
@@ -82,6 +84,20 @@ export default function SettingsPage() {
     setSaving(true);
     setSaveError(null);
     setSaveSuccess(null);
+    setNameError("");
+    setRelationshipError("");
+
+    if (!name.trim()) {
+      setNameError("Name is required");
+      setSaving(false);
+      return;
+    }
+    if (!relationship.trim()) {
+      setRelationshipError("Relationship is required");
+      setSaving(false);
+      return;
+    }
+
     try {
       await fetch("/api/db", {
         method: "POST",
@@ -132,18 +148,20 @@ export default function SettingsPage() {
                 <input
                   type="text"
                   value={name}
-                  onChange={(e) => setName(e.target.value)}
+                  onChange={(e) => { setName(e.target.value); setNameError(""); }}
                   className="w-full px-4 py-2 rounded-xl border-2 border-gray-200 focus:border-gray-400 focus:outline-none text-gray-900"
                 />
+                {nameError && <p className="text-red-500 text-xs mt-1">{nameError}</p>}
               </div>
               <div>
                 <label className="text-gray-600 text-sm block mb-2">Relationship</label>
                 <input
                   type="text"
                   value={relationship}
-                  onChange={(e) => setRelationship(e.target.value)}
+                  onChange={(e) => { setRelationship(e.target.value); setRelationshipError(""); }}
                   className="w-full px-4 py-2 rounded-xl border-2 border-gray-200 focus:border-gray-400 focus:outline-none text-gray-900"
                 />
+                {relationshipError && <p className="text-red-500 text-xs mt-1">{relationshipError}</p>}
               </div>
                 <button
                   onClick={handleSave}

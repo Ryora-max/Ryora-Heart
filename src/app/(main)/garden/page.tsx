@@ -4,6 +4,8 @@ import { useState, useCallback } from "react";
 import { Flower2, Plus, X, TreeDeciduous, Leaf } from "lucide-react";
 import { useActivities } from "@/hooks/useDatabase";
 import { useAuthStore } from "@/stores";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { CardSkeleton } from "@/components/ui/LoadingSkeleton";
 
 interface SelectedMilestone {
   id: string;
@@ -46,20 +48,16 @@ export default function GardenPage() {
         </div>
 
         {loading ? (
-          <div className="text-center py-20">
-            <div className="w-8 h-8 border-4 border-green-400 border-t-transparent rounded-full animate-spin mx-auto" />
-          </div>
+          <CardSkeleton />
         ) : milestones.length === 0 ? (
-          <div className="text-center py-20">
-            <Flower2 size={48} className="text-green-300 mx-auto mb-4" />
-            <p className="text-green-600/70">No milestones yet. Add your first memory!</p>
+          <EmptyState icon={Flower2} emoji="🌱" title="No milestones yet" description="Add your first memory!" action={
             <button
               onClick={() => setShowForm(true)}
               className="mt-4 px-6 py-3 rounded-full bg-gradient-to-r from-green-500 to-emerald-500 text-white font-bold hover:from-green-600 hover:to-emerald-600 transition-all shadow-lg cursor-pointer"
             >
               <Plus size={18} className="inline mr-2" /> Add Milestone
             </button>
-          </div>
+          } />
         ) : (
           <div className="relative">
             <div className="flex justify-center mb-8">

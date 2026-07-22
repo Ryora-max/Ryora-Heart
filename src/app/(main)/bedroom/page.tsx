@@ -6,6 +6,8 @@ import { MagneticButton } from "@/components/animations/MagneticButton";
 import { LdrBanner } from "@/components/ldr/LdrBanner";
 import { useLetters } from "@/hooks/useDatabase";
 import { useAuthStore } from "@/stores";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { ListItemSkeleton } from "@/components/ui/LoadingSkeleton";
 
 type Tab = "love" | "openwhen" | "voice" | "secret";
 
@@ -283,14 +285,11 @@ export default function BedroomPage() {
           )}
 
           {loading ? (
-            <div className="text-center py-12">
-              <div className={`w-8 h-8 border-4 rounded-full animate-spin mx-auto ${nightMode ? "border-indigo-400 border-t-transparent" : "border-pink-400 border-t-transparent"}`} />
+            <div className="space-y-2">
+              {Array.from({ length: 3 }).map((_, i) => <ListItemSkeleton key={i} />)}
             </div>
           ) : filteredLetters.length === 0 ? (
-            <div className="text-center py-12">
-              <p className="text-4xl mb-2">📬</p>
-              <p className={nightMode ? "text-indigo-300/70" : "text-purple-600/70"}>No letters yet. Write your first one!</p>
-            </div>
+            <EmptyState emoji="📬" title="No letters yet" description="Write your first one!" />
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
               {filteredLetters.map((letter, idx) => {

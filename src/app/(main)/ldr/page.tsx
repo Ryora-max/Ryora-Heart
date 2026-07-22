@@ -5,6 +5,7 @@ import { Plane, Heart, MapPin, Clock, MessageCircle, Video, Gift, Star, Sparkles
 import { useAuthStore } from "@/stores";
 import { usePresence, useStatusUpdates, useHugs, useLoveMeter, useNotifications, usePartnerId, useLocations } from "@/hooks/useDatabase";
 import type { Hug, StatusUpdate } from "@/types";
+import { showToast } from "@/hooks/useToast";
 
 const ANIMALS = [
   "🐧 Penguin yang nunggu es batu meleleh",
@@ -51,13 +52,6 @@ interface FloatingHeart {
   emoji: string;
 }
 
-interface ToastNotification {
-  id: number;
-  message: string;
-  type: "hug" | "status" | "love" | "letter" | "mood" | "activity" | "gallery";
-  emoji?: string;
-}
-
 export default function LdrPage() {
   const { user } = useAuthStore();
   const token = user?.token || "";
@@ -70,14 +64,14 @@ export default function LdrPage() {
   const [statusEmoji, setStatusEmoji] = useState("💬");
   const [settings, setSettings] = useState<{ distance?: string; nextMeetupDate?: string }>({});
   const [hugMsg, setHugMsg] = useState<string | null>(null);
-  const [toasts, setToasts] = useState<ToastNotification[]>([]);
   const [showNotifPanel, setShowNotifPanel] = useState(false);
   const [letter, setLetter] = useState("");
   const [currentPlace, setCurrentPlace] = useState("");
   const [placeNote, setPlaceNote] = useState("");
+  const [statusError, setStatusError] = useState("");
+  const [locationError, setLocationError] = useState("");
 
   const prevNotificationsRef = useRef<string>("");
-  const toastIdRef = useRef(0);
 
   const { presence, updatePresence } = usePresence(token);
   const { updates, addUpdate } = useStatusUpdates(token);
@@ -145,33 +139,23 @@ export default function LdrPage() {
     }
   }, []);
 
-  const addToast = useCallback((message: string, type: ToastNotification["type"], emoji?: string) => {
-    const id = ++toastIdRef.current;
-    setToasts((prev) => [...prev, { id, message, type, emoji }]);
-    setTimeout(() => {
-      setToasts((prev) => prev.filter((t) => t.id !== id));
-    }, 4000);
-  }, []);
-
   useEffect(() => {
     const notifKey = notifications.map((n) => `${n.id}-${n.read}`).join(",");
     if (prevNotificationsRef.current && notifKey !== prevNotificationsRef.current) {
       const newNotifs = notifications.filter((n) => !n.read);
       if (newNotifs.length > 0) {
         const latest = newNotifs[0];
-        let type: ToastNotification["type"] = "mood";
-        let emoji = "🔔";
-        if (latest.type === "hug") { type = "hug"; emoji = "🤗"; }
-        else if (latest.type === "status") { type = "status"; emoji = "💬"; }
-        else if (latest.type === "love_meter") { type = "love"; emoji = "💗"; }
-        else if (latest.type === "letter") { type = "letter"; emoji = "💌"; }
-        else if (latest.type === "calendar") { type = "activity"; emoji = "📅"; }
-        else if (latest.type === "gallery") { type = "gallery"; emoji = "📸"; }
-        addToast(latest.message, type, emoji);
+        if (latest.type === "hug") showToast("New hug notification 🤗", "info");
+        else if (latest.type === "status") showToast("New status update 💬", "info");
+        else if (latest.type === "love_meter") showToast("Love meter updated 💗", "success");
+        else if (latest.type === "letter") showToast("New letter received 💌", "info");
+        else if (latest.type === "calendar") showToast("Calendar event 📅", "info");
+        else if (latest.type === "gallery") showToast("New gallery item 📸", "info");
+        else showToast(latest.message, "info");
       }
     }
     prevNotificationsRef.current = notifKey;
-  }, [notifications, addToast]);
+  }, [notifications]);
 
   const handleSendHug = useCallback(async () => {
     if (!partnerId) return;
@@ -184,13 +168,25 @@ export default function LdrPage() {
   }, [partnerId, sendHug, spawnHearts]);
 
   const handleStatusUpdate = useCallback(async () => {
-    if (!statusText.trim()) return;
+    setStatusError("");
+    if (!statusText.trim()) {
+      setStatusError("Please enter a status message");
+      return;
+    }
     await addUpdate(statusText.trim(), statusEmoji);
     setStatusText("");
   }, [statusText, statusEmoji, addUpdate]);
 
   const handleShareLocation = useCallback(async () => {
-    if (!currentPlace.trim() || !partnerId) return;
+    setLocationError("");
+    if (!currentPlace.trim()) {
+      setLocationError("Please enter your location");
+      return;
+    }
+    if (!partnerId) {
+      setLocationError("Partner not found");
+      return;
+    }
     await addLocation(currentPlace.trim(), placeNote || undefined);
     setCurrentPlace("");
     setPlaceNote("");
@@ -235,20 +231,6 @@ export default function LdrPage() {
           </span>
         ))}
       </div>
-
-      {toasts.map((toast) => (
-        <div
-          key={toast.id}
-          className={`fixed top-4 right-4 z-50 animate-slide-in-right bg-gradient-to-r ${toast.type === "hug" ? "from-fuchsia-500 to-pink-500" : toast.type === "status" ? "from-blue-500 to-cyan-500" : toast.type === "love" ? "from-rose-500 to-red-500" : "from-pink-500 to-rose-500"} text-white px-6 py-4 rounded-2xl shadow-2xl border-2 border-white/30 max-w-sm`}
-        >
-          <div className="flex items-start gap-3">
-            <span className="text-2xl">{toast.emoji}</span>
-            <div className="flex-1">
-              <p className="font-semibold text-sm">{toast.message}</p>
-            </div>
-          </div>
-        </div>
-      ))}
 
       <div className="fixed top-4 right-4 z-40">
         <button
@@ -442,16 +424,19 @@ export default function LdrPage() {
 
         <div className="animate-fade-in-up bg-white/80 backdrop-blur-sm p-6 rounded-3xl border-2 border-pink-200 shadow-xl mb-8" style={{ animationDelay: "0.4s" }}>
           <h2 className="text-xl font-bold text-center text-pink-700 mb-4">💬 Status & Update</h2>
-          <div className="flex flex-wrap gap-2 mb-4">
-            <input
-              type="text"
-              value={statusText}
-              onChange={(e) => setStatusText(e.target.value)}
-              placeholder="Apa yang kamu lakukan sekarang?"
-              className="flex-1 min-w-[180px] px-4 py-3 rounded-xl border-2 border-pink-200 focus:border-pink-400 focus:outline-none text-pink-900 text-sm min-h-[44px]"
-              onKeyDown={(e) => e.key === "Enter" && handleStatusUpdate()}
-            />
-            <select
+            <div className="flex flex-wrap gap-2 mb-4">
+              <div className="flex-1 min-w-0">
+                <input
+                  type="text"
+                  value={statusText}
+                  onChange={(e) => { setStatusText(e.target.value); setStatusError(""); }}
+                  placeholder="Apa yang kamu lakukan sekarang?"
+                  className="w-full px-4 py-3 rounded-xl border-2 border-pink-200 focus:border-pink-400 focus:outline-none text-pink-900 text-sm min-h-[44px]"
+                  onKeyDown={(e) => e.key === "Enter" && handleStatusUpdate()}
+                />
+                {statusError && <p className="text-red-500 text-xs mt-1">{statusError}</p>}
+              </div>
+              <select
               value={statusEmoji}
               onChange={(e) => setStatusEmoji(e.target.value)}
               className="px-3 py-2.5 rounded-xl border-2 border-pink-200 focus:border-pink-400 focus:outline-none text-pink-900 text-sm min-h-[44px]"
@@ -496,14 +481,17 @@ export default function LdrPage() {
           </h2>
           <p className="text-pink-600/70 text-sm text-center mb-4">Beri tau partner kamu lagi di mana 💕</p>
           <div className="flex flex-wrap gap-2 mb-4">
-            <input
-              type="text"
-              value={currentPlace}
-              onChange={(e) => setCurrentPlace(e.target.value)}
-              placeholder="Contoh: Kantor, Rumah, Kafe..."
-              className="flex-1 min-w-[160px] px-4 py-2.5 rounded-xl border-2 border-pink-200 focus:border-pink-400 focus:outline-none text-pink-900 text-sm min-h-[44px]"
-              onKeyDown={(e) => e.key === "Enter" && handleShareLocation()}
-            />
+            <div className="flex-1 min-w-0">
+              <input
+                type="text"
+                value={currentPlace}
+                onChange={(e) => { setCurrentPlace(e.target.value); setLocationError(""); }}
+                placeholder="Contoh: Kantor, Rumah, Kafe..."
+                className="w-full px-4 py-2.5 rounded-xl border-2 border-pink-200 focus:border-pink-400 focus:outline-none text-pink-900 text-sm min-h-[44px]"
+                onKeyDown={(e) => e.key === "Enter" && handleShareLocation()}
+              />
+              {locationError && <p className="text-red-500 text-xs mt-1">{locationError}</p>}
+            </div>
             <input
               type="text"
               value={placeNote}

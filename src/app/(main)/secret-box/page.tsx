@@ -7,6 +7,8 @@ import { MagneticButton } from "@/components/animations/MagneticButton";
 import { LdrBanner } from "@/components/ldr/LdrBanner";
 import { useLetters } from "@/hooks/useDatabase";
 import { useAuthStore } from "@/stores";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { ListItemSkeleton } from "@/components/ui/LoadingSkeleton";
 
 const DEFAULT_PIN = "0101";
 
@@ -32,6 +34,10 @@ export default function SecretBoxPage() {
     return localStorage.getItem("ryora-disguise-mode") === "true";
   });
   const [pinMessage, setPinMessage] = useState<string | null>(null);
+  const [pinError, setPinError] = useState("");
+  const [secretTitleError, setSecretTitleError] = useState("");
+  const [secretContentError, setSecretContentError] = useState("");
+  const [newPinError, setNewPinError] = useState("");
   const { token } = useAuthStore();
   const { letters, loading, createLetter, refetch } = useLetters(token || "");
 
@@ -55,16 +61,28 @@ export default function SecretBoxPage() {
   }, [disguiseMode]);
 
   const handleUnlock = () => {
+    setPinError("");
     if (pin === savedPin) {
       setIsUnlocked(true);
     } else {
       setShake(true);
+      setPinError("Incorrect PIN");
       setTimeout(() => setShake(false), 500);
     }
   };
 
   const handleCreateSecret = async () => {
-    if (!secretTitle.trim() || !secretContent.trim() || !token) return;
+    setSecretTitleError("");
+    setSecretContentError("");
+    if (!secretTitle.trim()) {
+      setSecretTitleError("Title is required");
+      return;
+    }
+    if (!secretContent.trim()) {
+      setSecretContentError("Content is required");
+      return;
+    }
+    if (!token) return;
     await createLetter({
       title: secretTitle.trim(),
       content: selfDestruct ? `[SELF_DESTRUCT]${secretContent.trim()}` : secretContent.trim(),
@@ -77,7 +95,15 @@ export default function SecretBoxPage() {
   };
 
   const handleChangePin = () => {
-    if (newPin.length !== 4 || newPin !== confirmPin) return;
+    setNewPinError("");
+    if (newPin.length !== 4) {
+      setNewPinError("PIN must be 4 digits");
+      return;
+    }
+    if (newPin !== confirmPin) {
+      setNewPinError("PINs do not match");
+      return;
+    }
     localStorage.setItem("ryora-secret-pin", newPin);
     setNewPin("");
     setConfirmPin("");
@@ -142,10 +168,11 @@ export default function SecretBoxPage() {
                     type={showPin ? "text" : "password"}
                     maxLength={4}
                     value={pin}
-                    onChange={(e) => setPin(e.target.value.replace(/\D/g, "").slice(0, 4))}
+                    onChange={(e) => { setPin(e.target.value.replace(/\D/g, "").slice(0, 4)); setPinError(""); }}
                     className="w-full bg-pink-50 border-2 border-pink-200 rounded-xl px-4 py-3 text-center text-2xl tracking-[1em] text-pink-900 placeholder-pink-300 focus:outline-none focus:border-pink-400 transition-colors min-h-[48px]"
                     placeholder="••••"
                   />
+                  {pinError && <p className="text-red-500 text-xs mt-2 text-center">{pinError}</p>}
                   <button onClick={() => setShowPin(!showPin)} className="absolute right-4 top-1/2 -translate-y-1/2 text-pink-400 hover:text-pink-600 transition-colors p-2 min-h-[44px] min-w-[44px] flex items-center justify-center">
                     {showPin ? <EyeOff size={20} /> : <Eye size={20} />}
                   </button>
@@ -234,9 +261,9 @@ export default function SecretBoxPage() {
                   placeholder="Confirm PIN"
                   className="w-full px-4 py-3 rounded-xl border-2 border-purple-200 focus:border-purple-400 focus:outline-none text-purple-900 text-sm min-h-[44px]"
                 />
+                {newPinError && <p className="text-red-500 text-xs">{newPinError}</p>}
                 <button
                   onClick={handleChangePin}
-                  disabled={newPin.length !== 4 || newPin !== confirmPin}
                   className="w-full py-3 rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold hover:from-purple-600 hover:to-pink-600 disabled:opacity-50 transition-all min-h-[44px]"
                 >
                   Update PIN
@@ -252,17 +279,19 @@ export default function SecretBoxPage() {
                 <input
                   type="text"
                   value={secretTitle}
-                  onChange={(e) => setSecretTitle(e.target.value)}
+                  onChange={(e) => { setSecretTitle(e.target.value); setSecretTitleError(""); }}
                   placeholder="Secret title 🤫"
                   className="w-full px-4 py-3 rounded-xl border-2 border-pink-200 focus:border-pink-400 focus:outline-none text-pink-900 text-sm min-h-[44px]"
                 />
+                {secretTitleError && <p className="text-red-500 text-xs">{secretTitleError}</p>}
                 <textarea
                   value={secretContent}
-                  onChange={(e) => setSecretContent(e.target.value)}
+                  onChange={(e) => { setSecretContent(e.target.value); setSecretContentError(""); }}
                   placeholder="Write your secret here..."
                   rows={4}
                   className="w-full px-4 py-3 rounded-xl border-2 border-pink-200 focus:border-pink-400 focus:outline-none text-pink-900 text-sm resize-none"
                 />
+                {secretContentError && <p className="text-red-500 text-xs">{secretContentError}</p>}
                 <div className="flex items-center gap-2">
                   <input
                     type="checkbox"
@@ -286,14 +315,11 @@ export default function SecretBoxPage() {
             )}
 
             {loading ? (
-              <div className="text-center py-8">
-                <div className="w-8 h-8 border-4 border-pink-400 border-t-transparent rounded-full animate-spin mx-auto" />
+              <div className="space-y-2">
+                {Array.from({ length: 3 }).map((_, i) => <ListItemSkeleton key={i} />)}
               </div>
             ) : secretLetters.length === 0 ? (
-              <div className="text-center py-8">
-                <p className="text-4xl mb-2">🤫</p>
-                <p className="text-pink-600/70">No secrets yet. Write your first one!</p>
-              </div>
+              <EmptyState emoji="🤫" title="No secrets yet" description="Write your first one!" />
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                 {secretLetters.map((letter, idx) => (

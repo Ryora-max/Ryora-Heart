@@ -8,6 +8,8 @@ import { ImageUpload } from "@/components/ui/ImageUpload";
 import { useGallery } from "@/hooks/useDatabase";
 import { useAuthStore } from "@/stores";
 import type { GalleryItem } from "@/types";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { ImageGridSkeleton } from "@/components/ui/LoadingSkeleton";
 
 export default function GalleryPage() {
   const [selectedPhoto, setSelectedPhoto] = useState<GalleryItem | null>(null);
@@ -60,14 +62,9 @@ export default function GalleryPage() {
           </div>
 
         {loading ? (
-          <div className="text-center py-20">
-            <div className="w-8 h-8 border-4 border-purple-400 border-t-transparent rounded-full animate-spin mx-auto" />
-          </div>
+          <ImageGridSkeleton count={8} />
         ) : filteredPhotos.length === 0 ? (
-          <div className="text-center py-20">
-            <p className="text-4xl mb-2">📸</p>
-            <p className="text-purple-600/70">No photos yet. Upload your first memory!</p>
-          </div>
+          <EmptyState emoji="📸" title="No photos yet" description="Upload your first memory!" action={<ImageUpload onUpload={(url) => addPhoto(url)} />} />
         ) : (
           <div className={`gallery-grid ${viewMode === "masonry" ? "columns-1 sm:columns-2 lg:columns-3 gap-3 sm:gap-4 space-y-3 sm:space-y-4" : "grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4"}`}>
             {filteredPhotos.map((photo, idx) => (

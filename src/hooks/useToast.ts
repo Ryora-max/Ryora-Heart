@@ -2,36 +2,42 @@
 
 import { useEffect, useState, useCallback } from "react";
 
-type Toast = {
+type ToastType = "success" | "error" | "info" | "warning";
+
+interface ToastItem {
   id: string;
   message: string;
-  type: "success" | "info" | "error";
-};
+  type: ToastType;
+  duration?: number;
+}
 
-let addToast: (toast: Omit<Toast, "id">) => void;
+let addToastGlobal: (toast: Omit<ToastItem, "id">) => void;
 
 export function useToast() {
-  const [toasts, setToasts] = useState<Toast[]>([]);
+  const [toasts, setToasts] = useState<ToastItem[]>([]);
 
-  const removeToast = useCallback((id: string) => {
+  const handleRemove = useCallback((id: string) => {
     setToasts((prev) => prev.filter((t) => t.id !== id));
   }, []);
 
   useEffect(() => {
-    addToast = (toast) => {
-      const id = Date.now().toString();
+    addToastGlobal = (toast) => {
+      const id = Date.now().toString() + Math.random().toString(36).slice(2, 8);
       setToasts((prev) => [...prev, { ...toast, id }]);
-      setTimeout(() => removeToast(id), 3000);
+      const duration = toast.duration ?? 4000;
+      if (duration > 0) {
+        setTimeout(() => handleRemove(id), duration);
+      }
     };
 
     return () => {
-      addToast = () => {};
+      addToastGlobal = () => {};
     };
-  }, [removeToast]);
+  }, [handleRemove]);
 
-  return { toasts, removeToast };
+  return { toasts, removeToast: handleRemove };
 }
 
-export function showToast(message: string, type: Toast["type"] = "info") {
-  addToast({ message, type });
+export function showToast(message: string, type: ToastType = "info", duration?: number) {
+  addToastGlobal({ message, type, duration });
 }

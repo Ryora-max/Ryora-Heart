@@ -7,6 +7,8 @@ import { LdrBanner } from "@/components/ldr/LdrBanner";
 import { useActivities, useMoods } from "@/hooks/useDatabase";
 import { useAuthStore } from "@/stores";
 import type { MoodEntry } from "@/types";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { ListItemSkeleton } from "@/components/ui/LoadingSkeleton";
 
 interface ConfettiHeart {
   id: number;
@@ -148,11 +150,11 @@ export default function LivingRoomPage() {
             )}
 
             {activitiesLoading ? (
-              <div className="text-center py-8">
-                <div className="w-8 h-8 border-4 border-blue-400 border-t-transparent rounded-full animate-spin mx-auto" />
+              <div className="space-y-2">
+                {Array.from({ length: 3 }).map((_, i) => <ListItemSkeleton key={i} />)}
               </div>
             ) : filteredActivities.length === 0 ? (
-              <p className="text-blue-600/70 text-center py-8">No activities today 💤</p>
+              <EmptyState emoji="💤" title="No activities today" description="Start adding activities to see them here" />
             ) : (
               <div className="space-y-2">
                 {filteredActivities.map((activity) => (
@@ -236,11 +238,11 @@ export default function LivingRoomPage() {
                  <div className="room-card animate-fade-in-up bg-white/80 backdrop-blur-sm rounded-2xl p-4 sm:p-6 border-2 border-purple-200 shadow-xl" style={{ animationDelay: "0.2s" }}>
           <h3 className="text-lg font-bold text-purple-900 mb-4">Recent Moods 💭</h3>
           {moodsLoading ? (
-            <div className="text-center py-8">
-              <div className="w-8 h-8 border-4 border-purple-400 border-t-transparent rounded-full animate-spin mx-auto" />
+            <div className="space-y-2">
+              {Array.from({ length: 3 }).map((_, i) => <ListItemSkeleton key={i} />)}
             </div>
           ) : moods.length === 0 ? (
-            <p className="text-purple-600/70 text-center py-8">No moods yet. How are you feeling?</p>
+            <EmptyState emoji="💭" title="No moods yet" description="How are you feeling?" />
           ) : (
             <div className="flex gap-3 overflow-x-auto pb-2">
               {moods.slice(0, 10).map((mood) => {

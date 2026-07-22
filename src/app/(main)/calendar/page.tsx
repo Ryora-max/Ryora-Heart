@@ -8,6 +8,8 @@ import { LdrBanner } from "@/components/ldr/LdrBanner";
 import { useCalendarEvents } from "@/hooks/useDatabase";
 import { useAuthStore } from "@/stores";
 import type { CalendarEvent } from "@/types";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { ListItemSkeleton } from "@/components/ui/LoadingSkeleton";
 
 const EVENT_TYPES = {
   vc: { label: "Video Call", color: "bg-blue-100 text-blue-600 border-blue-200", icon: Video },
@@ -25,12 +27,14 @@ export default function CalendarPage() {
   const [newDate, setNewDate] = useState("");
   const [newType, setNewType] = useState<EventType>("vc");
   const [newDesc, setNewDesc] = useState("");
+  const [addError, setAddError] = useState("");
 
   const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null);
   const [editTitle, setEditTitle] = useState("");
   const [editDate, setEditDate] = useState("");
   const [editType, setEditType] = useState<EventType>("vc");
   const [editDesc, setEditDesc] = useState("");
+  const [editError, setEditError] = useState("");
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 
   const { token } = useAuthStore();
@@ -64,10 +68,15 @@ export default function CalendarPage() {
     setEditDate(new Date(event.date).toISOString().split("T")[0]);
     setEditType(event.type);
     setEditDesc(event.description || "");
+    setEditError("");
   };
 
   const handleUpdate = async () => {
-    if (!editTitle.trim() || !editDate || !editingEvent) return;
+    setEditError("");
+    if (!editTitle.trim() || !editDate || !editingEvent) {
+      setEditError("Title and date are required");
+      return;
+    }
     await updateCalendarEvent(editingEvent.id, {
       title: editTitle.trim(),
       date: new Date(editDate),
@@ -102,19 +111,21 @@ export default function CalendarPage() {
                 <button onClick={() => setShowAddEvent(false)} className="text-blue-400 hover:text-blue-600"><X size={20} /></button>
               </div>
               <div className="space-y-3">
-                <input
-                  type="text"
-                  value={newTitle}
-                  onChange={(e) => setNewTitle(e.target.value)}
-                  placeholder="Event title..."
-                  className="w-full px-4 py-2 rounded-xl border-2 border-blue-200 focus:border-blue-400 focus:outline-none text-blue-900 text-sm"
-                />
-                <input
-                  type="date"
-                  value={newDate}
-                  onChange={(e) => setNewDate(e.target.value)}
-                  className="w-full px-4 py-2 rounded-xl border-2 border-blue-200 focus:border-blue-400 focus:outline-none text-blue-900 text-sm"
-                />
+                 <input
+                   type="text"
+                   value={newTitle}
+                   onChange={(e) => setNewTitle(e.target.value)}
+                   placeholder="Event title..."
+                   className="w-full px-4 py-2 rounded-xl border-2 border-blue-200 focus:border-blue-400 focus:outline-none text-blue-900 text-sm"
+                 />
+                 {addError && <p className="text-red-500 text-xs mt-1">{addError}</p>}
+                 <input
+                   type="date"
+                   value={newDate}
+                   onChange={(e) => setNewDate(e.target.value)}
+                   className="w-full px-4 py-2 rounded-xl border-2 border-blue-200 focus:border-blue-400 focus:outline-none text-blue-900 text-sm"
+                 />
+                 {addError && <p className="text-red-500 text-xs mt-1">{addError}</p>}
                   <select
                     value={newType}
                     onChange={(e) => setNewType(e.target.value as EventType)}
@@ -134,7 +145,11 @@ export default function CalendarPage() {
                 />
                 <button
                   onClick={async () => {
-                    if (!newTitle.trim() || !newDate) return;
+                    setAddError("");
+                    if (!newTitle.trim() || !newDate) {
+                      setAddError("Title and date are required");
+                      return;
+                    }
                     await addCalendarEvent(newTitle.trim(), new Date(newDate), newType, newDesc || undefined);
                     setNewTitle("");
                     setNewDate("");
@@ -160,19 +175,20 @@ export default function CalendarPage() {
                 <button onClick={() => setEditingEvent(null)} className="text-blue-400 hover:text-blue-600"><X size={20} /></button>
               </div>
               <div className="space-y-3">
-                <input
-                  type="text"
-                  value={editTitle}
-                  onChange={(e) => setEditTitle(e.target.value)}
-                  placeholder="Event title..."
-                  className="w-full px-4 py-2 rounded-xl border-2 border-blue-200 focus:border-blue-400 focus:outline-none text-blue-900 text-sm"
-                />
-                <input
-                  type="date"
-                  value={editDate}
-                  onChange={(e) => setEditDate(e.target.value)}
-                  className="w-full px-4 py-2 rounded-xl border-2 border-blue-200 focus:border-blue-400 focus:outline-none text-blue-900 text-sm"
-                />
+                 <input
+                   type="text"
+                   value={editTitle}
+                   onChange={(e) => { setEditTitle(e.target.value); setEditError(""); }}
+                   placeholder="Event title..."
+                   className="w-full px-4 py-2 rounded-xl border-2 border-blue-200 focus:border-blue-400 focus:outline-none text-blue-900 text-sm"
+                 />
+                 <input
+                   type="date"
+                   value={editDate}
+                   onChange={(e) => { setEditDate(e.target.value); setEditError(""); }}
+                   className="w-full px-4 py-2 rounded-xl border-2 border-blue-200 focus:border-blue-400 focus:outline-none text-blue-900 text-sm"
+                 />
+                 {editError && <p className="text-red-500 text-xs">{editError}</p>}
                 <select
                   value={editType}
                   onChange={(e) => setEditType(e.target.value as EventType)}
@@ -288,14 +304,14 @@ export default function CalendarPage() {
             </div>
 
             {loading ? (
-              <div className="text-center py-8">
-                <div className="w-8 h-8 border-4 border-blue-400 border-t-transparent rounded-full animate-spin mx-auto" />
+              <div className="space-y-2">
+                {Array.from({ length: 3 }).map((_, i) => <ListItemSkeleton key={i} />)}
               </div>
              ) : events.length === 0 ? (
-               <p className="text-blue-600/70 text-center py-8">No events yet 💤</p>
+               <EmptyState emoji="💤" title="No events yet" description="Add your first special date!" />
              ) : (
-               <div className="space-y-3">
-                  {events.map((event, idx) => {
+                <div className="space-y-3">
+                   {events.map((event, idx) => {
                      const EventIcon = EVENT_TYPES[event.type].icon;
                      return (
                        <div key={event.id} className="event-card animate-fade-in-left bg-white/80 backdrop-blur-sm p-3 sm:p-4 rounded-xl border-2 border-blue-100 hover:border-blue-300 hover:shadow-lg transition-all" style={{ animationDelay: `${0.3 + idx * 0.1}s` }}>

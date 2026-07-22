@@ -3,6 +3,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import type { MoodEntry, Activity, GalleryItem, CalendarEvent, Letter, Hug, StatusUpdate } from "@/types";
+import { useRetryQueue } from "./useRetryQueue";
 
 async function callDb(action: string, token: string, params?: any) {
   const result = await fetch("/api/db", {
@@ -13,7 +14,7 @@ async function callDb(action: string, token: string, params?: any) {
   });
 
   if (!result.ok) {
-    const error = await result.json();
+    const error = await result.json().catch(() => ({}));
     throw new Error(error.error || "Database error");
   }
   return result.json();
@@ -22,6 +23,7 @@ async function callDb(action: string, token: string, params?: any) {
 export function useMoods(token: string) {
   const [moods, setMoods] = useState<MoodEntry[]>([]);
   const [loading, setLoading] = useState(true);
+  const { enqueue, flush } = useRetryQueue();
 
   const fetchMoods = useCallback(async () => {
     try {
@@ -34,11 +36,12 @@ export function useMoods(token: string) {
         createdAt: new Date(m.createdAt),
       })));
     } catch (error) {
+      enqueue({ action: "getMoods", token });
       console.error("Error fetching moods:", error);
     } finally {
       setLoading(false);
     }
-  }, [token]);
+  }, [token, enqueue]);
 
   useEffect(() => {
     if (!token) return;
@@ -53,12 +56,13 @@ export function useMoods(token: string) {
     fetchMoods();
   }, [token, fetchMoods]);
 
-  return { moods, loading, addMood };
+  return { moods, loading, addMood, flushOffline: flush };
 }
 
 export function useActivities(token: string) {
   const [activities, setActivities] = useState<Activity[]>([]);
   const [loading, setLoading] = useState(true);
+  const { enqueue, flush } = useRetryQueue();
 
   const fetchActivities = useCallback(async () => {
     try {
@@ -73,11 +77,12 @@ export function useActivities(token: string) {
         createdBy: a.createdBy,
       })));
     } catch (error) {
+      enqueue({ action: "getActivities", token });
       console.error("Error fetching activities:", error);
     } finally {
       setLoading(false);
     }
-  }, [token]);
+  }, [token, enqueue]);
 
   useEffect(() => {
     if (!token) return;
@@ -97,12 +102,13 @@ export function useActivities(token: string) {
     fetchActivities();
   }, [token, fetchActivities]);
 
-  return { activities, loading, createActivity, toggleActivity };
+  return { activities, loading, createActivity, toggleActivity, flushOffline: flush };
 }
 
 export function useGallery(token: string) {
   const [photos, setPhotos] = useState<GalleryItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const { enqueue, flush } = useRetryQueue();
 
   const fetchGallery = useCallback(async () => {
     try {
@@ -115,11 +121,12 @@ export function useGallery(token: string) {
         createdBy: g.createdBy,
       })));
     } catch (error) {
+      enqueue({ action: "getGallery", token });
       console.error("Error fetching gallery:", error);
     } finally {
       setLoading(false);
     }
-  }, [token]);
+  }, [token, enqueue]);
 
   useEffect(() => {
     if (!token) return;
@@ -139,12 +146,13 @@ export function useGallery(token: string) {
     fetchGallery();
   }, [token, fetchGallery]);
 
-  return { photos, loading, addPhoto, deletePhoto };
+  return { photos, loading, addPhoto, deletePhoto, flushOffline: flush };
 }
 
 export function useCalendarEvents(token: string) {
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [loading, setLoading] = useState(true);
+  const { enqueue, flush } = useRetryQueue();
 
   const fetchEvents = useCallback(async () => {
     try {
@@ -157,11 +165,12 @@ export function useCalendarEvents(token: string) {
         description: e.description || undefined,
       })));
     } catch (error) {
+      enqueue({ action: "getCalendarEvents", token });
       console.error("Error fetching events:", error);
     } finally {
       setLoading(false);
     }
-  }, [token]);
+  }, [token, enqueue]);
 
   useEffect(() => {
     if (!token) return;
@@ -188,12 +197,13 @@ export function useCalendarEvents(token: string) {
     fetchEvents();
   }, [token, fetchEvents]);
 
-  return { events, loading, addCalendarEvent, updateCalendarEvent, deleteCalendarEvent };
+  return { events, loading, addCalendarEvent, updateCalendarEvent, deleteCalendarEvent, flushOffline: flush };
 }
 
 export function useLetters(token: string) {
   const [letters, setLetters] = useState<Letter[]>([]);
   const [loading, setLoading] = useState(true);
+  const { enqueue, flush } = useRetryQueue();
 
   const fetchLetters = useCallback(async () => {
     try {
@@ -208,11 +218,12 @@ export function useLetters(token: string) {
         createdBy: l.createdBy,
       })));
     } catch (error) {
+      enqueue({ action: "getLetters", token });
       console.error("Error fetching letters:", error);
     } finally {
       setLoading(false);
     }
-  }, [token]);
+  }, [token, enqueue]);
 
   useEffect(() => {
     if (!token) return;
@@ -227,11 +238,12 @@ export function useLetters(token: string) {
     fetchLetters();
   }, [token, fetchLetters]);
 
-  return { letters, loading, refetch: fetchLetters, createLetter };
+  return { letters, loading, refetch: fetchLetters, createLetter, flushOffline: flush };
 }
 
 export function usePresence(token: string) {
   const [presence, setPresence] = useState<{ userId: string; status: string; lastSeen: string }[]>([]);
+  const { enqueue, flush } = useRetryQueue();
 
   const fetchPresence = useCallback(async () => {
     try {
@@ -242,9 +254,10 @@ export function usePresence(token: string) {
         lastSeen: p.last_seen,
       })));
     } catch (error) {
+      enqueue({ action: "getPresence", token });
       console.error("Error fetching presence:", error);
     }
-  }, [token]);
+  }, [token, enqueue]);
 
   useEffect(() => {
     if (!token) return;
@@ -259,20 +272,22 @@ export function usePresence(token: string) {
     fetchPresence();
   }, [token, fetchPresence]);
 
-  return { presence, updatePresence };
+  return { presence, updatePresence, flushOffline: flush };
 }
 
 export function useStatusUpdates(token: string) {
   const [updates, setUpdates] = useState<StatusUpdate[]>([]);
+  const { enqueue, flush } = useRetryQueue();
 
   const fetchUpdates = useCallback(async () => {
     try {
       const data = await callDb("getStatusUpdates", token);
       setUpdates(data);
     } catch (error) {
+      enqueue({ action: "getStatusUpdates", token });
       console.error("Error fetching status updates:", error);
     }
-  }, [token]);
+  }, [token, enqueue]);
 
   useEffect(() => {
     if (!token) return;
@@ -287,11 +302,12 @@ export function useStatusUpdates(token: string) {
     fetchUpdates();
   }, [token, fetchUpdates]);
 
-  return { updates, addUpdate, refetch: fetchUpdates };
+  return { updates, addUpdate, refetch: fetchUpdates, flushOffline: flush };
 }
 
 export function useHugs(token: string) {
   const [hugs, setHugs] = useState<Hug[]>([]);
+  const { enqueue, flush } = useRetryQueue();
 
   const fetchHugs = useCallback(async () => {
     try {
@@ -305,9 +321,10 @@ export function useHugs(token: string) {
         createdAt: new Date(h.createdAt),
       })));
     } catch (error) {
+      enqueue({ action: "getHugs", token });
       console.error("Error fetching hugs:", error);
     }
-  }, [token]);
+  }, [token, enqueue]);
 
   useEffect(() => {
     if (!token) return;
@@ -322,11 +339,12 @@ export function useHugs(token: string) {
     fetchHugs();
   }, [token, fetchHugs]);
 
-  return { hugs, sendHug, refetch: fetchHugs };
+  return { hugs, sendHug, refetch: fetchHugs, flushOffline: flush };
 }
 
 export function useLoveMeter(token: string) {
   const [history, setHistory] = useState<{ userId: string; percentage: number; createdAt: Date }[]>([]);
+  const { enqueue, flush } = useRetryQueue();
 
   const fetchHistory = useCallback(async () => {
     try {
@@ -337,9 +355,10 @@ export function useLoveMeter(token: string) {
         createdAt: new Date(l.createdAt),
       })));
     } catch (error) {
+      enqueue({ action: "getLoveMeter", token });
       console.error("Error fetching love meter:", error);
     }
-  }, [token]);
+  }, [token, enqueue]);
 
   useEffect(() => {
     if (!token) return;
@@ -356,20 +375,22 @@ export function useLoveMeter(token: string) {
 
   const currentPercentage = history.length > 0 ? history[0].percentage : 0;
 
-  return { history, currentPercentage, update, refetch: fetchHistory };
+  return { history, currentPercentage, update, refetch: fetchHistory, flushOffline: flush };
 }
 
 export function useNotifications(token: string) {
   const [notifications, setNotifications] = useState<{ id: string; message: string; type: string; read: boolean; createdAt: string }[]>([]);
+  const { enqueue, flush } = useRetryQueue();
 
   const fetchNotifications = useCallback(async () => {
     try {
       const data = await callDb("getNotifications", token);
       setNotifications(data);
     } catch (error) {
+      enqueue({ action: "getNotifications", token });
       console.error("Error fetching notifications:", error);
     }
-  }, [token]);
+  }, [token, enqueue]);
 
   useEffect(() => {
     if (!token) return;
@@ -381,7 +402,7 @@ export function useNotifications(token: string) {
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
-  return { notifications, unreadCount, refetch: fetchNotifications };
+  return { notifications, unreadCount, refetch: fetchNotifications, flushOffline: flush };
 }
 
 export function usePartnerId(token: string, userId?: string) {
@@ -420,15 +441,17 @@ export function usePartnerId(token: string, userId?: string) {
 
 export function useLocations(token: string) {
   const [locations, setLocations] = useState<{ id: string; userId: string; place: string; note?: string; createdAt: string }[]>([]);
+  const { enqueue, flush } = useRetryQueue();
 
   const fetchLocations = useCallback(async () => {
     try {
       const data = await callDb("getLocations", token);
       setLocations(data);
     } catch (error) {
+      enqueue({ action: "getLocations", token });
       console.error("Error fetching locations:", error);
     }
-  }, [token]);
+  }, [token, enqueue]);
 
   useEffect(() => {
     if (!token) return;
@@ -452,7 +475,7 @@ export function useLocations(token: string) {
     });
   }, [token]);
 
-  return { locations, addLocation, refetch: fetchLocations, markAsRead };
+  return { locations, addLocation, refetch: fetchLocations, markAsRead, flushOffline: flush };
 }
 
 export function useDailyReset() {

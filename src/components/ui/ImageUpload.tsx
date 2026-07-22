@@ -3,7 +3,6 @@
 import { useState, useRef } from "react";
 import { Upload, X, Loader2, AlertCircle, RefreshCw } from "lucide-react";
 import { useAuthStore } from "@/stores";
-import Image from "next/image";
 
 interface ImageUploadProps {
   onUpload: (url: string) => void;
@@ -82,6 +81,7 @@ export function ImageUpload({ onUpload }: ImageUploadProps) {
 
       {preview && (
         <div className="relative rounded-xl overflow-hidden">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={preview}
             alt="Preview"

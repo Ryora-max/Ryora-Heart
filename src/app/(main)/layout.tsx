@@ -8,6 +8,9 @@ import { cn } from "@/lib/utils";
 import { Menu, LogOut, Home } from "lucide-react";
 import CustomCursor from "@/components/ui/CustomCursor";
 import { NotificationButton } from "@/components/ui/NotificationButton";
+import { Toaster } from "@/components/ui/Toaster";
+import { OfflineIndicator } from "@/components/ui/OfflineIndicator";
+import { useOnlineStatus } from "@/hooks/useOnlineStatus";
 
 export default function MainLayout({
   children,
@@ -19,6 +22,16 @@ export default function MainLayout({
   const { user, token, isAuthenticated, logout, setUser, setToken } = useAuthStore();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [verifying, setVerifying] = useState(true);
+  const online = useOnlineStatus();
+  const [pendingCount, setPendingCount] = useState(0);
+
+  useEffect(() => {
+    const handleEnqueue = () => {
+      setPendingCount((prev) => prev + 1);
+    };
+    window.addEventListener("ryora-retry-enqueued", handleEnqueue);
+    return () => window.removeEventListener("ryora-retry-enqueued", handleEnqueue);
+  }, []);
 
   useEffect(() => {
     const verifySession = async () => {
@@ -182,6 +195,8 @@ export default function MainLayout({
           {children}
         </main>
       </div>
+      <Toaster />
+      {!online && <OfflineIndicator pendingCount={pendingCount} onDismiss={() => setPendingCount(0)} />}
     </>
   );
 }

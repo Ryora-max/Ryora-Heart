@@ -10,6 +10,8 @@ import { GlassPanel } from "@/components/ui/GlassPanel";
 import { MagneticButton } from "@/components/animations/MagneticButton";
 import { LdrBanner } from "@/components/ldr/LdrBanner";
 import { useActivities, useMoods, useGallery } from "@/hooks/useDatabase";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { CardSkeleton, ListItemSkeleton } from "@/components/ui/LoadingSkeleton";
 
 const MOOD_EMOJIS = [
   { value: "happy", emoji: "😊" },
@@ -25,10 +27,11 @@ export default function DashboardPage() {
   const { user, token } = useAuthStore();
   const { activities, loading: activitiesLoading } = useActivities(token || "");
   const { moods, loading: moodsLoading, addMood } = useMoods(token || "");
-  const { photos } = useGallery(token || "");
+  const { photos, loading: galleryLoading } = useGallery(token || "");
   const [searchQuery, setSearchQuery] = useState("");
 
   const daysTogether = useMemo(() => calculateDaysTogether(APP_CONFIG.relationship.startDate), []);
+  const statsLoading = activitiesLoading || moodsLoading || galleryLoading;
   const stats = useMemo(() => [
     { label: "Days Together", value: daysTogether, icon: Heart, color: "from-pink-400 to-rose-400", emoji: "💝" },
     { label: "Activities", value: activities.length, icon: Calendar, color: "from-purple-400 to-pink-400", emoji: "📋" },
@@ -51,17 +54,21 @@ export default function DashboardPage() {
         <LdrBanner tagline="Dashboard cinta jarak jauh: beda kota, tapi notif hati selalu nyambung. 💞" />
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          {stats.map((stat, i) => (
-            <GlassPanel key={i} className="dashboard-card animate-fade-in-up p-5 bg-white/80 backdrop-blur-sm border-2 border-white/50 shadow-xl hover:shadow-2xl transition-all hover:scale-105" style={{ animationDelay: `${i * 0.1}s` }}>
-              <div className="flex items-center justify-between mb-3">
-                <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${stat.color} flex items-center justify-center text-xl shadow-lg`}>
-                  {stat.emoji}
+          {statsLoading ? (
+            Array.from({ length: 4 }).map((_, i) => <CardSkeleton key={i} style={{ animationDelay: `${i * 0.05}s` }} />)
+          ) : (
+            stats.map((stat, i) => (
+              <GlassPanel key={i} className="dashboard-card animate-fade-in-up p-5 bg-white/80 backdrop-blur-sm border-2 border-white/50 shadow-xl hover:shadow-2xl transition-all hover:scale-105" style={{ animationDelay: `${i * 0.1}s` }}>
+                <div className="flex items-center justify-between mb-3">
+                  <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${stat.color} flex items-center justify-center text-xl shadow-lg`}>
+                    {stat.emoji}
+                  </div>
                 </div>
-              </div>
-              <p className="text-2xl font-bold text-gray-800 mb-1">{typeof stat.value === "number" ? stat.value.toLocaleString() : stat.value}</p>
-              <p className="text-gray-600 text-sm">{stat.label}</p>
-            </GlassPanel>
-          ))}
+                <p className="text-2xl font-bold text-gray-800 mb-1">{typeof stat.value === "number" ? stat.value.toLocaleString() : stat.value}</p>
+                <p className="text-gray-600 text-sm">{stat.label}</p>
+              </GlassPanel>
+            ))
+          )}
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
@@ -83,11 +90,11 @@ export default function DashboardPage() {
               </div>
             </div>
             {activitiesLoading ? (
-              <div className="text-center py-8">
-                <div className="w-8 h-8 border-4 border-purple-400 border-t-transparent rounded-full animate-spin mx-auto" />
+              <div className="space-y-2">
+                {Array.from({ length: 4 }).map((_, i) => <ListItemSkeleton key={i} style={{ animationDelay: `${i * 0.05}s` }} />)}
               </div>
             ) : filteredActivities.length === 0 ? (
-              <p className="text-gray-500 text-center py-8">No activities yet 💤</p>
+              <EmptyState emoji="💤" title="No activities yet" description="Start adding activities to see them here" />
             ) : (
               <div className="space-y-2">
                 {filteredActivities.slice(0, 5).map((activity, idx) => (
