@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { create } from "zustand";
@@ -30,27 +29,6 @@ export const useAuthStore = create<AuthState>()(
     }),
     {
       name: "ryora-auth",
-      storage: createJSONStorage(() => localStorage),
-    }
-  )
-);
-
-interface MoodState {
-  moods: any[];
-  addMood: (mood: any) => void;
-}
-
-export const useMoodStore = create<MoodState>()(
-  persist(
-    (set) => ({
-      moods: [],
-      addMood: (mood) =>
-        set((state) => ({
-          moods: [mood, ...state.moods].slice(0, 100),
-        })),
-    }),
-    {
-      name: "ryora-moods",
       storage: createJSONStorage(() => localStorage),
     }
   )

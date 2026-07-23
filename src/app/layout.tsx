@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Sora, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { AuroraBackground } from "@/components/home/AuroraBackground";
-import { CustomCursor } from "@/components/animations/CustomCursor";
 import Loader from "@/components/animations/Loader";
 import { ServiceWorkerRegistrar } from "@/components/pwa/ServiceWorkerRegistrar";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
@@ -32,11 +31,10 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${sora.variable} ${jakarta.variable} h-full antialiased`}>
       <body className="min-h-screen flex flex-col bg-background text-foreground overflow-x-hidden">
-        <AuroraBackground />
-        <CustomCursor />
-        <Loader />
-        <ServiceWorkerRegistrar />
-        <ErrorBoundary>
+      <AuroraBackground />
+      <Loader />
+      <ServiceWorkerRegistrar />
+      <ErrorBoundary>
           {children}
         </ErrorBoundary>
       </body>

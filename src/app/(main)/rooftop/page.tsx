@@ -23,27 +23,79 @@ export default function RooftopPage() {
   const { token } = useAuthStore();
   const [settings, setSettings] = useState(DEFAULT_SETTINGS);
   const daysTogether = calculateDaysTogether(settings.relationshipStartDate);
-  const [wishes, setWishes] = useState<string[]>(() => {
-    if (typeof window === "undefined") return ["Visit Japan together 🌸", "Build a treehouse 🏡", "Stargaze in the desert ✨"];
-    try {
-      const stored = localStorage.getItem("ryora-wishes");
-      if (stored) return JSON.parse(stored);
-    } catch {}
-    return ["Visit Japan together 🌸", "Build a treehouse 🏡", "Stargaze in the desert ✨"];
-  });
+  const [wishes, setWishes] = useState<string[]>([]);
+  const [dreams, setDreams] = useState<DreamItem[]>([]);
   const [newWish, setNewWish] = useState("");
   const [showWishForm, setShowWishForm] = useState(false);
-  const [stargazing, setStargazing] = useState(false);
-  const [dreams, setDreams] = useState<DreamItem[]>(() => {
-    if (typeof window === "undefined") return [];
-    try {
-      const stored = localStorage.getItem("ryora-dreams");
-      if (stored) return JSON.parse(stored);
-    } catch {}
-    return [];
-  });
   const [selectedDream, setSelectedDream] = useState<{ emoji: string; note: string } | null>(null);
   const [dreamNote, setDreamNote] = useState("");
+  const [stargazing, setStargazing] = useState(false);
+
+  useEffect(() => {
+    if (!token) return;
+    let cancelled = false;
+
+    async function fetchData() {
+      try {
+        const [wishesRes, dreamsRes] = await Promise.all([
+          fetch("/api/db", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ action: "getUserExtra", token, key: "wishes" }),
+            cache: "no-store",
+          }),
+          fetch("/api/db", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ action: "getUserExtra", token, key: "dreams" }),
+            cache: "no-store",
+          }),
+        ]);
+
+        const wishesData = wishesRes.ok ? await wishesRes.json() : null;
+        const dreamsData = dreamsRes.ok ? await dreamsRes.json() : null;
+
+        if (!cancelled) {
+          const wishList = wishesData?.value ? JSON.parse(wishesData.value) : ["Visit Japan together 🌸", "Build a treehouse 🏡", "Stargaze in the desert ✨"];
+          setWishes(wishList);
+
+          const dreamList = dreamsData?.value ? JSON.parse(dreamsData.value) : [];
+          setDreams(dreamList);
+        }
+      } catch {
+        if (!cancelled) {
+          setWishes(["Visit Japan together 🌸", "Build a treehouse 🏡", "Stargaze in the desert ✨"]);
+        }
+      }
+    }
+
+    fetchData();
+    return () => { cancelled = true; };
+  }, [token]);
+
+  useEffect(() => {
+    if (!token || !wishes.length) return;
+    const timeout = setTimeout(() => {
+      fetch("/api/db", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "setUserExtra", token, key: "wishes", value: JSON.stringify(wishes) }),
+      }).catch(() => {});
+    }, 500);
+    return () => clearTimeout(timeout);
+  }, [wishes, token]);
+
+  useEffect(() => {
+    if (!token || !dreams.length) return;
+    const timeout = setTimeout(() => {
+      fetch("/api/db", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "setUserExtra", token, key: "dreams", value: JSON.stringify(dreams) }),
+      }).catch(() => {});
+    }, 500);
+    return () => clearTimeout(timeout);
+  }, [dreams, token]);
   const [stars] = useState(() => [...Array(30)].map(() => ({
     left: Math.random() * 100,
     top: Math.random() * 100,
@@ -70,7 +122,7 @@ export default function RooftopPage() {
     setDreamNote(existing?.note || "");
   }, [dreams]);
 
-  const saveDreamNote = useCallback(() => {
+   const saveDreamNote = useCallback(() => {
     if (!selectedDream) return;
     setDreams((prev) => {
       const filtered = prev.filter((d) => d.emoji !== selectedDream.emoji);
@@ -81,12 +133,7 @@ export default function RooftopPage() {
   }, [selectedDream, dreamNote]);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    localStorage.setItem("ryora-wishes", JSON.stringify(wishes));
-  }, [wishes]);
-
-  useEffect(() => {
-    if (!token) return;
+    if (!token || !settings.relationshipStartDate) return;
     fetch("/api/db", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -99,12 +146,7 @@ export default function RooftopPage() {
         }
       })
       .catch(() => {});
-  }, [token]);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    localStorage.setItem("ryora-dreams", JSON.stringify(dreams));
-  }, [dreams]);
+  }, [token, settings.relationshipStartDate]);
 
   return (
     <div className={`relative min-h-screen p-3 sm:p-4 md:p-8 transition-all duration-500 ${stargazing ? "bg-gradient-to-br from-slate-950 via-indigo-950 to-purple-950" : "bg-gradient-to-br from-indigo-200 via-purple-200 to-pink-200"}`}>

@@ -372,3 +372,56 @@ export async function getLocations(pairId: string) {
   `, [pairId]);
   return result;
 }
+
+export async function getUserExtra(userId: string, key: string) {
+  const result = await getOne("SELECT value FROM user_extras WHERE user_id = $1 AND key = $2", [userId, key]);
+  return result?.value || null;
+}
+
+export async function setUserExtra(userId: string, pairId: string, key: string, value: string) {
+  const existing = await getOne("SELECT id FROM user_extras WHERE user_id = $1 AND key = $2", [userId, key]);
+  if (existing) {
+    await query("UPDATE user_extras SET value = $1, updated_at = $2 WHERE id = $3", [value, new Date().toISOString(), existing.id]);
+  } else {
+    const id = generateId();
+    await query("INSERT INTO user_extras (id, user_id, pair_id, key, value, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7)", [id, userId, pairId, key, value, new Date().toISOString(), new Date().toISOString()]);
+  }
+  return { success: true };
+}
+
+export async function getAchievements(pairId: string) {
+  const result = await getOne(`
+    SELECT COUNT(*) as gallery_count FROM gallery WHERE pair_id = $1
+  `, [pairId]);
+  const galleryCount = result?.gallery_count || 0;
+
+  const lettersResult = await getOne(`
+    SELECT COUNT(*) as letter_count FROM letters WHERE pair_id = $1 AND type IN ('love_letter', 'open_when')
+  `, [pairId]);
+  const letterCount = lettersResult?.letter_count || 0;
+
+  const eventsResult = await getOne(`
+    SELECT COUNT(*) as event_count FROM calendar_events WHERE pair_id = $1 AND type = 'vc'
+  `, [pairId]);
+  const vcCount = eventsResult?.event_count || 0;
+
+  const settings = await getOne("SELECT relationship_start_date, next_meetup_date FROM user_settings WHERE pair_id = $1 LIMIT 1", [pairId]);
+  const startDate = settings?.relationship_start_date ? new Date(settings.relationship_start_date) : new Date("2023-01-01");
+  const daysTogether = Math.floor((Date.now() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+
+  const meetupPassed = settings?.next_meetup_date ? new Date(settings.next_meetup_date) < new Date() : false;
+
+  const milestones = await getOne(`
+    SELECT COUNT(*) as count FROM activities WHERE pair_id = $1 AND type = 'milestone'
+  `, [pairId]);
+  const milestoneCount = milestones?.count || 0;
+
+  return {
+    galleryCount,
+    letterCount,
+    vcCount,
+    daysTogether,
+    meetupPassed,
+    milestoneCount,
+  };
+}

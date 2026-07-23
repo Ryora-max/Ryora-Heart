@@ -2,13 +2,12 @@
 "use server";
 
 import { v4 as uuidv4 } from "uuid";
+import bcrypt from "bcryptjs";
 import { query, getOne, generateId } from "@/lib/db/postgres";
 import { initializeDatabase } from "@/lib/db/init";
-import jwt from "jsonwebtoken";
 
 initializeDatabase();
 
-const JWT_SECRET = process.env.JWT_SECRET || "ryora-secret-key-change-in-production";
 const SESSION_DURATION = 7 * 24 * 60 * 60 * 1000;
 
 export interface User {
@@ -27,8 +26,11 @@ export interface Session {
 }
 
 export async function login(username: string, password: string): Promise<Session | null> {
-  const result = await getOne("SELECT * FROM users WHERE username = $1 AND password = $2", [username, password]);
+  const result = await getOne("SELECT * FROM users WHERE username = $1", [username]);
   if (!result) return null;
+
+  const valid = await bcrypt.compare(password, result.password_hash);
+  if (!valid) return null;
 
   const token = uuidv4();
   const expiresAt = new Date(Date.now() + SESSION_DURATION).toISOString();
@@ -78,29 +80,6 @@ export async function getSession(token: string): Promise<Session | null> {
     },
     token: result.token,
   };
-}
-
-export async function createJWT(user: User): Promise<string> {
-  return jwt.sign({ userId: user.id, pairId: user.pair_id }, JWT_SECRET, { expiresIn: "7d" });
-}
-
-export async function verifyJWT(token: string): Promise<User | null> {
-  try {
-    const decoded = jwt.verify(token, JWT_SECRET) as any;
-    const user = await getOne("SELECT * FROM users WHERE id = $1", [decoded.userId]);
-    if (!user) return null;
-    return {
-      id: user.id,
-      username: user.username,
-      name: user.name,
-      role: user.role,
-      relationship: user.relationship,
-      avatar_url: user.avatar_url || undefined,
-      pair_id: user.pair_id,
-    };
-  } catch {
-    return null;
-  }
 }
 
 export async function updateProfile(userId: string, data: { name?: string; relationship?: string; avatar_url?: string }) {

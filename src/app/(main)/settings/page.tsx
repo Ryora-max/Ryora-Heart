@@ -7,6 +7,7 @@ import { APP_CONFIG } from "@/config";
 import { ProfilePictureUpload } from "@/components/ui/ProfilePictureUpload";
 import { LdrBanner } from "@/components/ldr/LdrBanner";
 import { useTheme } from "@/hooks";
+import { GuideModal } from "@/components/ui/GuideModal";
 
 type Theme = "dark" | "light" | "aurora";
 
@@ -27,6 +28,7 @@ const DEFAULT_SETTINGS: Settings = {
 export default function SettingsPage() {
   const { user, logout, token } = useAuthStore();
   const { theme, changeTheme } = useTheme();
+  const [isGuideOpen, setIsGuideOpen] = useState(false);
   const [name, setName] = useState(user?.name || "");
   const [relationship, setRelationship] = useState(user?.relationship || "");
   const [avatarUrl, setAvatarUrl] = useState(user?.avatar_url || "");
@@ -275,6 +277,26 @@ export default function SettingsPage() {
           ))}
         </div>
 
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 mb-6 border-2 border-amber-200 shadow-xl">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center text-amber-600">
+                <Bell size={20} />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-gray-900">Buku Panduan Penggunaan 📘</h3>
+                <p className="text-xs text-gray-500">Panduan lengkap notifikasi, status online & fitur LDR</p>
+              </div>
+            </div>
+            <button
+              onClick={() => setIsGuideOpen(true)}
+              className="px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold transition-all shadow-md cursor-pointer min-h-[44px]"
+            >
+              Buka Panduan
+            </button>
+          </div>
+        </div>
+
         <button
           onClick={handleLogout}
           className="w-full py-3 rounded-xl border-2 border-red-200 text-red-500 hover:bg-red-50 transition-all cursor-pointer flex items-center justify-center gap-2 font-medium min-h-[44px]"
@@ -282,6 +304,8 @@ export default function SettingsPage() {
           <LogOut size={18} />
           Logout
         </button>
+
+        <GuideModal isOpen={isGuideOpen} onClose={() => setIsGuideOpen(false)} />
 
         <div className="mt-8 text-center">
           <p className="text-gray-400 text-sm">{APP_CONFIG.name} • {APP_CONFIG.subtitle}</p>

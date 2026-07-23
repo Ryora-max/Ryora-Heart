@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { Plane, Heart, MapPin, Clock, MessageCircle, Video, Gift, Star, Sparkles, Send, HeartHandshake, Bell, X, Navigation } from "lucide-react";
+import { Plane, Heart, MapPin, Clock, MessageCircle, Video, Gift, Star, Sparkles, Send, HeartHandshake, Bell, X, Navigation, Save, Flame, Sliders } from "lucide-react";
 import { useAuthStore } from "@/stores";
-import { usePresence, useStatusUpdates, useHugs, useLoveMeter, useNotifications, usePartnerId, useLocations } from "@/hooks/useDatabase";
+import { usePresence, useStatusUpdates, useHugs, useLoveMeter, useNotifications, usePartnerId, useLocations, useLetters } from "@/hooks/useDatabase";
 import type { Hug, StatusUpdate } from "@/types";
 import { showToast } from "@/hooks/useToast";
 
@@ -71,6 +71,12 @@ export default function LdrPage() {
   const [statusError, setStatusError] = useState("");
   const [locationError, setLocationError] = useState("");
 
+  const [hugCustomNote, setHugCustomNote] = useState("");
+  const [hugPreset, setHugPreset] = useState("Peluk Hangat 🤗");
+  const [loveSliderVal, setLoveSliderVal] = useState<number | null>(null);
+  const [isSavingLoveMeter, setIsSavingLoveMeter] = useState(false);
+  const [isSavingLetter, setIsSavingLetter] = useState(false);
+
   const prevNotificationsRef = useRef<string>("");
 
   const { presence, updatePresence } = usePresence(authToken);
@@ -79,6 +85,7 @@ export default function LdrPage() {
   const { currentPercentage, update: updateLoveMeter } = useLoveMeter(authToken);
   const { notifications, unreadCount } = useNotifications(authToken);
   const { partnerId } = usePartnerId(authToken, user?.id);
+  const { createLetter } = useLetters(authToken);
 
   const { locations, addLocation } = useLocations(authToken);
   useEffect(() => {
@@ -168,15 +175,38 @@ export default function LdrPage() {
     prevNotificationsRef.current = notifKey;
   }, [notifications]);
 
+  const activeLovePercentage = loveSliderVal !== null ? loveSliderVal : currentPercentage;
+
+  const handleSaveLoveMeter = useCallback(async () => {
+    setIsSavingLoveMeter(true);
+    await updateLoveMeter(activeLovePercentage);
+    spawnHearts(15);
+    setIsSavingLoveMeter(false);
+  }, [activeLovePercentage, updateLoveMeter, spawnHearts]);
+
   const handleSendHug = useCallback(async () => {
-    if (!partnerId) return;
-    const messages = ["Sent a virtual hug 🤗", "Peluk dikirim lewat WiFi 🤗", "Peluk panjang 12 detik 🤗"];
-    const msg = messages[Math.floor(Math.random() * messages.length)];
+    if (!partnerId) {
+      showToast("Partner belum terhubung", "error");
+      return;
+    }
+    const msg = hugCustomNote.trim() || hugPreset;
     await sendHug(partnerId, msg);
     setHugMsg(msg);
+    setHugCustomNote("");
     spawnHearts(14);
     setTimeout(() => setHugMsg(null), 4000);
-  }, [partnerId, sendHug, spawnHearts]);
+  }, [partnerId, hugCustomNote, hugPreset, sendHug, spawnHearts]);
+
+  const handleSaveLetterToBedroom = useCallback(async () => {
+    if (!letter.trim()) return;
+    setIsSavingLetter(true);
+    await createLetter({
+      title: `Surat Rindu LDR (${new Date().toLocaleDateString("id-ID")})`,
+      content: letter,
+      type: "love_letter"
+    });
+    setIsSavingLetter(false);
+  }, [letter, createLetter]);
 
   const handleStatusUpdate = useCallback(async () => {
     setStatusError("");
@@ -380,55 +410,132 @@ export default function LdrPage() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          <div className="animate-fade-in-up bg-white/80 backdrop-blur-sm p-6 rounded-2xl border-2 border-pink-200 shadow-xl" style={{ animationDelay: "0.25s" }}>
-            <h2 className="text-xl font-bold text-center text-pink-700 mb-4">💗 Love Meter Hari Ini</h2>
-            <div className="text-center mb-4">
-              <p className="text-6xl font-bold bg-gradient-to-r from-pink-500 to-rose-500 bg-clip-text text-transparent mb-3">{currentPercentage}%</p>
-              <div className="w-full h-5 bg-pink-100 rounded-full overflow-hidden mb-4 shadow-inner">
-                <div className="h-full bg-gradient-to-r from-pink-400 via-rose-400 to-red-400 rounded-full transition-all duration-700 shadow-lg" style={{ width: `${currentPercentage}%` }} />
-              </div>
-              <div className="flex gap-2 justify-center flex-wrap">
-                <button onClick={() => updateLoveMeter(Math.max(0, currentPercentage - 7))} className="px-4 py-2.5 rounded-full bg-pink-200 text-pink-700 font-semibold hover:bg-pink-300 transition-all cursor-pointer hover:scale-105 transform min-h-[44px] text-sm">Kurangin 😜</button>
-                <button onClick={() => updateLoveMeter(Math.min(100, currentPercentage + 7))} className="px-4 py-2.5 rounded-full bg-pink-500 text-white font-semibold hover:bg-pink-600 transition-all cursor-pointer hover:scale-105 transform min-h-[44px] text-sm">Tambah 💕</button>
-                <button onClick={() => { updateLoveMeter(100); spawnHearts(15); }} className="px-4 py-2.5 rounded-full bg-rose-500 text-white font-semibold hover:bg-rose-600 transition-all cursor-pointer hover:scale-105 transform min-h-[44px] text-sm">MAX 100% 🔥</button>
+          <div className="animate-fade-in-up bg-white/80 backdrop-blur-sm p-6 rounded-3xl border-2 border-pink-200 shadow-xl flex flex-col justify-between" style={{ animationDelay: "0.25s" }}>
+            <div>
+              <h2 className="text-xl font-bold text-center text-pink-700 mb-2 flex items-center justify-center gap-2">
+                <Heart className="text-pink-500 fill-pink-500" size={22} /> Love Meter Hari Ini
+              </h2>
+              <p className="text-xs text-center text-pink-400 mb-4">Geser slider atau atur persen cinta kamu hari ini</p>
+              
+              <div className="text-center mb-5">
+                <p className="text-5xl font-extrabold bg-gradient-to-r from-pink-500 via-rose-500 to-red-500 bg-clip-text text-transparent mb-2">
+                  {activeLovePercentage}%
+                </p>
+                <div className="w-full h-5 bg-pink-100 rounded-full overflow-hidden mb-3 shadow-inner p-0.5 border border-pink-200">
+                  <div
+                    className="h-full bg-gradient-to-r from-pink-400 via-rose-500 to-red-500 rounded-full transition-all duration-300 shadow-md"
+                    style={{ width: `${activeLovePercentage}%` }}
+                  />
+                </div>
+
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3">
+                    <Sliders size={18} className="text-pink-400" />
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      value={activeLovePercentage}
+                      onChange={(e) => setLoveSliderVal(Number(e.target.value))}
+                      className="w-full accent-pink-500 h-2 bg-pink-100 rounded-lg cursor-pointer"
+                    />
+                  </div>
+
+                  <div className="flex gap-2 justify-center flex-wrap">
+                    <button onClick={() => setLoveSliderVal(Math.max(0, activeLovePercentage - 10))} className="px-3 py-1.5 rounded-xl bg-pink-100 text-pink-700 font-semibold hover:bg-pink-200 text-xs transition-all cursor-pointer">-10% 😜</button>
+                    <button onClick={() => setLoveSliderVal(Math.min(100, activeLovePercentage + 10))} className="px-3 py-1.5 rounded-xl bg-pink-100 text-pink-700 font-semibold hover:bg-pink-200 text-xs transition-all cursor-pointer">+10% 💕</button>
+                    <button onClick={() => { setLoveSliderVal(100); spawnHearts(10); }} className="px-3 py-1.5 rounded-xl bg-rose-100 text-rose-700 font-semibold hover:bg-rose-200 text-xs transition-all cursor-pointer flex items-center gap-1"><Flame size={14} /> MAX 100%</button>
+                  </div>
+                </div>
               </div>
             </div>
+
+            <button
+              onClick={handleSaveLoveMeter}
+              disabled={isSavingLoveMeter}
+              className="w-full py-3 rounded-2xl bg-gradient-to-r from-pink-500 to-rose-500 text-white font-bold text-sm hover:from-pink-600 hover:to-rose-600 shadow-lg hover:shadow-xl transition-all cursor-pointer flex items-center justify-center gap-2 transform hover:scale-[1.02] active:scale-[0.98] min-h-[46px]"
+            >
+              <Save size={18} /> {isSavingLoveMeter ? "Saving..." : "Simpan Love Meter 💗"}
+            </button>
           </div>
 
-          <div className="animate-fade-in-up bg-gradient-to-br from-fuchsia-400 to-pink-500 p-6 rounded-3xl shadow-xl" style={{ animationDelay: "0.3s" }}>
-            <h2 className="text-xl font-bold text-center text-white mb-4">🤗 Peluk Virtual</h2>
-            <div className="text-center">
-              <button onClick={handleSendHug} className="px-6 py-3 rounded-full bg-white/90 text-fuchsia-600 font-bold text-base md:text-lg hover:bg-white transition-all shadow-md cursor-pointer flex items-center gap-2 mx-auto hover:scale-105 transform min-h-[44px]">
-                <HeartHandshake size={22} /> Kirim Peluk 💞
-              </button>
-              {hugMsg && (
-                <p className="mt-4 text-white text-lg font-medium animate-pop">{hugMsg}</p>
-              )}
-              <div className="mt-4 text-left">
-                <p className="text-white/80 text-sm font-semibold mb-2">📜 Riwayat Peluk:</p>
-                {hugs.length === 0 ? (
-                  <p className="text-white/60 text-sm">Belum ada peluk 😢</p>
-                ) : (
-                  <div className="space-y-2 max-h-32 overflow-y-auto">
-                    {hugs.slice(0, 5).map((h: Hug) => (
-                      <div key={h.id} className="bg-white/20 rounded-xl p-2 text-sm text-white flex items-center justify-between">
-                        <span className="font-semibold">{h.emoji} {h.message}</span>
-                        <span className="text-white/60 text-xs">{new Date(h.createdAt).toLocaleString("id-ID", { hour: "2-digit", minute: "2-digit" })}</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
+          <div className="animate-fade-in-up bg-gradient-to-br from-fuchsia-400 via-pink-500 to-rose-500 p-6 rounded-3xl shadow-xl text-white flex flex-col justify-between" style={{ animationDelay: "0.3s" }}>
+            <div>
+              <h2 className="text-xl font-bold text-center mb-1 flex items-center justify-center gap-2">
+                <HeartHandshake size={24} /> Peluk Virtual 🤗
+              </h2>
+              <p className="text-xs text-center text-white/80 mb-4">Kirim pelukan hangat jarak jauh ke partner kamu</p>
+
+              <div className="space-y-3 mb-4">
+                <div className="flex gap-1.5 flex-wrap justify-center">
+                  {["Peluk Hangat 🤗", "Peluk Erat 12 Detik 💕", "Peluk Manja 🥺", "Peluk Rindu ✨"].map((preset) => (
+                    <button
+                      key={preset}
+                      onClick={() => { setHugPreset(preset); setHugCustomNote(""); }}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer border ${hugPreset === preset && !hugCustomNote ? "bg-white text-fuchsia-600 border-white shadow-md" : "bg-white/10 text-white border-white/20 hover:bg-white/20"}`}
+                    >
+                      {preset}
+                    </button>
+                  ))}
+                </div>
+
+                <input
+                  type="text"
+                  value={hugCustomNote}
+                  onChange={(e) => setHugCustomNote(e.target.value)}
+                  placeholder="Atau tulis ucapan peluk khusus..."
+                  className="w-full px-4 py-2.5 rounded-xl bg-white/20 backdrop-blur-sm border border-white/30 text-white placeholder-white/60 text-xs focus:outline-none focus:bg-white/30"
+                />
+
+                <button
+                  onClick={handleSendHug}
+                  className="w-full py-3 rounded-2xl bg-white text-fuchsia-600 font-bold text-sm hover:bg-white/90 shadow-lg hover:shadow-xl transition-all cursor-pointer flex items-center justify-center gap-2 transform hover:scale-[1.02] active:scale-[0.98] min-h-[46px]"
+                >
+                  <HeartHandshake size={20} /> Kirim Peluk Virtual 🤗
+                </button>
               </div>
+
+              {hugMsg && (
+                <div className="p-3 bg-white/20 rounded-xl border border-white/30 text-center animate-pop mb-3">
+                  <p className="text-white text-sm font-semibold">{hugMsg}</p>
+                </div>
+              )}
+            </div>
+
+            <div className="mt-2 text-left">
+              <p className="text-white/90 text-xs font-bold uppercase tracking-wider mb-2">📜 Riwayat Peluk Terakhir:</p>
+              {hugs.length === 0 ? (
+                <p className="text-white/70 text-xs">Belum ada pelukan yang dikirim 😢</p>
+              ) : (
+                <div className="space-y-1.5 max-h-28 overflow-y-auto pr-1">
+                  {hugs.slice(0, 4).map((h: Hug) => (
+                    <div key={h.id} className="bg-white/15 rounded-lg px-3 py-1.5 text-xs text-white flex items-center justify-between">
+                      <span className="font-semibold truncate max-w-[200px]">{h.emoji} {h.message}</span>
+                      <span className="text-white/70 text-[10px]">{new Date(h.createdAt).toLocaleString("id-ID", { hour: "2-digit", minute: "2-digit" })}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
 
         <div className="animate-fade-in-up bg-white/80 backdrop-blur-sm p-6 rounded-3xl border-2 border-pink-200 shadow-xl mb-8" style={{ animationDelay: "0.35s" }}>
-          <h2 className="text-xl font-bold text-center text-pink-700 mb-4">✉️ Generator Surat Rindu</h2>
+          <h2 className="text-xl font-bold text-center text-pink-700 mb-2">✉️ Generator Surat Rindu</h2>
+          <p className="text-xs text-center text-pink-400 mb-4">Buat surat romantis acak dan simpan langsung ke Bedroom</p>
           <div className="text-center">
             <LetterGenerator onGenerate={setLetter} spawnHearts={spawnHearts} />
             {letter && (
-              <p className="text-pink-700 text-lg leading-relaxed animate-pop bg-pink-50 p-4 rounded-2xl border-2 border-pink-100 mt-4">{letter}</p>
+              <div className="mt-4 p-4 rounded-2xl bg-pink-50 border-2 border-pink-200 animate-pop space-y-3">
+                <p className="text-pink-800 text-base leading-relaxed font-medium">{letter}</p>
+                <button
+                  onClick={handleSaveLetterToBedroom}
+                  disabled={isSavingLetter}
+                  className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-pink-500 to-fuchsia-500 text-white font-bold text-xs hover:from-pink-600 hover:to-fuchsia-600 shadow-md transition-all cursor-pointer inline-flex items-center gap-2"
+                >
+                  <Save size={16} /> {isSavingLetter ? "Saving..." : "Simpan ke Bedroom 💌"}
+                </button>
+              </div>
             )}
           </div>
         </div>

@@ -31,6 +31,9 @@ import {
   getLoveMeter,
   addLocation,
   getLocations,
+  getUserExtra,
+  setUserExtra,
+  getAchievements,
 } from "@/app/actions/db";
 import { updateProfile, updateSettings, getUserSettings } from "@/app/actions/auth";
 
@@ -117,6 +120,12 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ success: true });
       case "getUserSettings":
         return NextResponse.json(await getUserSettings(userId));
+      case "getUserExtra":
+        return NextResponse.json(await getUserExtra(userId, params.key));
+      case "setUserExtra":
+        return NextResponse.json(await setUserExtra(userId, pairId, params.key, params.value));
+      case "getAchievements":
+        return NextResponse.json(await getAchievements(pairId));
       default:
         return NextResponse.json({ error: "Invalid action" }, { status: 400 });
     }

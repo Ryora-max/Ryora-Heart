@@ -2,7 +2,7 @@
 CREATE TABLE IF NOT EXISTS users (
   id TEXT PRIMARY KEY,
   username TEXT UNIQUE NOT NULL,
-  password TEXT NOT NULL,
+  password_hash TEXT NOT NULL,
   name TEXT NOT NULL,
   role TEXT NOT NULL CHECK(role IN ('owner', 'partner')),
   relationship TEXT,
@@ -96,6 +96,18 @@ CREATE TABLE IF NOT EXISTS user_settings (
   secret_pin TEXT DEFAULT '0101'
 );
 
+-- User extras table for wishes, dreams, achievements state
+CREATE TABLE IF NOT EXISTS user_extras (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL REFERENCES users(id),
+  pair_id TEXT NOT NULL,
+  key TEXT NOT NULL,
+  value TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(user_id, key)
+);
+
 -- LDR presence table
 CREATE TABLE IF NOT EXISTS ldr_presence (
   id TEXT PRIMARY KEY,
@@ -158,10 +170,11 @@ CREATE INDEX IF NOT EXISTS idx_ldr_status_pair_id ON ldr_status_updates(pair_id)
 CREATE INDEX IF NOT EXISTS idx_ldr_hugs_pair_id ON ldr_hugs(pair_id);
 CREATE INDEX IF NOT EXISTS idx_ldr_love_meter_pair_id ON ldr_love_meter(pair_id);
 CREATE INDEX IF NOT EXISTS idx_ldr_locations_pair_id ON ldr_locations(pair_id);
+CREATE INDEX IF NOT EXISTS idx_user_extras_user_key ON user_extras(user_id, key);
 
--- Seed data
-INSERT INTO users (id, username, password, name, role, relationship, pair_id, created_at)
+-- Seed data (passwords will be hashed by init.ts)
+INSERT INTO users (id, username, password_hash, name, role, relationship, pair_id, created_at)
 VALUES 
-  ('user-1', 'Ryo', '11122004', 'Ahmad Rio Prawiro', 'owner', 'Cowo Ara ❤️', 'pair-1', CURRENT_TIMESTAMP),
-  ('user-2', 'Ara', '09062004', 'Tiara Pertiwi', 'partner', 'Cewe Rio ❤️', 'pair-1', CURRENT_TIMESTAMP)
+  ('user-1', 'Ryo', 'PLACEHOLDER', 'Ahmad Rio Prawiro', 'owner', 'Cowo Ara ❤️', 'pair-1', CURRENT_TIMESTAMP),
+  ('user-2', 'Ara', 'PLACEHOLDER', 'Tiara Pertiwi', 'partner', 'Cewe Rio ❤️', 'pair-1', CURRENT_TIMESTAMP)
 ON CONFLICT (username) DO NOTHING;

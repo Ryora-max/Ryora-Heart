@@ -45,6 +45,17 @@ export default function SecretBoxPage() {
 
   const secretLetters = letters.filter((l) => l.type === "secret");
 
+  const isSelfDestruct = (content: string) => content.startsWith("[SELF_DESTRUCT]");
+  const getCleanContent = (content: string) => content.replace("[SELF_DESTRUCT]", "");
+
+  const handleReadSecret = async (id: string, content: string) => {
+    const clean = getCleanContent(content);
+    const proceed = confirm("Peringatan: Surat ini hanya bisa dibaca SEKALI. Setelah ini, surat akan dihapus selamanya. Tetap lanjutkan?");
+    if (!proceed) return;
+    alert(clean);
+    await handleDeleteSecret(id);
+  };
+
   useEffect(() => {
     const originalTitle = typeof window !== "undefined" ? document.title : "RYORA";
     if (disguiseMode) {
@@ -320,7 +331,7 @@ export default function SecretBoxPage() {
               </div>
             ) : secretLetters.length === 0 ? (
               <EmptyState emoji="🤫" title="No secrets yet" description="Write your first one!" />
-            ) : (
+             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                 {secretLetters.map((letter, idx) => (
                   <div
@@ -331,12 +342,21 @@ export default function SecretBoxPage() {
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <h5 className="font-bold text-pink-900 text-sm mb-1 flex items-center gap-1">
-                          {letter.content.startsWith("[SELF_DESTRUCT]") && <Trash2 size={14} className="text-red-400" />}
+                          {isSelfDestruct(letter.content) && <Trash2 size={14} className="text-red-400" />}
                           {letter.title}
                         </h5>
-                        <p className="text-pink-700/80 text-xs leading-relaxed line-clamp-3">
-                          {letter.content.startsWith("[SELF_DESTRUCT]") ? letter.content.replace("[SELF_DESTRUCT]", "") : letter.content}
-                        </p>
+                        {isSelfDestruct(letter.content) ? (
+                          <button
+                            onClick={() => handleReadSecret(letter.id, letter.content)}
+                            className="px-3 py-1.5 rounded-lg bg-red-100 text-red-700 text-xs font-semibold hover:bg-red-200 transition-all"
+                          >
+                            🔴 Baca Sekali & Hapus
+                          </button>
+                        ) : (
+                          <p className="text-pink-700/80 text-xs leading-relaxed line-clamp-3">
+                            {letter.content}
+                          </p>
+                        )}
                       </div>
                       <button
                         onClick={() => handleDeleteSecret(letter.id)}

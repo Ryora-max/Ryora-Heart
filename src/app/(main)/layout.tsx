@@ -5,12 +5,14 @@ import { useRouter, usePathname } from "next/navigation";
 import { useAuthStore } from "@/stores";
 import { APP_CONFIG, ROOMS } from "@/config";
 import { cn } from "@/lib/utils";
-import { Menu, LogOut, Home } from "lucide-react";
+import { Menu, LogOut, Home, BookOpen, Radio } from "lucide-react";
 import CustomCursor from "@/components/ui/CustomCursor";
 import { NotificationButton } from "@/components/ui/NotificationButton";
 import { Toaster } from "@/components/ui/Toaster";
 import { OfflineIndicator } from "@/components/ui/OfflineIndicator";
 import { useOnlineStatus } from "@/hooks/useOnlineStatus";
+import { GuideModal } from "@/components/ui/GuideModal";
+import { usePresence, usePartnerId } from "@/hooks/useDatabase";
 
 export default function MainLayout({
   children,
@@ -22,8 +24,26 @@ export default function MainLayout({
   const { user, token, isAuthenticated, logout, setUser, setToken } = useAuthStore();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [verifying, setVerifying] = useState(true);
+  const [isGuideOpen, setIsGuideOpen] = useState(false);
   const online = useOnlineStatus();
   const [pendingCount, setPendingCount] = useState(0);
+
+  const authToken = token || "";
+  const { presence, updatePresence } = usePresence(authToken);
+  const { partnerId } = usePartnerId(authToken, user?.id);
+
+  useEffect(() => {
+    if (!authToken) return;
+    updatePresence("online");
+    const interval = setInterval(() => updatePresence("online"), 30000);
+    return () => clearInterval(interval);
+  }, [authToken, updatePresence]);
+
+  const partnerPresence = presence.find((p) => p.userId === partnerId);
+  const isPartnerOnline = partnerPresence?.status === "online" && partnerPresence?.lastSeen ? (() => {
+    const diff = Date.now() - new Date(partnerPresence.lastSeen).getTime();
+    return diff < 60000;
+  })() : false;
 
   useEffect(() => {
     const handleEnqueue = () => {
@@ -52,6 +72,15 @@ export default function MainLayout({
         } catch {
           // ignore
         }
+      }
+
+      if (!effectiveToken) {
+        const cookies = document.cookie.split(";").reduce((acc, c) => {
+          const [k, v] = c.trim().split("=");
+          acc[k] = v;
+          return acc;
+        }, {} as Record<string, string>);
+        effectiveToken = cookies["ryora-session"] || null;
       }
 
       if (!effectiveToken) {
@@ -95,10 +124,14 @@ export default function MainLayout({
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ action: "logout", token }),
+          cache: "no-store",
         });
       } catch {}
     }
     logout();
+    if (typeof document !== "undefined") {
+      document.cookie = "ryora-session=; Max-Age=0; path=/;";
+    }
     router.push("/");
   }, [logout, router, token]);
 
@@ -130,18 +163,30 @@ export default function MainLayout({
           )}
         >
           <div className="h-full bg-gradient-to-b from-pink-400/90 to-purple-400/90 backdrop-blur-xl p-4 md:p-6 flex flex-col shadow-2xl">
-            <div className="mb-6 md:mb-8">
-              <h2 className="text-3xl font-bold text-white mb-1">🏠</h2>
+            <div className="mb-4">
+              <div className="flex items-center justify-between mb-1">
+                <h2 className="text-2xl font-bold text-white">🏠 RYORA</h2>
+                <span
+                  className={cn(
+                    "px-2 py-0.5 rounded-full text-[10px] font-bold flex items-center gap-1 border",
+                    isPartnerOnline
+                      ? "bg-emerald-500/30 text-emerald-100 border-emerald-300/40 animate-pulse"
+                      : "bg-white/10 text-white/70 border-white/20"
+                  )}
+                >
+                  <span className={cn("w-1.5 h-1.5 rounded-full", isPartnerOnline ? "bg-emerald-400" : "bg-gray-400")} />
+                  {isPartnerOnline ? "Partner Online 💕" : "Offline 💤"}
+                </span>
+              </div>
               <p className="text-white/80 text-xs font-medium">{APP_CONFIG.name}</p>
-              <p className="text-white/60 text-xs">{APP_CONFIG.subtitle}</p>
             </div>
 
-            <nav className="flex-1 space-y-2 overflow-y-auto">
+            <nav className="flex-1 space-y-1.5 overflow-y-auto">
               <button
                 onClick={() => navigateTo("/home")}
                 className={cn(
-                  "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all min-h-[44px]",
-                  pathname === "/home" ? "bg-white/30 text-white" : "text-white/80 hover:bg-white/20"
+                  "w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all min-h-[44px]",
+                  pathname === "/home" ? "bg-white/30 text-white shadow-md font-bold" : "text-white/80 hover:bg-white/20"
                 )}
               >
                 <Home size={18} />
@@ -152,14 +197,22 @@ export default function MainLayout({
                   key={room.href}
                   onClick={() => navigateTo(room.href)}
                   className={cn(
-                    "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all min-h-[44px]",
-                    pathname === room.href ? "bg-white/30 text-white" : "text-white/80 hover:bg-white/20"
+                    "w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all min-h-[44px]",
+                    pathname === room.href ? "bg-white/30 text-white shadow-md font-bold" : "text-white/80 hover:bg-white/20"
                   )}
                 >
                   <span className="text-lg">{room.emoji}</span>
                   {room.name}
                 </button>
               ))}
+
+              <button
+                onClick={() => { setIsGuideOpen(true); setSidebarOpen(false); }}
+                className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-amber-100 bg-amber-500/20 hover:bg-amber-500/30 transition-all min-h-[44px] mt-2 border border-amber-300/30"
+              >
+                <BookOpen size={18} className="text-amber-200" />
+                Buku Panduan 📘
+              </button>
             </nav>
 
             <div className="mt-auto pt-4 border-t border-white/20">
@@ -185,17 +238,23 @@ export default function MainLayout({
         </aside>
 
         <main className="flex-1 min-h-screen">
-          <div className="md:hidden flex items-center justify-between p-3 md:p-4 bg-gradient-to-r from-pink-400 to-purple-400">
+          <div className="md:hidden flex items-center justify-between p-3 md:p-4 bg-gradient-to-r from-pink-400 to-purple-400 border-b border-white/10">
             <button onClick={() => setSidebarOpen(true)} className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center min-h-[44px] min-w-[44px]">
               <Menu size={20} className="text-white" />
             </button>
-            <h1 className="text-lg font-bold text-white">🏠 RYORA</h1>
-            <div className="w-10" />
+            <div className="flex items-center gap-2">
+              <h1 className="text-base font-bold text-white">🏠 RYORA</h1>
+              <span className={cn("w-2 h-2 rounded-full", isPartnerOnline ? "bg-emerald-400 animate-pulse" : "bg-gray-300")} />
+            </div>
+            <button onClick={() => setIsGuideOpen(true)} className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center min-h-[44px] min-w-[44px] text-white">
+              <BookOpen size={18} />
+            </button>
           </div>
           {children}
         </main>
       </div>
       <Toaster />
+      <GuideModal isOpen={isGuideOpen} onClose={() => setIsGuideOpen(false)} />
       {!online && <OfflineIndicator pendingCount={pendingCount} onDismiss={() => setPendingCount(0)} />}
     </>
   );
