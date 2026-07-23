@@ -278,8 +278,8 @@ export default function CalendarPage() {
                 const dayEvents = currentMonth ? getEventsForDate(day) : [];
                 const isToday = currentMonth && day === new Date().getDate() && month === new Date().getMonth() && year === new Date().getFullYear();
                 return (
-                  <div key={i} className={cn("calendar-day animate-scale-in aspect-square flex flex-col items-center justify-center rounded-xl transition-all", currentMonth ? "text-blue-900" : "text-blue-300", isToday && "bg-blue-200 ring-2 ring-blue-400")} style={{ animationDelay: `${i * 0.02}s` }}>
-                    <span className="text-sm font-medium">{day}</span>
+                   <div key={i} className={cn("calendar-day animate-scale-in aspect-square flex flex-col items-center justify-center rounded-xl transition-all cursor-pointer active:scale-95", currentMonth ? "text-blue-900" : "text-blue-300", isToday && "bg-blue-200 ring-2 ring-blue-400")} style={{ animationDelay: `${i * 0.02}s` }}>
+                     <span className="text-sm sm:text-base font-medium">{day}</span>
                     {dayEvents.length > 0 && (
                       <div className="flex gap-0.5 mt-1">
                         {dayEvents.slice(0, 3).map((event) => (

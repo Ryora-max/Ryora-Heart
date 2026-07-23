@@ -177,10 +177,10 @@ export default function LivingRoomPage() {
             ) : (
               <div className="space-y-2">
                 {filteredActivities.map((activity) => (
-                  <div
-                     key={activity.id}
-                     className="flex items-center gap-3 p-3 rounded-xl bg-blue-50/50 hover:bg-blue-50 transition-all group"
-                   >
+                   <div
+                      key={activity.id}
+                      className="flex items-center gap-3 p-3 rounded-xl bg-blue-50/50 hover:bg-blue-50 transition-all group active:scale-[0.98]"
+                    >
                     <div
                       onClick={() => handleToggleActivity(activity.id, !activity.completed)}
                       className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all group-hover:scale-110 cursor-pointer flex-shrink-0 ${activity.completed ? "border-green-400 bg-green-400/20" : "border-blue-300"}`}
@@ -202,19 +202,19 @@ export default function LivingRoomPage() {
                           <button onClick={() => handleSaveEdit(activity.id)} className="px-2 py-1.5 bg-blue-500 text-white text-xs font-bold rounded-lg cursor-pointer min-h-[44px]">Save</button>
                           <button onClick={() => { setEditingId(null); setEditTitle(""); }} className="px-2 py-1.5 bg-gray-200 text-gray-700 text-xs font-bold rounded-lg cursor-pointer min-h-[44px]">Cancel</button>
                         </div>
-                      ) : (
-                        <div className="flex items-center justify-between gap-2">
-                          <p className={`text-sm transition-all truncate ${activity.completed ? "text-blue-600/50 line-through" : "text-blue-900 font-medium"}`}>{activity.title}</p>
-                          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
-                            <button onClick={(e) => { e.stopPropagation(); handleStartEdit(activity.id, activity.title); }} className="p-1.5 rounded-lg hover:bg-blue-100 text-blue-400 hover:text-blue-600 cursor-pointer" title="Edit">
-                              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
-                            </button>
-                            <button onClick={(e) => { e.stopPropagation(); handleDeleteActivity(activity.id); }} className="p-1.5 rounded-lg hover:bg-red-50 text-red-400 hover:text-red-600 cursor-pointer" title="Delete">
-                              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
-                            </button>
-                          </div>
-                        </div>
-                      )}
+                       ) : (
+                         <div className="flex items-center justify-between gap-2">
+                           <p className={`text-sm transition-all truncate ${activity.completed ? "text-blue-600/50 line-through" : "text-blue-900 font-medium"}`}>{activity.title}</p>
+                           <div className="flex items-center gap-1 flex-shrink-0 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                             <button onClick={(e) => { e.stopPropagation(); handleStartEdit(activity.id, activity.title); }} className="p-1.5 rounded-lg hover:bg-blue-100 text-blue-400 hover:text-blue-600 cursor-pointer active:scale-95 transition-transform" title="Edit">
+                               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
+                             </button>
+                             <button onClick={(e) => { e.stopPropagation(); handleDeleteActivity(activity.id); }} className="p-1.5 rounded-lg hover:bg-red-50 text-red-400 hover:text-red-600 cursor-pointer active:scale-95 transition-transform" title="Delete">
+                               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                             </button>
+                           </div>
+                         </div>
+                       )}
                     </div>
                     <span className="text-xs text-blue-400 flex-shrink-0">
                       {new Date(activity.date).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}

@@ -75,7 +75,7 @@ export default function DashboardPage() {
             Array.from({ length: 4 }).map((_, i) => <CardSkeleton key={i} style={{ animationDelay: `${i * 0.05}s` }} />)
           ) : (
             stats.map((stat, i) => (
-              <GlassPanel key={i} className="dashboard-card animate-fade-in-up p-5 bg-white/80 backdrop-blur-sm border-2 border-white/50 shadow-xl hover:shadow-2xl transition-all hover:scale-105" style={{ animationDelay: `${i * 0.1}s` }}>
+              <GlassPanel key={i} className="dashboard-card animate-fade-in-up p-4 sm:p-5 bg-white/80 backdrop-blur-sm border-2 border-white/50 shadow-xl hover:shadow-2xl transition-all hover:scale-105 active:scale-[0.98]" style={{ animationDelay: `${i * 0.1}s` }}>
                 <div className="flex items-center justify-between mb-3">
                   <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${stat.color} flex items-center justify-center text-xl shadow-lg`}>
                     {stat.emoji}
@@ -164,7 +164,7 @@ export default function DashboardPage() {
             <MagneticButton key={room.href}>
                 <button
                   onClick={() => router.push(room.href)}
-                  className="dashboard-card animate-fade-in-up bg-white/80 backdrop-blur-sm p-6 text-center cursor-pointer w-full border-2 border-white/50 shadow-xl hover:shadow-2xl transition-all hover:scale-105 group"
+                  className="dashboard-card animate-fade-in-up bg-white/80 backdrop-blur-sm p-4 sm:p-6 text-center cursor-pointer w-full border-2 border-white/50 shadow-xl hover:shadow-2xl transition-all hover:scale-105 active:scale-[0.98] group"
                   style={{ animationDelay: `${0.9 + i * 0.1}s` }}
               >
                 <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${room.color} flex items-center justify-center text-2xl mx-auto mb-2 shadow-lg group-hover:scale-110 transition-transform`}>

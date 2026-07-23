@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { X, BookOpen, Heart, Bell, Lock, Radio, Calendar, Image as ImageIcon, MapPin, Smile, ShieldCheck } from "lucide-react";
+import { X, BookOpen, Heart, Bell, Lock, Radio, Calendar, Image as ImageIcon, Smile, ShieldCheck } from "lucide-react";
 
 interface GuideModalProps {
   isOpen: boolean;
@@ -124,7 +124,7 @@ export function GuideModal({ isOpen, onClose }: GuideModalProps) {
                   <div className="flex items-center gap-2 p-2 rounded-xl bg-white border border-gray-200">
                     <span className="w-3 h-3 rounded-full bg-gray-400" />
                     <span className="font-bold text-gray-700">Offline 💤</span>
-                    <span className="text-gray-500">- Menampilkan estimasi waktu terakhir kali online (misal: "15 menit lalu").</span>
+                     <span className="text-gray-500">- Menampilkan estimasi waktu terakhir kali online (misal: &quot;15 menit lalu&quot;).</span>
                   </div>
                 </div>
               </div>
@@ -167,7 +167,7 @@ export function GuideModal({ isOpen, onClose }: GuideModalProps) {
                   <li><strong>PIN Default</strong>: <code className="bg-white px-1.5 py-0.5 rounded border border-rose-200 font-mono text-rose-600">0101</code> (diambil dari tanggal jadian).</li>
                   <li><strong>Kustomisasi PIN</strong>: PIN dapat diubah melalui menu Settings atau di dalam Secret Box.</li>
                   <li><strong>Self-Destruct Letter</strong>: Surat rahasia yang otomatis terhapus permanen setelah dibaca 1 kali!</li>
-                  <li><strong>Disguise Mode</strong>: Mode penyamaran judul aplikasi menjadi "Notes App".</li>
+                   <li><strong>Disguise Mode</strong>: Mode penyamaran judul aplikasi menjadi &quot;Notes App&quot;.</li>
                 </ul>
               </div>
             </div>

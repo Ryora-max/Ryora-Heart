@@ -182,7 +182,7 @@ export default function BedroomPage() {
                 setActiveTab(tab.key);
                 setShowForm(false);
               }}
-              className={`flex items-center gap-2 px-3 sm:px-4 py-3 rounded-full text-xs sm:text-sm font-medium transition-all whitespace-nowrap cursor-pointer min-h-[44px] ${
+              className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2.5 sm:py-3 rounded-full text-xs sm:text-sm font-medium transition-all whitespace-nowrap cursor-pointer min-h-[44px] active:scale-95 ${
                 activeTab === tab.key
                   ? `bg-gradient-to-r ${tab.gradient} text-white shadow-lg scale-105`
                   : nightMode ? "bg-indigo-900/50 text-indigo-200 hover:bg-indigo-800/50" : "bg-white/50 text-purple-700 hover:bg-white/80"

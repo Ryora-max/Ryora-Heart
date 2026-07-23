@@ -96,9 +96,9 @@ export default function GalleryPage() {
         )}
 
         {selectedPhoto && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-xl p-4" onClick={() => setSelectedPhoto(null)}>
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-xl p-4 safe-area-inset" onClick={() => setSelectedPhoto(null)}>
               <div className="lightbox-content animate-scale-in relative max-w-5xl max-h-[90vh] w-full" onClick={(e) => e.stopPropagation()}>
-              <button onClick={() => setSelectedPhoto(null)} className="absolute -top-10 sm:-top-12 right-0 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors min-h-[44px] min-w-[44px]">
+              <button onClick={() => setSelectedPhoto(null)} className="absolute -top-10 sm:-top-12 right-0 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors min-h-[44px] min-w-[44px] active:scale-95">
                 <X size={20} className="text-white" />
               </button>
               <div className="bg-white/10 backdrop-blur-sm p-2 rounded-2xl border-2 border-white/20">

@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuthStore } from "@/stores";
 import { APP_CONFIG, ROOMS } from "@/config";
 import { cn } from "@/lib/utils";
-import { Menu, LogOut, Home, BookOpen, Radio } from "lucide-react";
+import { Menu, LogOut, Home, BookOpen } from "lucide-react";
 import CustomCursor from "@/components/ui/CustomCursor";
 import { NotificationButton } from "@/components/ui/NotificationButton";
 import { Toaster } from "@/components/ui/Toaster";
@@ -40,10 +40,27 @@ export default function MainLayout({
   }, [authToken, updatePresence]);
 
   const partnerPresence = presence.find((p) => p.userId === partnerId);
-  const isPartnerOnline = partnerPresence?.status === "online" && partnerPresence?.lastSeen ? (() => {
-    const diff = Date.now() - new Date(partnerPresence.lastSeen).getTime();
-    return diff < 60000;
-  })() : false;
+  const [isPartnerOnline, setIsPartnerOnline] = useState(false);
+  const lastSeenRef = useRef<string | undefined>(undefined);
+
+  useEffect(() => {
+    lastSeenRef.current = partnerPresence?.lastSeen;
+  }, [partnerPresence?.lastSeen]);
+
+  useEffect(() => {
+    const tick = () => {
+      const lastSeen = lastSeenRef.current;
+      if (!lastSeen) {
+        setIsPartnerOnline(false);
+        return;
+      }
+      const diff = Date.now() - new Date(lastSeen).getTime();
+      setIsPartnerOnline(diff < 60000);
+    };
+    tick();
+    const id = setInterval(tick, 30000);
+    return () => clearInterval(id);
+  }, []);
 
   useEffect(() => {
     const handleEnqueue = () => {
@@ -139,6 +156,17 @@ export default function MainLayout({
     router.push(href);
     setSidebarOpen(false);
   }, [router]);
+
+  useEffect(() => {
+    if (sidebarOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [sidebarOpen]);
 
   if (verifying) {
     return (
@@ -238,19 +266,19 @@ export default function MainLayout({
         </aside>
 
         <main className="flex-1 min-h-screen">
-          <div className="md:hidden flex items-center justify-between p-3 md:p-4 bg-gradient-to-r from-pink-400 to-purple-400 border-b border-white/10">
-            <button onClick={() => setSidebarOpen(true)} className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center min-h-[44px] min-w-[44px]">
-              <Menu size={20} className="text-white" />
-            </button>
-            <div className="flex items-center gap-2">
-              <h1 className="text-base font-bold text-white">🏠 RYORA</h1>
-              <span className={cn("w-2 h-2 rounded-full", isPartnerOnline ? "bg-emerald-400 animate-pulse" : "bg-gray-300")} />
-            </div>
-            <button onClick={() => setIsGuideOpen(true)} className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center min-h-[44px] min-w-[44px] text-white">
-              <BookOpen size={18} />
-            </button>
-          </div>
-          {children}
+          <div className="md:hidden sticky top-0 z-40 flex items-center justify-between p-3 md:p-4 bg-gradient-to-r from-pink-400 to-purple-400 border-b border-white/10 safe-area-inset">
+             <button onClick={() => setSidebarOpen(true)} className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center min-h-[44px] min-w-[44px] active:scale-95 transition-transform">
+               <Menu size={20} className="text-white" />
+             </button>
+             <div className="flex items-center gap-2">
+               <h1 className="text-base font-bold text-white">🏠 RYORA</h1>
+               <span className={cn("w-2 h-2 rounded-full", isPartnerOnline ? "bg-emerald-400 animate-pulse" : "bg-gray-300")} />
+             </div>
+             <button onClick={() => setIsGuideOpen(true)} className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center min-h-[44px] min-w-[44px] text-white active:scale-95 transition-transform">
+               <BookOpen size={18} />
+             </button>
+           </div>
+           {children}
         </main>
       </div>
       <Toaster />

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState } from "react";
 
 export function usePushNotifications() {
   const [permission, setPermission] = useState<NotificationPermission>(() => {
@@ -8,7 +8,7 @@ export function usePushNotifications() {
     if ("Notification" in window) return Notification.permission;
     return "default";
   });
-  const [isSupported, setIsSupported] = useState<boolean>(() => {
+  const [isSupported] = useState<boolean>(() => {
     if (typeof window === "undefined") return false;
     return "Notification" in window && "serviceWorker" in navigator;
   });

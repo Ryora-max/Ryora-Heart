@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { LdrBanner } from "@/components/ldr/LdrBanner";
 import { BookOpen, Sparkles, Heart } from "lucide-react";
@@ -57,10 +57,27 @@ export default function HomePage() {
   const { partnerId } = usePartnerId(authToken, user?.id);
 
   const partnerPresence = presence.find((p) => p.userId === partnerId);
-  const isPartnerOnline = partnerPresence?.status === "online" && partnerPresence?.lastSeen ? (() => {
-    const diff = Date.now() - new Date(partnerPresence.lastSeen).getTime();
-    return diff < 60000;
-  })() : false;
+  const [isPartnerOnline, setIsPartnerOnline] = useState(false);
+  const lastSeenRef = useRef<string | undefined>(undefined);
+
+  useEffect(() => {
+    lastSeenRef.current = partnerPresence?.lastSeen;
+  }, [partnerPresence?.lastSeen]);
+
+  useEffect(() => {
+    const tick = () => {
+      const lastSeen = lastSeenRef.current;
+      if (!lastSeen) {
+        setIsPartnerOnline(false);
+        return;
+      }
+      const diff = Date.now() - new Date(lastSeen).getTime();
+      setIsPartnerOnline(diff < 60000);
+    };
+    tick();
+    const id = setInterval(tick, 30000);
+    return () => clearInterval(id);
+  }, []);
 
   return (
     <div className="relative min-h-screen overflow-x-hidden bg-gradient-to-b from-indigo-950 via-purple-900 to-pink-950 p-4 sm:p-6 md:p-8">
@@ -129,11 +146,11 @@ export default function HomePage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
             {ROOMS.map((room, idx) => (
               <div
-                key={room.id}
-                onClick={() => router.push(`/${room.id}`)}
-                className={`group relative p-5 rounded-3xl bg-gradient-to-br ${room.color} text-white shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-[1.03] cursor-pointer border-2 border-white/20 flex flex-col justify-between min-h-[140px] animate-scale-in`}
-                style={{ animationDelay: `${0.1 + idx * 0.05}s` }}
-              >
+                 key={room.id}
+                 onClick={() => router.push(`/${room.id}`)}
+                 className={`group relative p-4 sm:p-5 rounded-3xl bg-gradient-to-br ${room.color} text-white shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-[1.03] active:scale-[0.98] cursor-pointer border-2 border-white/20 flex flex-col justify-between min-h-[120px] sm:min-h-[140px] animate-scale-in`}
+                 style={{ animationDelay: `${0.1 + idx * 0.05}s` }}
+               >
                 <div className="flex items-start justify-between">
                   <span className="text-4xl group-hover:scale-125 transition-transform duration-300">{room.emoji}</span>
                   <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full bg-white/20 backdrop-blur-sm border border-white/30">

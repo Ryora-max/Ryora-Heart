@@ -74,12 +74,12 @@ export function LdrBanner({ tagline }: { tagline?: string }) {
   };
 
   return (
-    <div className="ldr-banner animate-fade-in-up relative mb-8 overflow-hidden rounded-3xl bg-gradient-to-r from-pink-400 via-fuchsia-400 to-rose-400 p-5 shadow-xl border-2 border-white/30 text-white">
+    <div className="ldr-banner animate-fade-in-up relative mb-6 sm:mb-8 overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-r from-pink-400 via-fuchsia-400 to-rose-400 p-4 sm:p-5 shadow-xl border-2 border-white/30 text-white">
       <div className="pointer-events-none absolute inset-0">
         {hearts.map((h) => (
           <span
             key={h.id}
-            className="absolute bottom-0 text-2xl animate-float-up"
+            className="absolute bottom-0 text-xl sm:text-2xl animate-float-up"
             style={{ left: `${h.left}%`, animationDelay: `${h.delay}s` }}
           >
             {h.emoji}
@@ -88,48 +88,54 @@ export function LdrBanner({ tagline }: { tagline?: string }) {
       </div>
 
       <div className="relative z-10">
-        <div className="flex flex-wrap items-center justify-center gap-2 mb-2">
-          <span className="text-2xl">💞</span>
-          <span className="font-bold tracking-wide text-sm uppercase opacity-90">LDR Mode • On</span>
-          <Plane size={18} className="animate-bounce" />
+        <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 mb-1.5 sm:mb-2">
+          <span className="text-xl sm:text-2xl">💞</span>
+          <span className="font-bold tracking-wide text-xs sm:text-sm uppercase opacity-90">LDR Mode • On</span>
+          <Plane size={16} className="animate-bounce sm:hidden" />
+          <Plane size={18} className="animate-bounce hidden sm:block" />
         </div>
 
-        <p className="text-lg md:text-xl font-semibold leading-snug text-center">{tagline || quote}</p>
+        <p className="text-base sm:text-lg md:text-xl font-semibold leading-snug text-center">{tagline || quote}</p>
 
-        <div className="flex flex-wrap items-center justify-center gap-2 mt-3 text-sm">
-          <span className="flex items-center gap-1 bg-white/20 px-3 py-1 rounded-full">
-            <MapPin size={14} /> 📍 Ryo di sini
+        <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 mt-2 sm:mt-3 text-xs sm:text-sm">
+          <span className="flex items-center gap-1 bg-white/20 px-2 py-0.5 sm:px-3 sm:py-1 rounded-full">
+            <MapPin size={12} className="sm:hidden" />
+            <MapPin size={14} className="hidden sm:block" /> 📍 Ryo di sini
           </span>
-          <span className="flex items-center gap-1 bg-white/20 px-3 py-1 rounded-full">
-            <MapPin size={14} /> 🌏 Ara di sana
+          <span className="flex items-center gap-1 bg-white/20 px-2 py-0.5 sm:px-3 sm:py-1 rounded-full">
+            <MapPin size={12} className="sm:hidden" />
+            <MapPin size={14} className="hidden sm:block" /> 🌏 Ara di sana
           </span>
-          <span className="flex items-center gap-1 bg-white/20 px-3 py-1 rounded-full">
-            <Heart size={14} /> Ketemu dalam {meet.days}h {meet.hours}j {meet.mins}m 💗
+          <span className="flex items-center gap-1 bg-white/20 px-2 py-0.5 sm:px-3 sm:py-1 rounded-full">
+            <Heart size={12} className="sm:hidden" />
+            <Heart size={14} className="hidden sm:block" /> Ketemu dalam {meet.days}h {meet.hours}j {meet.mins}m 💗
           </span>
         </div>
 
-        <div className="flex flex-wrap items-center justify-center gap-2 mt-3 text-xs">
+        <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 mt-2 sm:mt-3 text-xs">
           <button
             onClick={() => setSigRyo(SIGNAL_ROYO[Math.floor(Math.random() * SIGNAL_ROYO.length)])}
-            className="flex items-center gap-1 bg-black/15 hover:bg-black/25 px-3 py-1 rounded-full transition-all cursor-pointer"
+            className="flex items-center gap-1 bg-black/15 hover:bg-black/25 px-2 py-1 sm:px-3 sm:py-1 rounded-full transition-all cursor-pointer active:scale-95"
           >
-            <Signal size={12} /> Sinyal Ryo: {sigRyo}
+            <Signal size={10} className="sm:hidden" />
+            <Signal size={12} className="hidden sm:block" /> Sinyal Ryo: {sigRyo}
           </button>
           <button
             onClick={() => setSigAra(SIGNAL_ARA[Math.floor(Math.random() * SIGNAL_ARA.length)])}
-            className="flex items-center gap-1 bg-black/15 hover:bg-black/25 px-3 py-1 rounded-full transition-all cursor-pointer"
+            className="flex items-center gap-1 bg-black/15 hover:bg-black/25 px-2 py-1 sm:px-3 sm:py-1 rounded-full transition-all cursor-pointer active:scale-95"
           >
-            <Wifi size={12} /> Sinyal Ara: {sigAra}
+            <Wifi size={10} className="sm:hidden" />
+            <Wifi size={12} className="hidden sm:block" /> Sinyal Ara: {sigAra}
           </button>
           <button
             onClick={() => setQuote(RECEH[Math.floor(Math.random() * RECEH.length)])}
-            className="bg-white/30 hover:bg-white/40 px-3 py-1 rounded-full font-semibold transition-all cursor-pointer"
+            className="bg-white/30 hover:bg-white/40 px-2 py-1 sm:px-3 sm:py-1 rounded-full font-semibold transition-all cursor-pointer active:scale-95"
           >
             Quote receh 🎲
           </button>
           <button
             onClick={kangenClick}
-            className="bg-white/30 hover:bg-white/40 px-3 py-1 rounded-full font-semibold transition-all cursor-pointer"
+            className="bg-white/30 hover:bg-white/40 px-2 py-1 sm:px-3 sm:py-1 rounded-full font-semibold transition-all cursor-pointer active:scale-95"
           >
             🥺 Kangen ({kangen})
           </button>
