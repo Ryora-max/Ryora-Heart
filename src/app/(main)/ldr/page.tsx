@@ -53,8 +53,8 @@ interface FloatingHeart {
 }
 
 export default function LdrPage() {
-  const { user } = useAuthStore();
-  const token = user?.token || "";
+  const { user, token } = useAuthStore();
+  const authToken = token || "";
 
   const [animal, setAnimal] = useState(ANIMALS[0]);
   const [quoteIdx, setQuoteIdx] = useState(0);
@@ -73,16 +73,16 @@ export default function LdrPage() {
 
   const prevNotificationsRef = useRef<string>("");
 
-  const { presence, updatePresence } = usePresence(token);
-  const { updates, addUpdate } = useStatusUpdates(token);
-  const { hugs, sendHug } = useHugs(token);
-  const { currentPercentage, update: updateLoveMeter } = useLoveMeter(token);
-  const { notifications, unreadCount } = useNotifications(token);
-  const { partnerId } = usePartnerId(token, user?.id);
-  const { locations, addLocation } = useLocations(token);
+  const { presence, updatePresence } = usePresence(authToken);
+  const { updates, addUpdate } = useStatusUpdates(authToken);
+  const { hugs, sendHug } = useHugs(authToken);
+  const { currentPercentage, update: updateLoveMeter } = useLoveMeter(authToken);
+  const { notifications, unreadCount } = useNotifications(authToken);
+  const { partnerId } = usePartnerId(authToken, user?.id);
 
+  const { locations, addLocation } = useLocations(authToken);
   useEffect(() => {
-    if (!token) return;
+    if (!authToken) return;
     updatePresence("online");
     const interval = setInterval(() => updatePresence("online"), 30000);
 
@@ -97,14 +97,14 @@ export default function LdrPage() {
       clearInterval(interval);
       window.removeEventListener("beforeunload", handleOffline);
     };
-  }, [token, updatePresence]);
+  }, [authToken, updatePresence]);
 
   useEffect(() => {
-    if (!token) return;
+    if (!authToken) return;
     fetch("/api/db", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "getUserSettings", token }),
+      body: JSON.stringify({ action: "getUserSettings", token: authToken }),
     })
       .then((res) => res.ok ? res.json() : null)
       .then((data) => {
@@ -116,7 +116,7 @@ export default function LdrPage() {
         }
       })
       .catch(() => {});
-  }, [token]);
+  }, [authToken]);
 
   useEffect(() => {
     const targetDate: Date = settings.nextMeetupDate ? new Date(settings.nextMeetupDate) : (() => {
@@ -247,11 +247,11 @@ export default function LdrPage() {
         <button
           onClick={async () => {
             setShowNotifPanel(!showNotifPanel);
-            if (!showNotifPanel && token) {
+            if (!showNotifPanel && authToken) {
               await fetch("/api/db", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ action: "markNotificationsAsRead", token }),
+                body: JSON.stringify({ action: "markNotificationsAsRead", token: authToken }),
               });
             }
           }}

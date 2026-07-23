@@ -30,7 +30,17 @@ export default function SettingsPage() {
   const [name, setName] = useState(user?.name || "");
   const [relationship, setRelationship] = useState(user?.relationship || "");
   const [avatarUrl, setAvatarUrl] = useState(user?.avatar_url || "");
-  const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
+  const [settings, setSettings] = useState<Settings>(() => {
+    if (typeof window === "undefined") return DEFAULT_SETTINGS;
+    try {
+      const stored = localStorage.getItem("ryora-settings");
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        return { ...DEFAULT_SETTINGS, ...parsed };
+      }
+    } catch {}
+    return DEFAULT_SETTINGS;
+  });
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saveSuccess, setSaveSuccess] = useState<string | null>(null);
