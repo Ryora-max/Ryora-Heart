@@ -31,11 +31,16 @@ async function hashSeedPasswords() {
   ];
 
   for (const user of users) {
-    const result = await getOne("SELECT id FROM users WHERE id = $1", [user.id]);
-    if (result) {
-      const hash = await bcrypt.hash(user.password, 10);
-      await query("UPDATE users SET password_hash = $1 WHERE id = $2", [hash, user.id]);
-      console.log(`Hashed password for ${user.id}`);
+    const result = await getOne("SELECT id, password_hash FROM users WHERE id = $1", [user.id]);
+    if (!result) continue;
+
+    const currentHash = result.password_hash;
+    if (currentHash && /^\$2[aby]\$\d{2}\$/.test(currentHash)) {
+      continue;
     }
+
+    const hash = await bcrypt.hash(user.password, 10);
+    await query("UPDATE users SET password_hash = $1 WHERE id = $2", [hash, user.id]);
+    console.log(`Hashed password for ${user.id}`);
   }
 }

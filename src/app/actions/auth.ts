@@ -29,7 +29,15 @@ export async function login(username: string, password: string): Promise<Session
   const result = await getOne("SELECT * FROM users WHERE username = $1", [username]);
   if (!result) return null;
 
-  const valid = await bcrypt.compare(password, result.password_hash);
+  const stored = result.password_hash;
+
+  let valid = false;
+  if (stored && /^\$2[aby]\$\d{2}\$/.test(stored)) {
+    valid = await bcrypt.compare(password, stored);
+  } else {
+    valid = password === stored;
+  }
+
   if (!valid) return null;
 
   const token = uuidv4();
