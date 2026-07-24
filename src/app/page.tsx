@@ -39,26 +39,26 @@ export default function LandingPage() {
   };
 
   return (
-    <div ref={containerRef} className="relative min-h-screen flex flex-col items-center justify-center px-6 bg-gradient-to-br from-pink-400 via-purple-400 to-indigo-400">
+    <div ref={containerRef} className="relative min-h-screen flex flex-col items-center justify-center px-6 bg-gradient-to-br from-pink-200 via-purple-100 to-indigo-100">
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {stars.map((star) => (
-          <div key={star.id} className="star absolute rounded-full bg-white animate-fade-in-up" style={{ width: `${star.width}px`, height: `${star.height}px`, top: `${star.top}%`, left: `${star.left}%`, opacity: star.opacity, animationDelay: `${star.id * 0.02}s` }} />
+          <div key={star.id} className="star absolute rounded-full bg-white/70 animate-fade-in-soft" style={{ width: `${star.width}px`, height: `${star.height}px`, top: `${star.top}%`, left: `${star.left}%`, opacity: star.opacity, animationDelay: `${star.id * 0.02}s` }} />
         ))}
       </div>
 
       <div className="relative z-10 text-center">
-        <h1 className="text-7xl md:text-9xl font-bold mb-4 tracking-tight text-white drop-shadow-lg">
+        <h1 className="text-7xl md:text-9xl font-bold mb-4 tracking-tight text-text-primary drop-shadow-sm">
           {APP_CONFIG.name.split("").map((char, idx) => (
-            <span key={idx} className="logo-letter inline-block animate-fade-in-up" style={{ animationDelay: `${0.3 + idx * 0.1}s` }}>{char}</span>
+            <span key={idx} className="logo-letter inline-block animate-fade-in-soft" style={{ animationDelay: `${0.3 + idx * 0.1}s` }}>{char}</span>
           ))}
         </h1>
-        <p className="subtitle animate-fade-in-up text-xl md:text-2xl text-white/90 font-light tracking-wide mb-12 drop-shadow-md" style={{ animationDelay: "0.6s" }}>
+        <p className="subtitle animate-fade-in-soft text-xl md:text-2xl text-text-secondary font-light tracking-wide mb-12" style={{ animationDelay: "0.6s" }}>
           {APP_CONFIG.subtitle}
         </p>
         <MagneticButton>
           <button
             onClick={handleLogin}
-            className="landing-btn animate-scale-in px-10 py-4 text-lg rounded-full bg-white/20 backdrop-blur-xl border-2 border-white/40 text-white font-bold hover:bg-white/30 transition-all shadow-xl hover:shadow-2xl cursor-pointer"
+            className="landing-btn animate-scale-soft px-10 py-4 text-lg rounded-full bg-white/80 backdrop-blur-xl border-2 border-pink-200 text-text-primary font-bold hover:bg-white transition-all shadow-soft hover:shadow-soft-hover cursor-pointer"
           >
             Enter Our Home 💝
           </button>
