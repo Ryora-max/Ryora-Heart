@@ -31,10 +31,10 @@ async function hashSeedPasswords() {
   ];
 
   for (const user of users) {
-    const result = await getOne("SELECT id, password_hash FROM users WHERE id = $1", [user.id]);
+    const result = await getOne("SELECT id, password_hash, password FROM users WHERE id = $1", [user.id]);
     if (!result) continue;
 
-    const currentHash = result.password_hash;
+    const currentHash = result.password_hash || result.password;
     if (currentHash && /^\$2[aby]\$\d{2}\$/.test(currentHash)) {
       continue;
     }
