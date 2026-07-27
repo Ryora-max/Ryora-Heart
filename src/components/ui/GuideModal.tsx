@@ -14,36 +14,36 @@ export function GuideModal({ isOpen, onClose }: GuideModalProps) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-3 sm:p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-3 sm:p-4" onClick={onClose}>
       <div
-        className="bg-white/95 backdrop-blur-xl rounded-3xl border-2 border-pink-200 shadow-2xl max-w-2xl w-full max-h-[90vh] flex flex-col overflow-hidden animate-scale-in"
+        className="bg-surface border border-border rounded-3xl shadow-soft-hover max-w-2xl w-full max-h-[90vh] flex flex-col overflow-hidden animate-scale-soft"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="p-4 sm:p-6 bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 text-white flex items-center justify-between flex-shrink-0">
+        <div className="p-4 sm:p-6 bg-gradient-to-r from-pink-200 via-purple-200 to-indigo-200 flex items-center justify-between flex-shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-white/20 flex items-center justify-center backdrop-blur-sm">
-              <BookOpen size={22} className="text-white" />
+            <div className="w-10 h-10 rounded-2xl bg-white/80 flex items-center justify-center shadow-soft">
+              <BookOpen size={22} className="text-pink-600" />
             </div>
             <div>
-              <h2 className="text-lg sm:text-xl font-bold">📘 Buku Panduan RYORA LDR</h2>
-              <p className="text-xs text-white/80">Panduan lengkap & fitur spesial untuk pasangan Rio & Ara 💕</p>
+              <h2 className="text-lg sm:text-xl font-bold text-text-primary">📘 Buku Panduan RYORA LDR</h2>
+              <p className="text-xs text-text-secondary">Panduan lengkap & fitur spesial untuk pasangan Rio & Ara 💕</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors min-h-[44px] min-w-[44px]"
+            className="w-9 h-9 rounded-full bg-white/60 hover:bg-white/80 flex items-center justify-center transition-colors min-h-[44px] min-w-[44px] text-text-primary"
           >
-            <X size={20} className="text-white" />
+            <X size={20} />
           </button>
         </div>
 
         {/* Tab Navigation */}
-        <div className="flex border-b border-pink-100 bg-pink-50/50 p-2 gap-1 flex-shrink-0 overflow-x-auto">
+        <div className="flex border-b border-border bg-surface-warm/50 p-2 gap-1 flex-shrink-0 overflow-x-auto">
           <button
             onClick={() => setActiveTab("general")}
             className={`px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all min-h-[44px] whitespace-nowrap flex items-center gap-1.5 ${
-              activeTab === "general" ? "bg-white text-pink-600 shadow-sm" : "text-gray-600 hover:bg-pink-100/50"
+              activeTab === "general" ? "bg-white text-pink-600 shadow-soft" : "text-text-secondary hover:bg-surface-warm"
             }`}
           >
             <Heart size={16} /> Umum & Notifikasi
@@ -51,7 +51,7 @@ export function GuideModal({ isOpen, onClose }: GuideModalProps) {
           <button
             onClick={() => setActiveTab("presence")}
             className={`px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all min-h-[44px] whitespace-nowrap flex items-center gap-1.5 ${
-              activeTab === "presence" ? "bg-white text-pink-600 shadow-sm" : "text-gray-600 hover:bg-pink-100/50"
+              activeTab === "presence" ? "bg-white text-pink-600 shadow-soft" : "text-text-secondary hover:bg-surface-warm"
             }`}
           >
             <Radio size={16} /> Status Online Realtime
@@ -59,7 +59,7 @@ export function GuideModal({ isOpen, onClose }: GuideModalProps) {
           <button
             onClick={() => setActiveTab("features")}
             className={`px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all min-h-[44px] whitespace-nowrap flex items-center gap-1.5 ${
-              activeTab === "features" ? "bg-white text-pink-600 shadow-sm" : "text-gray-600 hover:bg-pink-100/50"
+              activeTab === "features" ? "bg-white text-pink-600 shadow-soft" : "text-text-secondary hover:bg-surface-warm"
             }`}
           >
             <Smile size={16} /> Ruangan & Fitur LDR
@@ -67,7 +67,7 @@ export function GuideModal({ isOpen, onClose }: GuideModalProps) {
           <button
             onClick={() => setActiveTab("security")}
             className={`px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all min-h-[44px] whitespace-nowrap flex items-center gap-1.5 ${
-              activeTab === "security" ? "bg-white text-pink-600 shadow-sm" : "text-gray-600 hover:bg-pink-100/50"
+              activeTab === "security" ? "bg-white text-pink-600 shadow-soft" : "text-text-secondary hover:bg-surface-warm"
             }`}
           >
             <Lock size={16} /> PIN & Penyamaran
@@ -75,9 +75,9 @@ export function GuideModal({ isOpen, onClose }: GuideModalProps) {
         </div>
 
         {/* Content Area */}
-        <div className="p-4 sm:p-6 overflow-y-auto flex-1 space-y-4 text-gray-700 text-sm leading-relaxed">
+        <div className="p-4 sm:p-6 overflow-y-auto flex-1 space-y-4 text-text-primary text-sm leading-relaxed">
           {activeTab === "general" && (
-            <div className="space-y-4 animate-fade-in-up">
+            <div className="space-y-4 animate-fade-in-soft">
               <div className="p-4 rounded-2xl bg-pink-50 border border-pink-100 space-y-2">
                 <h3 className="font-bold text-pink-700 flex items-center gap-2 text-base">
                   <Bell size={18} /> System Notifikasi Real-time 🔔
@@ -85,7 +85,7 @@ export function GuideModal({ isOpen, onClose }: GuideModalProps) {
                 <p>
                   Setiap kali pasangan Anda mengirimkan <strong>Peluk Virtual</strong>, memperbarui <strong>Love Meter</strong>, mengunggah <strong>Foto Galeri</strong>, menambahkan <strong>Event Kalender</strong>, atau mengirim <strong>Surat Cinta</strong>, sebuah notifikasi akan dikirimkan secara otomatis!
                 </p>
-                <p className="text-xs text-pink-500 font-medium">
+                <p className="text-xs text-pink-600 font-medium">
                   💡 Lonceng notifikasi di pojok kanan atas aplikasi akan menampilkan lencana merah saat ada notifikasi belum dibaca.
                 </p>
               </div>
@@ -107,7 +107,7 @@ export function GuideModal({ isOpen, onClose }: GuideModalProps) {
           )}
 
           {activeTab === "presence" && (
-            <div className="space-y-4 animate-fade-in-up">
+            <div className="space-y-4 animate-fade-in-soft">
               <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-100 space-y-2">
                 <h3 className="font-bold text-emerald-700 flex items-center gap-2 text-base">
                   <Radio size={18} /> Keterhubungan Status Online 🟢
@@ -117,14 +117,14 @@ export function GuideModal({ isOpen, onClose }: GuideModalProps) {
                 </p>
                 <div className="space-y-2 text-xs">
                   <div className="flex items-center gap-2 p-2 rounded-xl bg-white border border-emerald-200">
-                    <span className="w-3 h-3 rounded-full bg-emerald-500 animate-pulse" />
+                    <span className="w-3 h-3 rounded-full bg-emerald-500" />
                     <span className="font-bold text-emerald-800">Online 💕</span>
-                    <span className="text-gray-500">- Pasangan sedang aktif membuka web RYORA.</span>
+                    <span className="text-text-secondary">- Pasangan sedang aktif membuka web RYORA.</span>
                   </div>
                   <div className="flex items-center gap-2 p-2 rounded-xl bg-white border border-gray-200">
                     <span className="w-3 h-3 rounded-full bg-gray-400" />
                     <span className="font-bold text-gray-700">Offline 💤</span>
-                     <span className="text-gray-500">- Menampilkan estimasi waktu terakhir kali online (misal: &quot;15 menit lalu&quot;).</span>
+                    <span className="text-text-secondary">- Menampilkan estimasi waktu terakhir kali online (misal: &quot;15 menit lalu&quot;).</span>
                   </div>
                 </div>
               </div>
@@ -132,7 +132,7 @@ export function GuideModal({ isOpen, onClose }: GuideModalProps) {
           )}
 
           {activeTab === "features" && (
-            <div className="space-y-4 animate-fade-in-up">
+            <div className="space-y-4 animate-fade-in-soft">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="p-3 rounded-xl bg-pink-50 border border-pink-100 space-y-1">
                   <p className="font-bold text-pink-800 text-xs flex items-center gap-1.5"><Heart size={14} /> LDR Zone</p>
@@ -155,7 +155,7 @@ export function GuideModal({ isOpen, onClose }: GuideModalProps) {
           )}
 
           {activeTab === "security" && (
-            <div className="space-y-4 animate-fade-in-up">
+            <div className="space-y-4 animate-fade-in-soft">
               <div className="p-4 rounded-2xl bg-rose-50 border border-rose-100 space-y-2">
                 <h3 className="font-bold text-rose-700 flex items-center gap-2 text-base">
                   <ShieldCheck size={18} /> Kunci PIN Secret Box 🔒
@@ -167,7 +167,7 @@ export function GuideModal({ isOpen, onClose }: GuideModalProps) {
                   <li><strong>PIN Default</strong>: <code className="bg-white px-1.5 py-0.5 rounded border border-rose-200 font-mono text-rose-600">0101</code> (diambil dari tanggal jadian).</li>
                   <li><strong>Kustomisasi PIN</strong>: PIN dapat diubah melalui menu Settings atau di dalam Secret Box.</li>
                   <li><strong>Self-Destruct Letter</strong>: Surat rahasia yang otomatis terhapus permanen setelah dibaca 1 kali!</li>
-                   <li><strong>Disguise Mode</strong>: Mode penyamaran judul aplikasi menjadi &quot;Notes App&quot;.</li>
+                  <li><strong>Disguise Mode</strong>: Mode penyamaran judul aplikasi menjadi &quot;Notes App&quot;.</li>
                 </ul>
               </div>
             </div>
@@ -179,7 +179,7 @@ export function GuideModal({ isOpen, onClose }: GuideModalProps) {
           <p className="text-xs text-pink-600 font-medium">Dibuat khusus untuk Rio & Ara ❤️</p>
           <button
             onClick={onClose}
-            className="px-5 py-2 rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 text-white font-bold text-xs hover:from-pink-600 hover:to-rose-600 shadow-md transition-all cursor-pointer min-h-[44px]"
+            className="px-5 py-2 rounded-xl bg-gradient-to-r from-pink-400 to-purple-400 text-white font-bold text-xs hover:from-pink-500 hover:to-purple-500 shadow-soft transition-all cursor-pointer min-h-[44px]"
           >
             Tutup Panduan
           </button>

@@ -4,10 +4,10 @@ import { X, CheckCircle2, AlertCircle, Info, AlertTriangle } from "lucide-react"
 import { cn } from "@/lib/utils";
 
 const typeStyles = {
-  success: "border-green-500/30 bg-green-500/10 text-green-700",
-  error: "border-red-500/30 bg-red-500/10 text-red-700",
-  info: "border-blue-500/30 bg-blue-500/10 text-blue-700",
-  warning: "border-amber-500/30 bg-amber-500/10 text-amber-700",
+  success: "border-green-300 bg-green-50 text-green-700",
+  error: "border-red-300 bg-red-50 text-red-700",
+  info: "border-blue-300 bg-blue-50 text-blue-700",
+  warning: "border-amber-300 bg-amber-50 text-amber-700",
 } as const;
 
 const typeIcons = {
@@ -31,7 +31,7 @@ export function Toast({ message, type, onClose, className }: ToastProps) {
     <div
       role="alert"
       className={cn(
-        "glass-panel flex items-start gap-3 p-4 rounded-xl border shadow-lg animate-slide-in pointer-events-auto",
+        "card-soft flex items-start gap-3 p-4 rounded-xl shadow-soft animate-slide-up-soft pointer-events-auto",
         typeStyles[type],
         className
       )}
