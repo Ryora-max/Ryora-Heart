@@ -95,16 +95,16 @@ export default function DashboardPage() {
                 <Activity size={18} className="text-purple-500" />
                 Recent Activities
               </h3>
-              <div className="relative">
-                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search..."
-                  className="pl-8 pr-3 py-1.5 bg-gray-50 border-2 border-gray-200 rounded-lg text-sm focus:border-purple-400 focus:outline-none w-36"
-                />
-              </div>
+                <div className="relative">
+                  <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search..."
+                    className="pl-8 pr-3 py-2 bg-gray-50 border-2 border-gray-200 rounded-lg text-sm focus:border-purple-400 focus:outline-none w-full max-w-xs"
+                  />
+                </div>
             </div>
             {activitiesLoading ? (
               <div className="space-y-2">

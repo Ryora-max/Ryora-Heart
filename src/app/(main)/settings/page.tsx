@@ -152,19 +152,19 @@ export default function SettingsPage() {
 
         <LdrBanner tagline="Setting LDR: notifikasi prioritas = chat doi. 🔔💞" />
 
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 mb-6 border-2 border-gray-200 shadow-xl">
-          <h3 className="text-xl font-bold text-gray-900 mb-6">Profile</h3>
-          <div className="flex flex-col md:flex-row items-start gap-6">
-            <ProfilePictureUpload currentUrl={avatarUrl} onUpload={setAvatarUrl} />
-            <div className="flex-1 space-y-4 w-full">
-              <div>
-                <label className="text-gray-600 text-sm block mb-2">Name</label>
-                <input
-                  type="text"
-                  value={name}
-                  onChange={(e) => { setName(e.target.value); setNameError(""); }}
-                  className="w-full px-4 py-2 rounded-xl border-2 border-gray-200 focus:border-gray-400 focus:outline-none text-gray-900"
-                />
+         <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 sm:p-6 mb-6 border-2 border-gray-200 shadow-xl">
+           <h3 className="text-xl font-bold text-gray-900 mb-4">Profile</h3>
+           <div className="flex flex-col items-start gap-4">
+             <ProfilePictureUpload currentUrl={avatarUrl} onUpload={setAvatarUrl} />
+             <div className="flex-1 space-y-4 w-full">
+               <div>
+                 <label className="text-gray-600 text-sm block mb-2">Name</label>
+                 <input
+                   type="text"
+                   value={name}
+                   onChange={(e) => { setName(e.target.value); setNameError(""); }}
+                   className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-gray-400 focus:outline-none text-gray-900"
+                 />
                 {nameError && <p className="text-red-500 text-xs mt-1">{nameError}</p>}
               </div>
               <div>
@@ -215,50 +215,50 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 mb-6 border-2 border-gray-200 shadow-xl">
-          <h3 className="text-xl font-bold text-gray-900 mb-4">Relationship</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="text-gray-600 text-sm block mb-2">Relationship Start Date</label>
-              <input
-                type="date"
-                value={settings.relationshipStartDate}
-                onChange={(e) => updateSetting("relationshipStartDate", e.target.value)}
-                className="w-full px-4 py-2 rounded-xl border-2 border-gray-200 focus:border-gray-400 focus:outline-none text-gray-900 text-sm"
-              />
-            </div>
-            <div>
-              <label className="text-gray-600 text-sm block mb-2">Distance (KM)</label>
-              <input
-                type="number"
-                value={settings.distance}
-                onChange={(e) => updateSetting("distance", e.target.value)}
-                placeholder="e.g. 1200"
-                className="w-full px-4 py-2 rounded-xl border-2 border-gray-200 focus:border-gray-400 focus:outline-none text-gray-900 text-sm"
-              />
-            </div>
-            <div>
-              <label className="text-gray-600 text-sm block mb-2">Next Meetup Date</label>
-              <input
-                type="date"
-                value={settings.nextMeetupDate}
-                onChange={(e) => updateSetting("nextMeetupDate", e.target.value)}
-                className="w-full px-4 py-2 rounded-xl border-2 border-gray-200 focus:border-gray-400 focus:outline-none text-gray-900 text-sm"
-              />
-            </div>
-            <div>
-              <label className="text-gray-600 text-sm block mb-2">Secret Box PIN</label>
-              <input
-                type="password"
-                maxLength={4}
-                value={settings.secretPin}
-                onChange={(e) => updateSetting("secretPin", e.target.value.replace(/\D/g, "").slice(0, 4))}
-                placeholder="****"
-                className="w-full px-4 py-2 rounded-xl border-2 border-gray-200 focus:border-gray-400 focus:outline-none text-gray-900 text-sm tracking-widest"
-              />
-            </div>
-          </div>
-        </div>
+         <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 sm:p-6 mb-6 border-2 border-gray-200 shadow-xl">
+           <h3 className="text-xl font-bold text-gray-900 mb-4">Relationship</h3>
+           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+             <div>
+               <label className="text-gray-600 text-sm block mb-2">Relationship Start Date</label>
+               <input
+                 type="date"
+                 value={settings.relationshipStartDate}
+                 onChange={(e) => updateSetting("relationshipStartDate", e.target.value)}
+                 className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-gray-400 focus:outline-none text-gray-900 text-sm"
+               />
+             </div>
+             <div>
+               <label className="text-gray-600 text-sm block mb-2">Distance (KM)</label>
+               <input
+                 type="number"
+                 value={settings.distance}
+                 onChange={(e) => updateSetting("distance", e.target.value)}
+                 placeholder="e.g. 1200"
+                 className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-gray-400 focus:outline-none text-gray-900 text-sm"
+               />
+             </div>
+             <div>
+               <label className="text-gray-600 text-sm block mb-2">Next Meetup Date</label>
+               <input
+                 type="date"
+                 value={settings.nextMeetupDate}
+                 onChange={(e) => updateSetting("nextMeetupDate", e.target.value)}
+                 className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-gray-400 focus:outline-none text-gray-900 text-sm"
+               />
+             </div>
+             <div>
+               <label className="text-gray-600 text-sm block mb-2">Secret Box PIN</label>
+               <input
+                 type="password"
+                 maxLength={4}
+                 value={settings.secretPin}
+                 onChange={(e) => updateSetting("secretPin", e.target.value.replace(/\D/g, "").slice(0, 4))}
+                 placeholder="****"
+                 className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-gray-400 focus:outline-none text-gray-900 text-sm tracking-widest"
+               />
+             </div>
+           </div>
+         </div>
 
         <div className="space-y-3 mb-6">
           {[

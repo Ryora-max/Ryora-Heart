@@ -296,7 +296,9 @@ export default function LdrPage() {
         </button>
 
         {showNotifPanel && (
-          <div className="absolute right-0 mt-2 w-80 bg-white/95 backdrop-blur-sm rounded-2xl border-2 border-pink-200 shadow-2xl max-h-96 overflow-hidden">
+          <div className="fixed inset-0 z-40" onClick={() => setShowNotifPanel(false)} />
+        )}
+        <div className={`absolute right-0 mt-2 w-80 sm:w-96 bg-white/95 backdrop-blur-sm rounded-2xl border-2 border-pink-200 shadow-2xl max-h-[80vh] overflow-hidden animate-scale-soft ${showNotifPanel ? "" : "hidden"}`}>
             <div className="p-4 border-b border-pink-100 flex items-center justify-between">
               <h3 className="font-bold text-pink-700 flex items-center gap-2">
                 <Bell size={18} /> Notifikasi
@@ -326,12 +328,11 @@ export default function LdrPage() {
                   </div>
                 ))
               )}
-            </div>
-          </div>
-        )}
-      </div>
+             </div>
+           </div>
+         </div>
 
-      <div className="relative z-10 max-w-6xl mx-auto px-1 sm:px-4">
+       <div className="relative z-10 max-w-6xl mx-auto px-1 sm:px-4">
         <div className="ldr-header animate-fade-in-up text-center mb-10">
           <h1 className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-pink-500 to-fuchsia-600 bg-clip-text text-transparent mb-2">
             💞 LDR Zone

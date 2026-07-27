@@ -179,7 +179,7 @@ export default function LivingRoomPage() {
                 {filteredActivities.map((activity) => (
                    <div
                       key={activity.id}
-                      className="flex items-center gap-3 p-3 rounded-xl bg-blue-50/50 hover:bg-blue-50 transition-all group active:scale-[0.98]"
+                      className="flex items-center gap-3 p-3 sm:p-4 rounded-xl bg-blue-50/50 hover:bg-blue-50 transition-all group active:scale-[0.98]"
                     >
                     <div
                       onClick={() => handleToggleActivity(activity.id, !activity.completed)}
