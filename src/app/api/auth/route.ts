@@ -9,6 +9,9 @@ export async function POST(request: NextRequest) {
     switch (action) {
       case "login": {
         const { username, password } = params;
+        if (!username || !password) {
+          return NextResponse.json({ error: "Username dan password harus diisi" }, { status: 400 });
+        }
         const session = await authLogin(username, password);
         if (!session) {
           return NextResponse.json({ error: "Username atau password salah" }, { status: 401 });
@@ -43,6 +46,6 @@ export async function POST(request: NextRequest) {
     }
   } catch (error) {
     console.error("Auth API error:", error);
-    return NextResponse.json({ error: "Kesalahan server" }, { status: 500 });
+    return NextResponse.json({ error: "Kesalahan server, periksa DATABASE_URL" }, { status: 500 });
   }
 }

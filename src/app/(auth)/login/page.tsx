@@ -40,7 +40,7 @@ export default function LoginPage() {
         setToken(data.token);
         router.push("/home");
       } else {
-        setError("Password salah 😢");
+        setError(data.error || "Password salah 😢");
         setShake(true);
         setTimeout(() => setShake(false), 500);
       }

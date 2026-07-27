@@ -26,40 +26,45 @@ export interface Session {
 }
 
 export async function login(username: string, password: string): Promise<Session | null> {
-  const result = await getOne("SELECT * FROM users WHERE username = $1", [username]);
-  if (!result) return null;
+  try {
+    const result = await getOne("SELECT * FROM users WHERE username = $1", [username]);
+    if (!result) return null;
 
-  const stored = result.password_hash || result.password;
+    const stored = result.password_hash || result.password;
 
-  let valid = false;
-  if (stored && /^\$2[aby]\$\d{2}\$/.test(stored)) {
-    valid = await bcrypt.compare(password, stored);
-  } else {
-    valid = password === stored;
+    let valid = false;
+    if (stored && /^\$2[aby]\$\d{2}\$/.test(stored)) {
+      valid = await bcrypt.compare(password, stored);
+    } else {
+      valid = password === stored;
+    }
+
+    if (!valid) return null;
+
+    const token = uuidv4();
+    const expiresAt = new Date(Date.now() + SESSION_DURATION).toISOString();
+
+    await query(
+      "INSERT INTO sessions (id, user_id, token, expires_at) VALUES ($1, $2, $3, $4)",
+      [generateId(), result.id, token, expiresAt]
+    );
+
+    return {
+      user: {
+        id: result.id,
+        username: result.username,
+        name: result.name,
+        role: result.role,
+        relationship: result.relationship,
+        avatar_url: result.avatar_url || undefined,
+        pair_id: result.pair_id,
+      },
+      token,
+    };
+  } catch (error) {
+    console.error("Login error:", error);
+    return null;
   }
-
-  if (!valid) return null;
-
-  const token = uuidv4();
-  const expiresAt = new Date(Date.now() + SESSION_DURATION).toISOString();
-
-  await query(
-    "INSERT INTO sessions (id, user_id, token, expires_at) VALUES ($1, $2, $3, $4)",
-    [generateId(), result.id, token, expiresAt]
-  );
-
-  return {
-    user: {
-      id: result.id,
-      username: result.username,
-      name: result.name,
-      role: result.role,
-      relationship: result.relationship,
-      avatar_url: result.avatar_url || undefined,
-      pair_id: result.pair_id,
-    },
-    token,
-  };
 }
 
 export async function logout(token: string) {
