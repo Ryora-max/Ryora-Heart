@@ -224,7 +224,7 @@ function HouseExterior({
       {/* Top — greeting + partner status + streak */}
       <div className="relative pt-8 sm:pt-12 px-4 z-20 flex flex-col items-center gap-2">
         <p className="text-xs sm:text-sm font-medium text-white/70 italic animate-fade-in text-center px-2">{greeting}</p>
-        <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 rounded-full bg-white/70 backdrop-blur-md shadow-md text-[11px] sm:text-sm font-medium border border-white/60 max-w-[85vw]">
+        <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 rounded-full bg-white/70 backdrop-blur-md shadow-md text-xs sm:text-sm font-medium border border-white/60 max-w-[85vw]">
           <span className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${isPartnerOnline ? "bg-emerald-400 animate-pulse" : "bg-gray-300"}`} />
           {isPartnerOnline ? (
             <span className="text-gray-700 truncate">{partnerName} {partnerPreset.emoji} {partnerPreset.label}</span>
@@ -234,13 +234,13 @@ function HouseExterior({
         </div>
         <div className="flex flex-wrap items-center justify-center gap-1.5">
           {streak > 1 && (
-            <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-100/70 backdrop-blur-sm shadow-sm text-[10px] font-medium text-amber-600 border border-amber-200/60">
+            <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-100/70 backdrop-blur-sm shadow-sm text-xs font-medium text-amber-600 border border-amber-200/60">
               <span>🔥</span>
               <span>{streak} hari beruntun</span>
             </div>
           )}
           {relationshipDays !== null && (
-            <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-rose-100/70 backdrop-blur-sm shadow-sm text-[10px] font-medium text-rose-500 border border-rose-200/60">
+            <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-rose-100/70 backdrop-blur-sm shadow-sm text-xs font-medium text-rose-500 border border-rose-200/60">
               <span>⭐</span>
               <span>Hari ke-{relationshipDays}</span>
             </div>
@@ -252,25 +252,25 @@ function HouseExterior({
       <div className="relative flex-1 flex flex-col items-center justify-center py-8 pb-32">
         <div className={`relative ${isEntering ? "animate-door-zoom" : "animate-house-approach"}`} style={{ transformOrigin: "center 70%" }}>
           {/* Chimney */}
-          <div className="absolute -top-1 right-10 sm:right-14 w-6 h-12 sm:w-7 sm:h-14 bg-[#d4a5a5] rounded-t-xl z-10">
+          <div className="absolute -top-1 right-[clamp(30px,10vw,56px)] w-6 h-12 sm:w-7 sm:h-14 bg-[#d4a5a5] rounded-t-xl z-10">
             {[0, 1, 2].map((i) => (
               <div key={i} className="absolute -top-2 left-1/2 -translate-x-1/2 w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-white/40" style={{ animation: `chimney-smoke 4s ease-out ${i * 1.2}s infinite` }} />
             ))}
           </div>
 
           {/* Roof */}
-          <div className="relative w-[220px] h-[90px] sm:w-[270px] sm:h-[105px] mx-auto rounded-t-[45px]" style={{ background: "linear-gradient(135deg, #d4a5a5, #c49b9b)", boxShadow: "0 4px 20px rgba(180,140,140,0.25)" }}>
+          <div className="relative w-[clamp(180px,55vw,270px)] h-[clamp(75px,22vw,105px)] mx-auto rounded-t-[45px]" style={{ background: "linear-gradient(135deg, #d4a5a5, #c49b9b)", boxShadow: "0 4px 20px rgba(180,140,140,0.25)" }}>
             <div className="absolute inset-0 rounded-t-[45px] opacity-20" style={{ background: "linear-gradient(135deg, rgba(255,255,255,0.5), transparent 50%)" }} />
             <div className="absolute top-[25%] left-1/2 -translate-x-1/2 text-xl sm:text-2xl animate-pulse" style={{ filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.1))" }}>❤️</div>
           </div>
 
           {/* House body — mood-tinted */}
-          <div className="relative w-[200px] h-[170px] sm:w-[240px] sm:h-[200px] mx-auto -mt-1 rounded-3xl overflow-hidden animate-house-wobble" style={{ background: `linear-gradient(180deg, #fff9f5, #fff0e8)`, boxShadow: "0 8px 35px rgba(180,140,140,0.15), inset 0 -4px 0 rgba(0,0,0,0.03)" }}>
+          <div className="relative w-[clamp(170px,50vw,240px)] h-[clamp(150px,42vw,200px)] mx-auto -mt-1 rounded-3xl overflow-hidden animate-house-wobble" style={{ background: `linear-gradient(180deg, #fff9f5, #fff0e8)`, boxShadow: "0 8px 35px rgba(180,140,140,0.15), inset 0 -4px 0 rgba(0,0,0,0.03)" }}>
             {/* Mood tint overlay */}
             <div className="absolute inset-0 pointer-events-none" style={{ background: moodTint }} />
             {/* Welcome sign */}
             <div className="absolute top-3 left-1/2 -translate-x-1/2 z-10">
-              <div className="px-3 py-1 rounded-full text-[10px] sm:text-xs font-medium text-rose-600 bg-white/80 backdrop-blur-sm shadow-sm border border-rose-100 animate-sign-swing" style={{ transformOrigin: "top center" }}>
+              <div className="px-3 py-1 rounded-full text-xs sm:text-sm font-medium text-rose-600 bg-white/80 backdrop-blur-sm shadow-sm border border-rose-100 animate-sign-swing" style={{ transformOrigin: "top center" }}>
                 Rumah Kita 🏡
               </div>
             </div>
@@ -293,7 +293,7 @@ function HouseExterior({
 
             {/* Door */}
             <button onClick={onEnter} className="absolute bottom-0 left-1/2 -translate-x-1/2 group cursor-pointer" aria-label="Masuk rumah">
-              <div className={`relative w-[52px] h-[80px] sm:w-[60px] sm:h-[95px] rounded-t-[28px] rounded-b-lg transition-all duration-500 group-hover:scale-105 group-active:scale-95 ${isEntering ? "animate-door-swing" : ""}`} style={{ background: "linear-gradient(180deg, #b89589, #9c7a6e)", boxShadow: "inset -3px 0 6px rgba(0,0,0,0.15)", transformOrigin: "left center" }}>
+              <div className={`relative w-[clamp(44px,14vw,60px)] h-[clamp(70px,22vw,95px)] rounded-t-[28px] rounded-b-lg transition-all duration-500 group-hover:scale-105 group-active:scale-95 ${isEntering ? "animate-door-swing" : ""}`} style={{ background: "linear-gradient(180deg, #b89589, #9c7a6e)", boxShadow: "inset -3px 0 6px rgba(0,0,0,0.15)", transformOrigin: "left center" }}>
                 <div className="absolute top-2.5 left-1/2 -translate-x-1/2 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-amber-200/60 border border-[#9c7a6e]" />
                 <div className="absolute top-1/2 right-1.5 text-xs sm:text-sm animate-pulse">💌</div>
               </div>
@@ -301,7 +301,7 @@ function HouseExterior({
           </div>
 
           {/* Ground shadow */}
-          <div className="w-[100px] h-[10px] sm:w-[120px] sm:h-[12px] mx-auto rounded-full bg-rose-900/8 blur-sm -mt-0.5" />
+          <div className="w-[clamp(90px,28vw,120px)] h-[clamp(8px,2.5vw,12px)] mx-auto rounded-full bg-rose-900/8 blur-sm -mt-0.5" />
         </div>
 
         {/* Mascot */}
@@ -716,7 +716,7 @@ function HouseInterior({
       {pullDistance > 5 && (
         <div className="absolute top-0 left-1/2 -translate-x-1/2 z-50 flex flex-col items-center" style={{ opacity: Math.min(pullDistance / 60, 1) }}>
           <div className={`text-2xl ${pullDistance > 60 ? "animate-spin" : ""}`} style={{ animationDuration: "1s" }}>💞</div>
-          <span className="text-[10px] text-rose-400 font-medium">{pullDistance > 60 ? "Lepas untuk refresh" : "Tarik untuk refresh"}</span>
+          <span className="text-xs text-rose-400 font-medium">{pullDistance > 60 ? "Lepas untuk refresh" : "Tarik untuk refresh"}</span>
         </div>
       )}
 
@@ -798,12 +798,12 @@ function HouseInterior({
               className={`flex-1 flex items-center justify-center gap-1.5 px-2 sm:px-4 py-2.5 rounded-xl transition-all active:scale-95 cursor-pointer ${myPreset.bg} shadow-sm border min-w-0`}
             >
               <span className="text-sm flex-shrink-0">{myPreset.emoji}</span>
-              <span className={`text-[10px] sm:text-xs font-medium ${myPreset.color} truncate`}>Kamu: {myPreset.label}</span>
+              <span className={`text-xs sm:text-sm font-medium ${myPreset.color} truncate`}>Kamu: {myPreset.label}</span>
             </button>
             {suggestedStatus && suggestedStatus !== myStatus && (
               <button
                 onClick={() => onUpdateStatus(suggestedStatus)}
-                className="px-2 py-2 rounded-xl bg-rose-100/80 border border-rose-200 text-[9px] sm:text-[10px] font-medium text-rose-500 animate-pulse cursor-pointer whitespace-nowrap flex-shrink-0"
+                className="px-3 py-2.5 rounded-xl bg-rose-100/80 border border-rose-200 text-xs font-medium text-rose-500 animate-pulse cursor-pointer whitespace-nowrap flex-shrink-0"
               >
                 💡 {suggestedStatus === "tidur" ? "Tidur?" : "Gabut?"}
               </button>
@@ -823,17 +823,17 @@ function HouseInterior({
           </div>
 
           {/* Clock — dual time */}
-          <div className="flex items-center justify-center gap-2 sm:gap-3 px-3 sm:px-4 py-2 rounded-xl bg-white/50 backdrop-blur-sm shadow-sm border border-white/40 text-[11px] sm:text-sm flex-wrap">
+          <div className="flex items-center justify-center gap-2 sm:gap-3 px-3 sm:px-4 py-2 rounded-xl bg-white/50 backdrop-blur-sm shadow-sm border border-white/40 text-xs sm:text-sm flex-wrap">
             <span className="flex items-center gap-1">
               {myTime.isDay ? "☀️" : "🌙"}
               <span className="font-mono font-medium text-gray-600">{myTime.time}</span>
-              <span className="text-gray-400 text-[9px] sm:text-[10px]">Kamu</span>
+              <span className="text-gray-400 text-xs">Kamu</span>
             </span>
             <span className="text-rose-200">─</span>
             <span className="flex items-center gap-1">
               {partnerTime.isDay ? "☀️" : "🌙"}
               <span className="font-mono font-medium text-gray-600">{partnerTime.time}</span>
-              <span className="text-gray-400 text-[9px] sm:text-[10px]">{partnerName}</span>
+              <span className="text-gray-400 text-xs">{partnerName}</span>
             </span>
             {isPartnerSleeping && <span>😴</span>}
           </div>
@@ -842,7 +842,7 @@ function HouseInterior({
 
         {/* LDR Countdown */}
         {ldrDays !== null && (
-          <div className="flex items-center justify-center gap-2 mb-3 px-3 sm:px-4 py-2 rounded-xl bg-white/50 backdrop-blur-sm shadow-sm border border-white/40 text-[11px] sm:text-sm">
+          <div className="flex items-center justify-center gap-2 mb-3 px-3 sm:px-4 py-2 rounded-xl bg-white/50 backdrop-blur-sm shadow-sm border border-white/40 text-xs sm:text-sm">
             <span className="text-rose-400">📅</span>
             <span className="text-gray-600 font-medium">{ldrDays} hari terakhir ketemu</span>
             <span className="text-gray-400">·</span>
@@ -857,11 +857,11 @@ function HouseInterior({
 
         {/* House temperature + Mood ring */}
         <div className="flex flex-wrap items-center justify-center gap-2 mb-3">
-          <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/60 backdrop-blur-sm shadow-sm border border-white/40 text-[11px] sm:text-xs ${houseTemp.color}`}>
+          <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/60 backdrop-blur-sm shadow-sm border border-white/40 text-xs sm:text-sm ${houseTemp.color}`}>
             <span>{houseTemp.emoji}</span>
             <span className="font-medium">{houseTemp.label}</span>
           </div>
-          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/60 backdrop-blur-sm shadow-sm border border-white/40 text-[11px] sm:text-xs text-gray-500">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/60 backdrop-blur-sm shadow-sm border border-white/40 text-xs sm:text-sm text-gray-500">
             <span className="w-3 h-3 rounded-full transition-colors duration-700" style={{ background: moodRingColor, boxShadow: `0 0 8px ${moodRingColor}80` }} />
             <span className="font-medium">Mood</span>
           </div>
@@ -870,18 +870,18 @@ function HouseInterior({
         {/* Meetup countdown + Sleep tracker + Heartbeat */}
         <div className="flex flex-wrap items-center justify-center gap-2 mb-3">
           {meetupDays !== null && (
-            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-purple-50/70 backdrop-blur-sm shadow-sm border border-purple-100/60 text-[11px] sm:text-xs text-purple-500">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-purple-50/70 backdrop-blur-sm shadow-sm border border-purple-100/60 text-xs sm:text-sm text-purple-500">
               <span>🗓️</span>
               <span className="font-medium">{meetupDays === 0 ? "Hari ini ketemu! 🎉" : `${meetupDays} hari lagi`}</span>
             </div>
           )}
           {partnerSleeping && (
-            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-indigo-50/70 backdrop-blur-sm shadow-sm border border-indigo-100/60 text-[11px] sm:text-xs text-indigo-400">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-indigo-50/70 backdrop-blur-sm shadow-sm border border-indigo-100/60 text-xs sm:text-sm text-indigo-400">
               <span>😴</span>
               <span className="font-medium">{partnerName} tidur</span>
             </div>
           )}
-          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/60 backdrop-blur-sm shadow-sm border border-white/40 text-[11px] sm:text-xs text-rose-400">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/60 backdrop-blur-sm shadow-sm border border-white/40 text-xs sm:text-sm text-rose-400">
             <span style={{ animation: `heartbeat ${heartbeatInterval}s ease-in-out infinite` }}>💗</span>
             <span className="font-medium">Detak cinta</span>
           </div>
@@ -896,12 +896,12 @@ function HouseInterior({
               aria-label="Buka hadiah harian"
             >
               <div className="text-3xl transition-transform group-hover:scale-110 group-active:scale-90 animate-float-bounce">🎁</div>
-              <span className="mt-1 text-[10px] font-medium text-rose-400">Buka hadiah hari ini!</span>
+              <span className="mt-1 text-xs font-medium text-rose-400">Buka hadiah hari ini!</span>
             </button>
           ) : giftContent ? (
             <div className="animate-pop-in-scale px-4 py-2.5 rounded-xl bg-gradient-to-br from-rose-50/80 to-pink-50/60 backdrop-blur-sm shadow-sm border border-rose-100/60 text-center max-w-xs">
               <p className="text-xs sm:text-sm text-rose-600/80 font-medium">{giftContent}</p>
-              <span className="mt-1 block text-[10px] text-gray-400">Come back besok untuk hadiah baru ✨</span>
+              <span className="mt-1 block text-xs text-gray-400">Come back besok untuk hadiah baru ✨</span>
             </div>
           ) : (
             <div className="px-4 py-2 rounded-xl bg-gray-50/60 text-xs text-gray-400 text-center">
@@ -922,7 +922,7 @@ function HouseInterior({
                 <div className="w-full h-full rounded-sm bg-gradient-to-br from-rose-100 to-pink-100 flex items-center justify-center text-lg">
                   {photo.emoji}
                 </div>
-                <div className="absolute bottom-1 left-1/2 -translate-x-1/2 text-[7px] text-gray-400 font-medium">kenangan</div>
+                <div className="absolute bottom-1 left-1/2 -translate-x-1/2 text-[10px] text-gray-400 font-medium">kenangan</div>
               </div>
             ))}
           </div>
@@ -933,7 +933,7 @@ function HouseInterior({
           <div className="mb-4 max-w-sm mx-auto px-4 sm:px-5 py-3 rounded-2xl bg-gradient-to-br from-amber-50/80 to-rose-50/60 backdrop-blur-sm shadow-sm border border-amber-100/60 cursor-pointer active:scale-[0.98] transition-transform" onClick={() => onOpenRoom("/bedroom")}>
             <div className="flex items-center gap-2 mb-1.5">
               <span className="text-base">💌</span>
-              <span className="text-[10px] font-medium text-amber-600 uppercase tracking-wide">Surat dari {latestLetter.author}</span>
+              <span className="text-xs font-medium text-amber-600 uppercase tracking-wide">Surat dari {latestLetter.author}</span>
             </div>
             <p className="text-xs sm:text-sm text-gray-600/80 italic leading-relaxed line-clamp-2">"{latestLetter.snippet}"</p>
           </div>
@@ -945,7 +945,7 @@ function HouseInterior({
             {achievements.map((ach, i) => (
               <div
                 key={i}
-                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[10px] font-medium border transition-all ${ach.unlocked ? "bg-rose-50/80 border-rose-200/60 text-rose-500 shadow-sm" : "bg-gray-50/40 border-gray-200/40 text-gray-300"}`}
+                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-medium border transition-all ${ach.unlocked ? "bg-rose-50/80 border-rose-200/60 text-rose-500 shadow-sm" : "bg-gray-50/40 border-gray-200/40 text-gray-300"}`}
                 title={ach.unlocked ? ach.label : `${ach.label} (terkunci)`}
               >
                 <span className={ach.unlocked ? "" : "grayscale opacity-40"}>{ach.emoji}</span>
@@ -981,7 +981,7 @@ function HouseInterior({
           </p>
           {partnerTyping && isPartnerOnline && (
             <div className="mt-1 inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-rose-50/80 border border-rose-100">
-              <span className="text-[10px] text-rose-400 font-medium">{partnerName} sedang mengetik</span>
+              <span className="text-xs text-rose-400 font-medium">{partnerName} sedang mengetik</span>
               <span className="flex gap-0.5">
                 <span className="w-1 h-1 rounded-full bg-rose-400 animate-bounce" style={{ animationDelay: "0s", animationDuration: "0.8s" }} />
                 <span className="w-1 h-1 rounded-full bg-rose-400 animate-bounce" style={{ animationDelay: "0.2s", animationDuration: "0.8s" }} />
@@ -990,9 +990,9 @@ function HouseInterior({
             </div>
           )}
           {partnerLastSeen && !isPartnerOnline && (
-            <p className="mt-0.5 text-[10px] text-gray-400/60">Terakhir online: {partnerLastSeen}</p>
+            <p className="mt-0.5 text-xs text-gray-400/60">Terakhir online: {partnerLastSeen}</p>
           )}
-          <p className="mt-1 text-[10px] text-gray-400/60">Hold untuk kirim hug/kiss 💞</p>
+          <p className="mt-1 text-xs text-gray-400/60">Hold untuk kirim hug/kiss 💞</p>
         </div>
 
         {/* Partner avatar — visible in interior */}
@@ -1059,13 +1059,13 @@ function HouseInterior({
 
                 {/* Badge */}
                 {badge > 0 && (
-                  <div className="absolute top-2 right-2 z-20 min-w-[20px] h-5 px-1.5 rounded-full bg-rose-400 text-white text-[10px] font-medium flex items-center justify-center shadow-sm border border-white/80">
+                  <div className="absolute top-2 right-2 z-20 min-w-[20px] h-5 px-1.5 rounded-full bg-rose-400 text-white text-xs font-medium flex items-center justify-center shadow-sm border border-white/80">
                     {badge > 9 ? "9+" : badge}
                   </div>
                 )}
 
                 {/* Room label — soft pill */}
-                <div className="absolute top-2.5 left-1/2 -translate-x-1/2 px-2.5 sm:px-3 py-0.5 rounded-full text-[9px] sm:text-xs font-medium bg-white/80 backdrop-blur-sm shadow-sm whitespace-nowrap text-gray-600 max-w-[80%] truncate">
+                <div className="absolute top-2.5 left-1/2 -translate-x-1/2 px-2.5 sm:px-3 py-0.5 rounded-full text-xs sm:text-sm font-medium bg-white/80 backdrop-blur-sm shadow-sm whitespace-nowrap text-gray-600 max-w-[80%] truncate">
                   {room.label}
                 </div>
 
@@ -1073,7 +1073,7 @@ function HouseInterior({
                 <div className="absolute bottom-9 left-2 text-sm sm:text-base opacity-40">{room.emoji}</div>
 
                 {/* Desc on hover */}
-                <div className={`absolute bottom-2.5 left-1/2 -translate-x-1/2 text-[10px] text-center text-gray-500 bg-white/70 rounded-full px-2.5 py-0.5 transition-all duration-300 ${hoveredRoom === room.id ? "opacity-100" : "opacity-0"}`}>
+                <div className={`absolute bottom-2.5 left-1/2 -translate-x-1/2 text-xs text-center text-gray-500 bg-white/70 rounded-full px-2.5 py-0.5 transition-all duration-300 ${hoveredRoom === room.id ? "opacity-100" : "opacity-0"}`}>
                   {room.desc}
                 </div>
 
@@ -1082,7 +1082,7 @@ function HouseInterior({
 
                 {/* Partner here indicator */}
                 {isPartnerOnline && partnerRoomIndex === idx && (
-                  <div className="absolute top-2 left-2 z-20 flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-rose-100/80 border border-rose-200 text-[8px] sm:text-[9px] font-medium text-rose-500 animate-pulse max-w-[60%] truncate">
+                  <div className="absolute top-2 left-2 z-20 flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-rose-100/80 border border-rose-200 text-xs font-medium text-rose-500 animate-pulse max-w-[60%] truncate">
                     <span className="w-1.5 h-1.5 rounded-full bg-rose-400 animate-ping flex-shrink-0" />
                     {partnerName}
                   </div>
@@ -1104,7 +1104,7 @@ function HouseInterior({
               <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-white/70 backdrop-blur-sm shadow-sm flex items-center justify-center text-xl sm:text-2xl transition-all group-hover:scale-105 group-active:scale-90 animate-float-bounce border border-rose-100">
                 {spot.emoji}
               </div>
-              <span className="mt-1 text-[10px] font-medium text-gray-500/70">
+              <span className="mt-1 text-xs font-medium text-gray-500/70">
                 {spot.label}
               </span>
             </button>

@@ -671,24 +671,6 @@ input:focus, textarea:focus, select:focus, button:focus-visible {
 }
 .animate-heart-float { animation: heart-float 2s ease-out forwards; }
 
-@media (prefers-reduced-motion: reduce) {
-  * {
-    animation-duration: 0.01ms !important;
-    animation-delay: 0ms !important;
-    transition-duration: 0.01ms !important;
-  }
-  /* Keep essential romantic animations visible */
-  .animate-house-approach,
-  .animate-door-zoom,
-  .animate-fade-to-white,
-  .animate-interior-reveal,
-  .animate-room-pop-in,
-  .animate-pop-in-scale,
-  .animate-slide-up-bounce {
-    animation-duration: 0.3s !important;
-  }
-}
-
 /* Mobile safe area + touch optimization */
 @supports (padding: env(safe-area-inset-bottom)) {
   .fixed.bottom-4, .fixed.bottom-7 {
@@ -698,10 +680,16 @@ input:focus, textarea:focus, select:focus, button:focus-visible {
 
 button {
   -webkit-tap-highlight-color: transparent;
+  min-height: 44px;
 }
 
 /* Prevent text size adjust on mobile */
 html {
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
+}
+
+/* Mobile: ensure no horizontal overflow */
+body {
+  max-width: 100vw;
 }
