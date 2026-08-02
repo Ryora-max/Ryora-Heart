@@ -1,8 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use server";
 
-import { query, getOne, getAll, generateId } from "@/lib/db/postgres";
-import { initializeDatabase } from "@/lib/db/init";
+import { query, getOne, getAll, generateId, initializeDatabase } from "@/lib/db";
 
 initializeDatabase();
 
@@ -424,4 +423,70 @@ export async function getAchievements(pairId: string) {
     meetupPassed,
     milestoneCount,
   };
+}
+
+export async function getChatMessages(pairId: string, limit = 50) {
+  const result = await getAll(`
+    SELECT id, user_id as "userId", text, emoji, created_at as "createdAt"
+    FROM chat_messages
+    WHERE pair_id = $1
+    ORDER BY created_at DESC
+    LIMIT $2
+  `, [pairId, limit]);
+  return result.reverse();
+}
+
+export async function sendChatMessage(userId: string, pairId: string, text: string, emoji?: string) {
+  const id = generateId();
+  const now = new Date().toISOString();
+  await query(
+    `INSERT INTO chat_messages (id, pair_id, user_id, text, emoji, created_at)
+     VALUES ($1, $2, $3, $4, $5, $6)`,
+    [id, pairId, userId, text, emoji || null, now]
+  );
+  return { id, userId, text, emoji: emoji || null, createdAt: now };
+}
+
+export async function getVoiceNotes(pairId: string) {
+  const result = await getAll(`
+    SELECT id, user_id as "userId", audio_url as "audioUrl", duration, title, created_at as "createdAt"
+    FROM voice_notes
+    WHERE pair_id = $1
+    ORDER BY created_at DESC
+    LIMIT 50
+  `, [pairId]);
+  return result;
+}
+
+export async function addVoiceNote(userId: string, pairId: string, audioUrl: string, duration: number, title?: string) {
+  const id = generateId();
+  const now = new Date().toISOString();
+  await query(
+    `INSERT INTO voice_notes (id, pair_id, user_id, audio_url, duration, title, created_at)
+     VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+    [id, pairId, userId, audioUrl, duration, title || null, now]
+  );
+  return { id, userId, audioUrl, duration, title: title || null, createdAt: now };
+}
+
+export async function getGameScores(pairId: string) {
+  const result = await getAll(`
+    SELECT id, user_id as "userId", game, score, data, created_at as "createdAt"
+    FROM game_scores
+    WHERE pair_id = $1
+    ORDER BY created_at DESC
+    LIMIT 50
+  `, [pairId]);
+  return result;
+}
+
+export async function addGameScore(userId: string, pairId: string, game: string, score: number, data?: string) {
+  const id = generateId();
+  const now = new Date().toISOString();
+  await query(
+    `INSERT INTO game_scores (id, pair_id, user_id, game, score, data, created_at)
+     VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+    [id, pairId, userId, game, score, data || null, now]
+  );
+  return { id, userId, game, score, data: data || null, createdAt: now };
 }

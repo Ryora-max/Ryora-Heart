@@ -3,8 +3,7 @@
 
 import { v4 as uuidv4 } from "uuid";
 import bcrypt from "bcryptjs";
-import { query, getOne, generateId } from "@/lib/db/postgres";
-import { initializeDatabase } from "@/lib/db/init";
+import { query, getOne, generateId, initializeDatabase } from "@/lib/db";
 
 initializeDatabase();
 

@@ -11,7 +11,7 @@ export default function Loader() {
     const timer = setTimeout(() => {
       setLoading(false);
       document.body.style.overflow = "";
-    }, 5000);
+    }, 1500);
 
     return () => {
       clearTimeout(timer);
@@ -31,7 +31,7 @@ export default function Loader() {
         <h1 className="text-3xl md:text-5xl font-bold text-white mb-2 animate-pulse">RYORA</h1>
         <p className="text-white/80 text-sm md:text-base mb-6">HeartSync • Our Home</p>
         <div className="w-48 h-2 bg-white/20 rounded-full overflow-hidden mx-auto">
-          <div className="h-full bg-white rounded-full loading-bar" style={{ width: "0%" }} />
+          <div className="h-full bg-white rounded-full loading-bar" />
         </div>
       </div>
     </div>

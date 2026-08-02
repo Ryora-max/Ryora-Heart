@@ -9,18 +9,26 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 const sora = Sora({
   variable: "--font-sora",
   subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700", "800"],
+  weight: ["400", "600", "700"],
+  display: "swap",
 });
 
 const jakarta = Plus_Jakarta_Sans({
   variable: "--font-jakarta",
   subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700", "800"],
+  weight: ["400", "600", "700"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: "RYORA | HeartSync • Our Home",
-  description: "A private digital home for two hearts in love",
+  title: "Ryora | LDR Love House",
+  description: "Rumah virtual untuk pasangan LDR — chat, surat, foto, dan permainan bareng",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Ryora",
+  },
 };
 
 export default function RootLayout({

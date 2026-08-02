@@ -9,6 +9,7 @@ import { useLetters } from "@/hooks/useDatabase";
 import { useAuthStore } from "@/stores";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ListItemSkeleton } from "@/components/ui/LoadingSkeleton";
+import { BackToHouseButton } from "@/components/house/BackToHouseButton";
 
 const DEFAULT_PIN = "0101";
 
@@ -141,6 +142,7 @@ export default function SecretBoxPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-red-100 via-rose-100 to-pink-100 p-3 sm:p-4 md:p-8">
+      <BackToHouseButton />
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-8">
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold bg-gradient-to-r from-red-500 to-pink-600 bg-clip-text text-transparent mb-2">

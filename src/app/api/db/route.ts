@@ -34,6 +34,12 @@ import {
   getUserExtra,
   setUserExtra,
   getAchievements,
+  getChatMessages,
+  sendChatMessage,
+  getVoiceNotes,
+  addVoiceNote,
+  getGameScores,
+  addGameScore,
 } from "@/app/actions/db";
 import { updateProfile, updateSettings, getUserSettings } from "@/app/actions/auth";
 
@@ -126,6 +132,18 @@ export async function POST(request: NextRequest) {
         return NextResponse.json(await setUserExtra(userId, pairId, params.key, params.value));
       case "getAchievements":
         return NextResponse.json(await getAchievements(pairId));
+      case "getChatMessages":
+        return NextResponse.json(await getChatMessages(pairId));
+      case "sendChatMessage":
+        return NextResponse.json(await sendChatMessage(userId, pairId, params.text, params.emoji));
+      case "getVoiceNotes":
+        return NextResponse.json(await getVoiceNotes(pairId));
+      case "addVoiceNote":
+        return NextResponse.json(await addVoiceNote(userId, pairId, params.audioUrl, params.duration, params.title));
+      case "getGameScores":
+        return NextResponse.json(await getGameScores(pairId));
+      case "addGameScore":
+        return NextResponse.json(await addGameScore(userId, pairId, params.game, params.score, params.data));
       default:
         return NextResponse.json({ error: "Invalid action" }, { status: 400 });
     }

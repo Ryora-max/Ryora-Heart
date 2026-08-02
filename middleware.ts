@@ -4,7 +4,12 @@ import type { NextRequest } from "next/server";
 export function middleware(request: NextRequest) {
   const token = request.cookies.get("ryora-session")?.value;
   const pathname = request.nextUrl.pathname;
-  if (!token && !pathname.startsWith("/login")) {
+
+  if (pathname === "/" || pathname.startsWith("/login")) {
+    return NextResponse.next();
+  }
+
+  if (!token) {
     const loginUrl = new URL("/login", request.url);
     return NextResponse.redirect(loginUrl);
   }

@@ -8,6 +8,7 @@ import { useLetters } from "@/hooks/useDatabase";
 import { useAuthStore } from "@/stores";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ListItemSkeleton } from "@/components/ui/LoadingSkeleton";
+import { BackToHouseButton } from "@/components/house/BackToHouseButton";
 
 type Tab = "love" | "openwhen" | "voice" | "secret";
 
@@ -136,6 +137,7 @@ export default function BedroomPage() {
 
   return (
     <div className={`relative min-h-screen p-3 sm:p-4 md:p-8 transition-all duration-500 ${nightMode ? "bg-gradient-to-br from-slate-900 via-indigo-950 to-purple-950" : "bg-gradient-to-br from-pink-100 via-purple-100 to-indigo-100"}`}>
+      <BackToHouseButton />
       {nightMode && (
         <div className="fixed inset-0 pointer-events-none overflow-hidden">
           {stars.map((star, i) => (

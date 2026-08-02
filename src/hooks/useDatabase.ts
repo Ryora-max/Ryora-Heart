@@ -48,7 +48,7 @@ export function useMoods(token: string) {
     if (!token) return;
     // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchMoods();
-    const interval = setInterval(fetchMoods, 3000);
+    const interval = setInterval(() => { if (!document.hidden) fetchMoods(); }, 2000);
     return () => clearInterval(interval);
   }, [fetchMoods, token]);
 
@@ -95,7 +95,7 @@ export function useActivities(token: string) {
     if (!token) return;
     // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchActivities();
-    const interval = setInterval(fetchActivities, 3000);
+    const interval = setInterval(() => { if (!document.hidden) fetchActivities(); }, 2000);
     return () => clearInterval(interval);
   }, [fetchActivities, token]);
 
@@ -172,7 +172,7 @@ export function useGallery(token: string) {
     if (!token) return;
     // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchGallery();
-    const interval = setInterval(fetchGallery, 3000);
+    const interval = setInterval(() => { if (!document.hidden) fetchGallery(); }, 2000);
     return () => clearInterval(interval);
   }, [fetchGallery, token]);
 
@@ -228,7 +228,7 @@ export function useCalendarEvents(token: string) {
     if (!token) return;
     // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchEvents();
-    const interval = setInterval(fetchEvents, 3000);
+    const interval = setInterval(() => { if (!document.hidden) fetchEvents(); }, 2000);
     return () => clearInterval(interval);
   }, [fetchEvents, token]);
 
@@ -299,7 +299,7 @@ export function useLetters(token: string) {
     if (!token) return;
     // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchLetters();
-    const interval = setInterval(fetchLetters, 3000);
+    const interval = setInterval(() => { if (!document.hidden) fetchLetters(); }, 2000);
     return () => clearInterval(interval);
   }, [fetchLetters, token]);
 
@@ -339,7 +339,7 @@ export function usePresence(token: string) {
     if (!token) return;
     // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchPresence();
-    const interval = setInterval(fetchPresence, 3000);
+    const interval = setInterval(() => { if (!document.hidden) fetchPresence(); }, 2000);
     return () => clearInterval(interval);
   }, [fetchPresence, token]);
 
@@ -373,7 +373,7 @@ export function useStatusUpdates(token: string) {
     if (!token) return;
     // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchUpdates();
-    const interval = setInterval(fetchUpdates, 3000);
+    const interval = setInterval(() => { if (!document.hidden) fetchUpdates(); }, 2000);
     return () => clearInterval(interval);
   }, [fetchUpdates, token]);
 
@@ -416,7 +416,7 @@ export function useHugs(token: string) {
     if (!token) return;
     // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchHugs();
-    const interval = setInterval(fetchHugs, 3000);
+    const interval = setInterval(() => { if (!document.hidden) fetchHugs(); }, 2000);
     return () => clearInterval(interval);
   }, [fetchHugs, token]);
 
@@ -456,7 +456,7 @@ export function useLoveMeter(token: string) {
     if (!token) return;
     // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchHistory();
-    const interval = setInterval(fetchHistory, 3000);
+    const interval = setInterval(() => { if (!document.hidden) fetchHistory(); }, 2000);
     return () => clearInterval(interval);
   }, [fetchHistory, token]);
 
@@ -494,7 +494,7 @@ export function useNotifications(token: string) {
     if (!token) return;
     // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchNotifications();
-    const interval = setInterval(fetchNotifications, 3000);
+    const interval = setInterval(() => { if (!document.hidden) fetchNotifications(); }, 2000);
     return () => clearInterval(interval);
   }, [fetchNotifications, token]);
 
@@ -591,7 +591,7 @@ export function useLocations(token: string) {
     if (!token) return;
     // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchLocations();
-    const interval = setInterval(fetchLocations, 3000);
+    const interval = setInterval(() => { if (!document.hidden) fetchLocations(); }, 2000);
     return () => clearInterval(interval);
   }, [fetchLocations, token]);
 
@@ -651,4 +651,111 @@ export function useDailyReset() {
   }, [todayKey]);
 
   return { todayKey, isNewDay };
+}
+
+export function useChat(token: string) {
+  const [messages, setMessages] = useState<{ id: string; userId: string; text: string; emoji: string | null; createdAt: string }[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchMessages = useCallback(async () => {
+    try {
+      const data = await callDb("getChatMessages", token);
+      setMessages(data);
+    } catch (error) {
+      console.error("Error fetching chat:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, [token]);
+
+  useEffect(() => {
+    if (!token) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchMessages();
+    const interval = setInterval(() => { if (!document.hidden) fetchMessages(); }, 2000);
+    return () => clearInterval(interval);
+  }, [fetchMessages, token]);
+
+  const sendMessage = useCallback(async (text: string, emoji?: string) => {
+    try {
+      await callDb("sendChatMessage", token, { text, emoji });
+      fetchMessages();
+    } catch (error) {
+      console.error("Error sending chat:", error);
+    }
+  }, [token, fetchMessages]);
+
+  return { messages, loading, sendMessage, refetch: fetchMessages };
+}
+
+export function useVoiceNotes(token: string) {
+  const [notes, setNotes] = useState<{ id: string; userId: string; audioUrl: string; duration: number; title: string | null; createdAt: string }[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchNotes = useCallback(async () => {
+    try {
+      const data = await callDb("getVoiceNotes", token);
+      setNotes(data);
+    } catch (error) {
+      console.error("Error fetching voice notes:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, [token]);
+
+  useEffect(() => {
+    if (!token) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchNotes();
+    const interval = setInterval(() => { if (!document.hidden) fetchNotes(); }, 2000);
+    return () => clearInterval(interval);
+  }, [fetchNotes, token]);
+
+  const addNote = useCallback(async (audioUrl: string, duration: number, title?: string) => {
+    try {
+      await callDb("addVoiceNote", token, { audioUrl, duration, title });
+      showToast("Voice note terkirim 🎙️", "success");
+      fetchNotes();
+    } catch (error) {
+      showToast("Gagal mengirim voice note", "error");
+      console.error("Error adding voice note:", error);
+    }
+  }, [token, fetchNotes]);
+
+  return { notes, loading, addNote, refetch: fetchNotes };
+}
+
+export function useGames(token: string) {
+  const [scores, setScores] = useState<{ id: string; userId: string; game: string; score: number; data: string | null; createdAt: string }[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchScores = useCallback(async () => {
+    try {
+      const data = await callDb("getGameScores", token);
+      setScores(data);
+    } catch (error) {
+      console.error("Error fetching game scores:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, [token]);
+
+  useEffect(() => {
+    if (!token) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchScores();
+    const interval = setInterval(() => { if (!document.hidden) fetchScores(); }, 2000);
+    return () => clearInterval(interval);
+  }, [fetchScores, token]);
+
+  const submitScore = useCallback(async (game: string, score: number, data?: string) => {
+    try {
+      await callDb("addGameScore", token, { game, score, data });
+      fetchScores();
+    } catch (error) {
+      console.error("Error submitting score:", error);
+    }
+  }, [token, fetchScores]);
+
+  return { scores, loading, submitScore, refetch: fetchScores };
 }

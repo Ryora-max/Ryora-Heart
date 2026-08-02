@@ -1,11 +1,11 @@
 {
-  "name": "RYORA - HeartSync • Our Home",
-  "short_name": "RYORA",
-  "description": "A private digital home for two hearts in love",
-  "start_url": "/",
+  "name": "Ryora — LDR Love House",
+  "short_name": "Ryora",
+  "description": "Rumah virtual untuk pasangan LDR — chat, surat, foto, dan permainan bareng",
+  "start_url": "/home",
   "display": "standalone",
-  "background_color": "#050816",
-  "theme_color": "#8B5CF6",
+  "background_color": "#FFE8D8",
+  "theme_color": "#E8927C",
   "orientation": "portrait-primary",
   "icons": [
     {

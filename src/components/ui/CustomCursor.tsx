@@ -14,20 +14,21 @@ interface Sparkle {
   delay: number;
 }
 
-function getInitialEnabled() {
-  if (typeof window === "undefined") return false;
-  const isTouchDevice = "ontouchstart" in window || navigator.maxTouchPoints > 0;
-  if (isTouchDevice) return false;
-  const stored = localStorage.getItem("ryora-custom-cursor");
-  return stored !== "false";
-}
-
 export default function CustomCursor() {
-  const [enabled, setEnabled] = useState(getInitialEnabled);
+  const [enabled, setEnabled] = useState(false);
   const [position, setPosition] = useState({ x: -100, y: -100 });
   const [isVisible, setIsVisible] = useState(false);
   const [sparkles, setSparkles] = useState<Sparkle[]>([]);
   const rafRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const isTouchDevice = "ontouchstart" in window || navigator.maxTouchPoints > 0;
+    if (isTouchDevice) return;
+    const stored = localStorage.getItem("ryora-custom-cursor");
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (stored !== "false") setEnabled(true);
+  }, []);
   const currentPos = useRef({ x: -100, y: -100 });
   const targetPos = useRef({ x: -100, y: -100 });
 

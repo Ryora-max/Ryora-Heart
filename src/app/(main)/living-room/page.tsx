@@ -1,14 +1,15 @@
 "use client";
 
-import { useState, useCallback } from "react";
-import { CheckCircle2, User, Search } from "lucide-react";
+import { useState, useCallback, useRef, useEffect } from "react";
+import { CheckCircle2, User, Search, Send } from "lucide-react";
 import { MagneticButton } from "@/components/animations/MagneticButton";
 import { LdrBanner } from "@/components/ldr/LdrBanner";
-import { useActivities, useMoods } from "@/hooks/useDatabase";
+import { useActivities, useMoods, useChat } from "@/hooks/useDatabase";
 import { useAuthStore } from "@/stores";
 import type { MoodEntry } from "@/types";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ListItemSkeleton } from "@/components/ui/LoadingSkeleton";
+import { BackToHouseButton } from "@/components/house/BackToHouseButton";
 
 interface ConfettiHeart {
   id: number;
@@ -35,9 +36,25 @@ export default function LivingRoomPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState("");
   const [confetti, setConfetti] = useState<ConfettiHeart[]>([]);
-  const { token } = useAuthStore();
+  const { user, token } = useAuthStore();
   const { activities, loading: activitiesLoading, createActivity, toggleActivity, updateActivity, deleteActivity } = useActivities(token || "");
   const { moods, loading: moodsLoading, addMood } = useMoods(token || "");
+  const { messages, sendMessage } = useChat(token || "");
+  const [chatInput, setChatInput] = useState("");
+  const chatScrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (chatScrollRef.current) {
+      chatScrollRef.current.scrollTop = chatScrollRef.current.scrollHeight;
+    }
+  }, [messages]);
+
+  const handleSendChat = async () => {
+    if (!chatInput.trim()) return;
+    const text = chatInput.trim();
+    setChatInput("");
+    await sendMessage(text);
+  };
 
   const spawnConfetti = useCallback(() => {
     const hearts: ConfettiHeart[] = [];
@@ -100,6 +117,7 @@ export default function LivingRoomPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-100 via-cyan-100 to-teal-100 p-3 sm:p-4 md:p-8">
+      <BackToHouseButton />
       <div className="max-w-6xl mx-auto">
         <div className="mb-8 text-center">
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-500 to-cyan-600 bg-clip-text text-transparent mb-2">
@@ -109,6 +127,45 @@ export default function LivingRoomPage() {
         </div>
 
         <LdrBanner tagline="Living room virtual: kita duduk bersebelahan lewat layar. Saling senggol pixel. 🛋️💞" />
+
+        {/* Quick Chat */}
+        <div className="mb-6 bg-white/80 backdrop-blur-sm rounded-2xl p-4 border-2 border-pink-200 shadow-xl">
+          <h3 className="text-sm font-bold text-pink-900 mb-3 flex items-center gap-2">💬 Quick Chat</h3>
+          <div ref={chatScrollRef} className="h-40 overflow-y-auto space-y-2 mb-3 rounded-xl bg-pink-50/50 p-3">
+            {messages.length === 0 ? (
+              <p className="text-center text-xs text-text-secondary py-8">Belum ada pesan. Sapa partner! 👋</p>
+            ) : (
+              messages.map((msg) => {
+                const isMine = msg.userId === user?.id;
+                return (
+                  <div key={msg.id} className={`flex ${isMine ? "justify-end" : "justify-start"}`}>
+                    <div className={`max-w-[75%] rounded-xl px-3 py-1.5 text-xs ${isMine ? "bg-gradient-to-br from-pink-400 to-purple-400 text-white" : "bg-white text-text-primary border border-pink-100"}`}>
+                      <p>{msg.text}</p>
+                      {msg.emoji && <span className="ml-1">{msg.emoji}</span>}
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            <input
+              type="text"
+              value={chatInput}
+              onChange={(e) => setChatInput(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleSendChat()}
+              placeholder="Ketik pesan..."
+              className="flex-1 px-3 py-2 rounded-full bg-pink-50 border border-pink-200 text-xs text-text-primary outline-none focus:border-pink-400 min-h-[40px]"
+            />
+            <button
+              onClick={handleSendChat}
+              disabled={!chatInput.trim()}
+              className="w-10 h-10 rounded-full bg-gradient-to-br from-pink-400 to-purple-400 text-white disabled:opacity-40 flex items-center justify-center transition-all hover:shadow-lg min-h-[40px] min-w-[40px]"
+            >
+              <Send size={16} />
+            </button>
+          </div>
+        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 mb-6">
           <div className="room-card animate-fade-in-up lg:col-span-2 bg-white/80 backdrop-blur-sm rounded-2xl p-6 border-2 border-blue-200 shadow-xl">

@@ -8,6 +8,8 @@ import { ProfilePictureUpload } from "@/components/ui/ProfilePictureUpload";
 import { LdrBanner } from "@/components/ldr/LdrBanner";
 import { useTheme } from "@/hooks";
 import { GuideModal } from "@/components/ui/GuideModal";
+import { BackToHouseButton } from "@/components/house/BackToHouseButton";
+import { showToast } from "@/hooks/useToast";
 
 type Theme = "dark" | "light" | "aurora";
 
@@ -85,9 +87,9 @@ export default function SettingsPage() {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ action: "updateSettings", token, data: { [key]: value } }),
           });
-          if (!res.ok) throw new Error("Failed to save");
+          if (!res.ok) throw new Error("Gagal menyimpan");
         } catch {
-          setSaveError("Failed to save setting");
+          setSaveError("Gagal menyimpan pengaturan");
         }
       })();
     }
@@ -102,12 +104,12 @@ export default function SettingsPage() {
     setRelationshipError("");
 
     if (!name.trim()) {
-      setNameError("Name is required");
+      setNameError("Nama wajib diisi");
       setSaving(false);
       return;
     }
     if (!relationship.trim()) {
-      setRelationshipError("Relationship is required");
+      setRelationshipError("Status hubungan wajib diisi");
       setSaving(false);
       return;
     }
@@ -120,10 +122,10 @@ export default function SettingsPage() {
       });
       const updatedUser = { ...user, name, relationship, avatar_url: avatarUrl };
       useAuthStore.getState().setUser(updatedUser);
-      setSaveSuccess("Profile saved successfully!");
+      setSaveSuccess("Profil berhasil disimpan!");
       setTimeout(() => setSaveSuccess(null), 3000);
     } catch {
-      setSaveError("Failed to save profile");
+      setSaveError("Gagal menyimpan profil");
     } finally {
       setSaving(false);
     }
@@ -142,23 +144,24 @@ export default function SettingsPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-100 via-slate-100 to-zinc-100 p-4 md:p-8">
+      <BackToHouseButton />
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-8">
           <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-gray-600 to-slate-600 bg-clip-text text-transparent mb-2">
-            ⚙️ Settings
+            ⚙️ Pengaturan
           </h1>
-          <p className="text-gray-600/70">Manage your preferences</p>
+          <p className="text-gray-600/70">Kelola preferensi kamu</p>
         </div>
 
         <LdrBanner tagline="Setting LDR: notifikasi prioritas = chat doi. 🔔💞" />
 
          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 sm:p-6 mb-6 border-2 border-gray-200 shadow-xl">
-           <h3 className="text-xl font-bold text-gray-900 mb-4">Profile</h3>
+           <h3 className="text-xl font-bold text-gray-900 mb-4">Profil</h3>
            <div className="flex flex-col items-start gap-4">
              <ProfilePictureUpload currentUrl={avatarUrl} onUpload={setAvatarUrl} />
              <div className="flex-1 space-y-4 w-full">
                <div>
-                 <label className="text-gray-600 text-sm block mb-2">Name</label>
+                 <label className="text-gray-600 text-sm block mb-2">Nama</label>
                  <input
                    type="text"
                    value={name}
@@ -168,7 +171,7 @@ export default function SettingsPage() {
                 {nameError && <p className="text-red-500 text-xs mt-1">{nameError}</p>}
               </div>
               <div>
-                <label className="text-gray-600 text-sm block mb-2">Relationship</label>
+                <label className="text-gray-600 text-sm block mb-2">Status Hubungan</label>
                 <input
                   type="text"
                   value={relationship}
@@ -182,24 +185,24 @@ export default function SettingsPage() {
                   disabled={saving}
                   className="w-full py-2 rounded-xl bg-gradient-to-r from-gray-500 to-slate-600 text-white font-bold hover:from-gray-600 hover:to-slate-700 transition-all shadow-lg hover:shadow-xl disabled:opacity-50"
                 >
-                  {saving ? "Saving..." : "Save Changes"}
+                  {saving ? "Menyimpan..." : "Simpan Perubahan"}
                 </button>
                 {saveError && (
-                  <p className="text-red-500 text-xs mt-2 text-center">{saveError}</p>
+                  <p className="text-red-500 text-xs mt-2 text-center">Gagal menyimpan profil</p>
                 )}
                 {saveSuccess && (
-                  <p className="text-green-600 text-xs mt-2 text-center">{saveSuccess}</p>
+                  <p className="text-green-600 text-xs mt-2 text-center">Profil berhasil disimpan!</p>
                 )}
             </div>
           </div>
         </div>
 
         <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 mb-6 border-2 border-gray-200 shadow-xl">
-          <h3 className="text-xl font-bold text-gray-900 mb-4">Appearance</h3>
+          <h3 className="text-xl font-bold text-gray-900 mb-4">Tampilan</h3>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {[
-              { value: "dark", label: "Dark", icon: <Moon size={18} /> },
-              { value: "light", label: "Light", icon: <Sun size={18} /> },
+              { value: "dark", label: "Gelap", icon: <Moon size={18} /> },
+              { value: "light", label: "Terang", icon: <Sun size={18} /> },
               { value: "aurora", label: "Aurora", icon: <Sun size={18} /> },
              ].map((t, i) => (
                 <button
@@ -216,10 +219,10 @@ export default function SettingsPage() {
         </div>
 
          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 sm:p-6 mb-6 border-2 border-gray-200 shadow-xl">
-           <h3 className="text-xl font-bold text-gray-900 mb-4">Relationship</h3>
+           <h3 className="text-xl font-bold text-gray-900 mb-4">Hubungan</h3>
            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
              <div>
-               <label className="text-gray-600 text-sm block mb-2">Relationship Start Date</label>
+               <label className="text-gray-600 text-sm block mb-2">Tanggal Jadian</label>
                <input
                  type="date"
                  value={settings.relationshipStartDate}
@@ -228,7 +231,7 @@ export default function SettingsPage() {
                />
              </div>
              <div>
-               <label className="text-gray-600 text-sm block mb-2">Distance (KM)</label>
+               <label className="text-gray-600 text-sm block mb-2">Jarak (KM)</label>
                <input
                  type="number"
                  value={settings.distance}
@@ -238,7 +241,7 @@ export default function SettingsPage() {
                />
              </div>
              <div>
-               <label className="text-gray-600 text-sm block mb-2">Next Meetup Date</label>
+               <label className="text-gray-600 text-sm block mb-2">Tanggal Ketemu Lagi</label>
                <input
                  type="date"
                  value={settings.nextMeetupDate}
@@ -247,7 +250,7 @@ export default function SettingsPage() {
                />
              </div>
              <div>
-               <label className="text-gray-600 text-sm block mb-2">Secret Box PIN</label>
+               <label className="text-gray-600 text-sm block mb-2">PIN Secret Box</label>
                <input
                  type="password"
                  maxLength={4}
@@ -258,22 +261,66 @@ export default function SettingsPage() {
                />
              </div>
            </div>
+           <button
+             onClick={() => {
+               if (token) {
+                 fetch("/api/db", {
+                   method: "POST",
+                   headers: { "Content-Type": "application/json" },
+                   body: JSON.stringify({ action: "updateSettings", token, data: settings }),
+                 }).then(() => {
+                   showToast("Pengaturan hubungan disimpan!", "success");
+                 }).catch(() => {
+                   showToast("Gagal menyimpan pengaturan", "error");
+                 });
+               }
+             }}
+             className="w-full mt-4 py-2 rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 text-white font-bold hover:from-pink-600 hover:to-rose-600 transition-all shadow-lg cursor-pointer"
+           >
+             Simpan Pengaturan Hubungan
+           </button>
          </div>
 
         <div className="space-y-3 mb-6">
           {[
-            { icon: <Bell size={20} />, label: "Notifications", description: "Manage alerts" },
-            { icon: <Shield size={20} />, label: "Privacy & Security", description: "Control your data" },
-            { icon: <Database size={20} />, label: "Data Management", description: "Export or clear data" },
+            { icon: <Bell size={20} />, label: "Notifikasi", description: "Atur peringatan", action: () => {
+              if (typeof window !== "undefined" && "Notification" in window) {
+                if (Notification.permission === "default") {
+                  Notification.requestPermission().then((p) => {
+                    showToast(p === "granted" ? "Notifikasi diaktifkan!" : "Notifikasi diblokir", p === "granted" ? "success" : "error");
+                  });
+                } else {
+                  showToast(`Notifikasi: ${Notification.permission === "granted" ? "aktif" : "diblokir"}`, "info");
+                }
+              } else {
+                showToast("Browser tidak support notifikasi", "error");
+              }
+            }},
+            { icon: <Shield size={20} />, label: "Privasi & Keamanan", description: "Kontrol data kamu", action: () => {
+              showToast("Data kamu terenkripsi & hanya bisa diakses dengan token kamu", "info");
+            }},
+            { icon: <Database size={20} />, label: "Manajemen Data", description: "Ekspor atau hapus data", action: () => {
+              if (confirm("Hapus semua data lokal (cache, settings)? Data server tidak terhapus.")) {
+                localStorage.clear();
+                sessionStorage.clear();
+                showToast("Data lokal dibersihkan. Halaman akan reload...", "success");
+                setTimeout(() => window.location.reload(), 1500);
+              }
+            }},
           ].map((item, i) => (
-            <div key={i} className="settings-item animate-fade-in-left bg-white/80 backdrop-blur-sm p-4 rounded-xl border-2 border-gray-200 flex items-center gap-4 transition-all" style={{ animationDelay: `${0.3 + i * 0.1}s` }}>
+            <button
+              key={i}
+              onClick={item.action}
+              className="settings-item animate-fade-in-left w-full bg-white/80 backdrop-blur-sm p-4 rounded-xl border-2 border-gray-200 flex items-center gap-4 transition-all hover:border-gray-300 hover:bg-gray-50 cursor-pointer text-left"
+              style={{ animationDelay: `${0.3 + i * 0.1}s` }}
+            >
               <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center text-gray-600">{item.icon}</div>
               <div className="flex-1">
                 <span className="text-gray-800 font-medium block">{item.label}</span>
                 <span className="text-gray-500 text-sm">{item.description}</span>
               </div>
               <span className="text-gray-400">→</span>
-            </div>
+            </button>
           ))}
         </div>
 
@@ -284,7 +331,7 @@ export default function SettingsPage() {
                 <Bell size={20} />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-gray-900">Buku Panduan Penggunaan 📘</h3>
+                <h3 className="text-lg font-bold text-gray-900">Buku Panduan 📘</h3>
                 <p className="text-xs text-gray-500">Panduan lengkap notifikasi, status online & fitur LDR</p>
               </div>
             </div>
@@ -302,7 +349,7 @@ export default function SettingsPage() {
           className="w-full py-3 rounded-xl border-2 border-red-200 text-red-500 hover:bg-red-50 transition-all cursor-pointer flex items-center justify-center gap-2 font-medium min-h-[44px]"
         >
           <LogOut size={18} />
-          Logout
+          Keluar
         </button>
 
         <GuideModal isOpen={isGuideOpen} onClose={() => setIsGuideOpen(false)} />

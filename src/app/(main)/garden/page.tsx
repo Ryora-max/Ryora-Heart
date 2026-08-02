@@ -6,6 +6,7 @@ import { useActivities } from "@/hooks/useDatabase";
 import { useAuthStore } from "@/stores";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { CardSkeleton } from "@/components/ui/LoadingSkeleton";
+import { BackToHouseButton } from "@/components/house/BackToHouseButton";
 
 interface SelectedMilestone {
   id: string;
@@ -39,6 +40,7 @@ export default function GardenPage() {
 
   return (
     <div className="relative min-h-screen bg-gradient-to-br from-green-100 via-emerald-100 to-teal-100 p-3 sm:p-4 md:p-8 overflow-hidden">
+      <BackToHouseButton />
       <div className="max-w-4xl mx-auto">
         <div className="garden-header animate-fade-in-up text-center mb-8 sm:mb-12">
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold bg-gradient-to-r from-green-500 to-emerald-600 bg-clip-text text-transparent mb-2">

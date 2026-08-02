@@ -19,11 +19,11 @@ function createStars(count: number): Star[] {
   for (let i = 0; i < count; i++) {
     stars.push({
       id: i,
-      width: Math.random() * 3 + 1,
-      height: Math.random() * 3 + 1,
-      top: Math.random() * 100,
-      left: Math.random() * 100,
-      opacity: Math.random() * 0.5 + 0.2,
+      width: ((i * 13 + 7) % 3) + 1,
+      height: ((i * 17 + 3) % 3) + 1,
+      top: ((i * 23 + 11) % 100),
+      left: ((i * 29 + 17) % 100),
+      opacity: ((i * 31 + 19) % 50 + 20) / 100,
     });
   }
   return stars;

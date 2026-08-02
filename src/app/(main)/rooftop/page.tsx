@@ -7,6 +7,7 @@ import { calculateDaysTogether } from "@/lib/utils";
 import { MagneticButton } from "@/components/animations/MagneticButton";
 import { LdrBanner } from "@/components/ldr/LdrBanner";
 import { useAuthStore } from "@/stores";
+import { BackToHouseButton } from "@/components/house/BackToHouseButton";
 
 const DEFAULT_SETTINGS = {
   relationshipStartDate: APP_CONFIG.relationship.startDate,
@@ -150,6 +151,7 @@ export default function RooftopPage() {
 
   return (
     <div className={`relative min-h-screen p-3 sm:p-4 md:p-8 transition-all duration-500 ${stargazing ? "bg-gradient-to-br from-slate-950 via-indigo-950 to-purple-950" : "bg-gradient-to-br from-indigo-200 via-purple-200 to-pink-200"}`}>
+      <BackToHouseButton />
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
         {stars.map((star, i) => (
           <div

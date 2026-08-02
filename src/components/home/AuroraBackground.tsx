@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 interface Star {
   id: number;
@@ -14,33 +14,28 @@ interface Star {
 
 function createStars(): Star[] {
   const arr: Star[] = [];
-  for (let i = 0; i < 100; i++) {
+  for (let i = 0; i < 30; i++) {
     arr.push({
       id: i,
-      top: Math.random() * 100,
-      left: Math.random() * 100,
-      opacity: Math.random() * 0.5 + 0.1,
-      size: Math.random() * 2 + 1,
-      delay: Math.random() * 5,
-      duration: 2 + Math.random() * 3,
+      top: ((i * 23 + 11) % 100),
+      left: ((i * 29 + 17) % 100),
+      opacity: ((i * 31 + 19) % 50 + 10) / 100,
+      size: ((i * 13 + 7) % 3) + 1,
+      delay: ((i * 37 + 23) % 50) / 10,
+      duration: 2 + ((i * 17 + 3) % 30) / 10,
     });
   }
   return arr;
 }
 
 export function AuroraBackground() {
-  const [stars, setStars] = useState<Star[]>([]);
-
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setStars(createStars());
-  }, []);
+  const [stars] = useState<Star[]>(() => createStars());
 
   return (
     <div className="aurora-bg">
-      <div className="aurora-orb-1 absolute top-[10%] left-[15%] w-[600px] h-[400px] rounded-full bg-primary/10 blur-[120px]" />
-      <div className="aurora-orb-2 absolute top-[60%] right-[10%] w-[500px] h-[500px] rounded-full bg-secondary/10 blur-[120px]" />
-      <div className="aurora-orb-3 absolute top-[30%] left-[50%] w-[400px] h-[300px] rounded-full bg-accent/8 blur-[100px]" />
+      <div className="aurora-orb-1 absolute top-[10%] left-[15%] w-[400px] h-[300px] rounded-full bg-primary/10 blur-[60px]" />
+      <div className="aurora-orb-2 absolute top-[60%] right-[10%] w-[350px] h-[350px] rounded-full bg-secondary/10 blur-[60px]" />
+      <div className="aurora-orb-3 absolute top-[30%] left-[50%] w-[300px] h-[200px] rounded-full bg-accent/8 blur-[50px]" />
       <div className="absolute inset-0 overflow-hidden">
         {stars.map((star) => (
           <div
