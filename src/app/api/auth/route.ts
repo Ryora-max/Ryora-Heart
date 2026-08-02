@@ -121,6 +121,6 @@ export async function POST(request: NextRequest) {
     }
   } catch (error) {
     console.error("Auth API error:", error);
-    return NextResponse.json({ error: "Kesalahan server, periksa DATABASE_URL" }, { status: 500 });
+    return NextResponse.json({ error: "Kesalahan server: " + String((error as any)?.message || error) }, { status: 500 });
   }
 }
