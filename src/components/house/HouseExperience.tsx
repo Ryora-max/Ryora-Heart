@@ -222,14 +222,14 @@ function HouseExterior({
       )}
 
       {/* Top — greeting + partner status + streak */}
-      <div className="absolute top-10 sm:top-12 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-1.5">
-        <p className="text-xs sm:text-sm font-medium text-white/70 italic animate-fade-in">{greeting}</p>
-        <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/70 backdrop-blur-md shadow-md text-xs sm:text-sm font-medium border border-white/60">
-          <span className={`w-2.5 h-2.5 rounded-full ${isPartnerOnline ? "bg-emerald-400 animate-pulse" : "bg-gray-300"}`} />
+      <div className="relative pt-6 sm:pt-10 flex flex-col items-center gap-1.5 px-4 z-20">
+        <p className="text-xs sm:text-sm font-medium text-white/70 italic animate-fade-in text-center">{greeting}</p>
+        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/70 backdrop-blur-md shadow-md text-xs sm:text-sm font-medium border border-white/60 max-w-[90vw]">
+          <span className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${isPartnerOnline ? "bg-emerald-400 animate-pulse" : "bg-gray-300"}`} />
           {isPartnerOnline ? (
-            <span className="text-gray-700">{partnerName} {partnerPreset.emoji} {partnerPreset.label}</span>
+            <span className="text-gray-700 truncate">{partnerName} {partnerPreset.emoji} {partnerPreset.label}</span>
           ) : (
-            <span className="text-gray-500">{partnerName} sedang pergi... 💤</span>
+            <span className="text-gray-500 truncate">{partnerName} sedang pergi... 💤</span>
           )}
         </div>
         {streak > 1 && (
@@ -247,7 +247,7 @@ function HouseExterior({
       </div>
 
       {/* Main area — flat house + mascot */}
-      <div className="relative flex flex-col items-center justify-center min-h-screen pt-20 pb-28">
+      <div className="relative flex flex-col items-center justify-center min-h-[70vh] sm:min-h-screen pt-4 pb-28">
         <div className={`relative ${isEntering ? "animate-door-zoom" : "animate-house-approach"}`} style={{ transformOrigin: "center 70%" }}>
           {/* Chimney */}
           <div className="absolute -top-1 right-10 sm:right-14 w-6 h-12 sm:w-7 sm:h-14 bg-[#d4a5a5] rounded-t-xl z-10">
@@ -316,7 +316,7 @@ function HouseExterior({
       </div>
 
       {/* Bottom action bar — soft, minimal */}
-      <div className="absolute bottom-5 sm:bottom-7 left-1/2 -translate-x-1/2 z-30 flex items-center gap-3 px-5 py-3 rounded-2xl bg-white/70 backdrop-blur-md shadow-lg border border-white/60 animate-slide-up-bounce">
+      <div className="fixed bottom-4 sm:bottom-7 left-1/2 -translate-x-1/2 z-30 flex items-center gap-3 px-4 sm:px-5 py-2.5 sm:py-3 rounded-2xl bg-white/70 backdrop-blur-md shadow-lg border border-white/60 animate-slide-up-bounce max-w-[90vw]">
         <button
           onClick={onEnter}
           className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-rose-400 to-pink-400 text-white text-sm font-medium shadow-md hover:scale-105 active:scale-95 transition-all cursor-pointer"
@@ -773,7 +773,7 @@ function HouseInterior({
         <div className="pointer-events-none absolute bottom-0 left-1/2 -translate-x-1/2 w-48 h-32 rounded-full" style={{ background: "radial-gradient(ellipse at center, rgba(255,140,80,0.06), transparent 70%)", animation: "candle-flicker 2s ease-in-out infinite" }} />
       )}
 
-      <div className="relative z-10 max-w-2xl mx-auto px-4 sm:px-6 py-4 sm:py-6 pb-28">
+      <div className="relative z-10 max-w-2xl mx-auto px-3 sm:px-6 py-3 sm:py-6 pb-28">
         {/* Loading skeleton */}
         {isLoading && (
           <div className="space-y-2.5 mb-5 animate-pulse">
@@ -1008,7 +1008,7 @@ function HouseInterior({
         )}
 
         {/* Room cards — soft, cozy, romantic */}
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-2 sm:gap-3">
           {ROOM_SPOTS.map((room, idx) => {
             const badge = roomBadges[room.id] || 0;
             return (
@@ -1021,7 +1021,7 @@ function HouseInterior({
                 onMouseUp={() => setPressedRoom(null)}
                 aria-label={`Masuk ${room.name}`}
                 className={`relative rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 hover:scale-[1.03] hover:z-10 active:scale-95 focus-visible:ring-2 focus-visible:ring-rose-300 focus-visible:z-10 group bg-gradient-to-b ${room.bg} animate-room-pop-in border ${isPartnerOnline && partnerRoomIndex === idx ? "border-rose-300 ring-2 ring-rose-200/50" : "border-white/60"} shadow-sm`}
-                style={{ height: "130px", animationDelay: `${idx * 0.1}s` }}
+                style={{ height: "110px", animationDelay: `${idx * 0.1}s` }}
               >
                 {/* Ripple on press */}
                 {pressedRoom === room.id && (
@@ -1129,13 +1129,13 @@ function HouseInterior({
       )}
 
       {/* Bottom action bar — soft, minimal */}
-      <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-30 flex items-center gap-3 px-4 py-2.5 rounded-2xl bg-white/70 backdrop-blur-md shadow-lg border border-white/60">
+      <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2.5 rounded-2xl bg-white/70 backdrop-blur-md shadow-lg border border-white/60 max-w-[90vw]">
         <button
           onClick={() => {
             setIsLeaving(true);
             setTimeout(onGoOutside, 800);
           }}
-          className="px-5 py-2.5 rounded-xl bg-white/80 text-gray-600 text-sm font-medium shadow-sm hover:scale-105 active:scale-95 transition-all cursor-pointer border border-rose-100"
+          className="px-4 sm:px-5 py-2.5 rounded-xl bg-white/80 text-gray-600 text-xs sm:text-sm font-medium shadow-sm hover:scale-105 active:scale-95 transition-all cursor-pointer border border-rose-100"
         >
           🏠 Keluar
         </button>

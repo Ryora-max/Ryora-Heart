@@ -677,4 +677,32 @@ input:focus, textarea:focus, select:focus, button:focus-visible {
     animation-delay: 0ms !important;
     transition-duration: 0.01ms !important;
   }
+  /* Keep essential romantic animations visible */
+  .animate-house-approach,
+  .animate-door-zoom,
+  .animate-fade-to-white,
+  .animate-interior-reveal,
+  .animate-room-pop-in,
+  .animate-pop-in-scale,
+  .animate-slide-up-bounce {
+    animation-duration: 0.3s !important;
+  }
+}
+
+/* Mobile safe area + touch optimization */
+@supports (padding: env(safe-area-inset-bottom)) {
+  .fixed.bottom-4, .fixed.bottom-7 {
+    bottom: env(safe-area-inset-bottom, 1rem) !important;
+  }
+}
+
+button {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+/* Prevent text size adjust on mobile */
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
