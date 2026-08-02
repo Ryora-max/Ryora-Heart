@@ -790,18 +790,18 @@ function HouseInterior({
           <p className="text-center text-xs sm:text-sm font-medium italic text-gray-500/70 animate-fade-in">{interiorGreeting}</p>
 
           {/* Status row + suggestion */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2">
             <button
               onClick={() => setShowStatusPicker(true)}
-              className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl transition-all active:scale-95 cursor-pointer ${myPreset.bg} shadow-sm border`}
+              className={`flex-1 flex items-center justify-center gap-1.5 sm:gap-2 px-2 sm:px-4 py-2.5 rounded-xl transition-all active:scale-95 cursor-pointer ${myPreset.bg} shadow-sm border min-w-0`}
             >
-              <span className="text-sm">{myPreset.emoji}</span>
-              <span className={`text-xs font-medium ${myPreset.color}`}>Kamu: {myPreset.label}</span>
+              <span className="text-sm flex-shrink-0">{myPreset.emoji}</span>
+              <span className={`text-[10px] sm:text-xs font-medium ${myPreset.color} truncate`}>Kamu: {myPreset.label}</span>
             </button>
             {suggestedStatus && suggestedStatus !== myStatus && (
               <button
                 onClick={() => onUpdateStatus(suggestedStatus)}
-                className="px-2.5 py-2 rounded-xl bg-rose-100/80 border border-rose-200 text-[10px] font-medium text-rose-500 animate-pulse cursor-pointer whitespace-nowrap"
+                className="px-2 py-2 rounded-xl bg-rose-100/80 border border-rose-200 text-[9px] sm:text-[10px] font-medium text-rose-500 animate-pulse cursor-pointer whitespace-nowrap flex-shrink-0"
               >
                 💡 {suggestedStatus === "tidur" ? "Tidur?" : "Gabut?"}
               </button>
@@ -1036,11 +1036,11 @@ function HouseInterior({
                 {/* Gallery photos */}
                 {(room.id === "living-room" || room.id === "bedroom") && galleryPhotos.length > 0 && (
                   <>
-                    <div className="absolute top-2 right-2 w-8 h-8 sm:w-10 sm:h-10 rounded-lg border border-amber-200 bg-white/70 flex items-center justify-center text-sm shadow-sm">
+                    <div className="absolute bottom-9 right-2 w-7 h-7 sm:w-8 sm:h-8 rounded-lg border border-amber-200 bg-white/70 flex items-center justify-center text-xs sm:text-sm shadow-sm">
                       {galleryPhotos[0]?.emoji || "🖼️"}
                     </div>
                     {galleryPhotos.length > 1 && (
-                      <div className="absolute top-2 right-12 sm:right-14 w-8 h-8 sm:w-10 sm:h-10 rounded-lg border border-amber-200 bg-white/70 flex items-center justify-center text-sm shadow-sm">
+                      <div className="absolute bottom-9 right-10 sm:right-12 w-7 h-7 sm:w-8 sm:h-8 rounded-lg border border-amber-200 bg-white/70 flex items-center justify-center text-xs sm:text-sm shadow-sm">
                         {galleryPhotos[1]?.emoji || "🖼️"}
                       </div>
                     )}
@@ -1063,12 +1063,12 @@ function HouseInterior({
                 )}
 
                 {/* Room label — soft pill */}
-                <div className="absolute top-2.5 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full text-[10px] sm:text-xs font-medium bg-white/80 backdrop-blur-sm shadow-sm whitespace-nowrap text-gray-600">
+                <div className="absolute top-2.5 left-1/2 -translate-x-1/2 px-2.5 sm:px-3 py-0.5 rounded-full text-[9px] sm:text-xs font-medium bg-white/80 backdrop-blur-sm shadow-sm whitespace-nowrap text-gray-600 max-w-[80%] truncate">
                   {room.label}
                 </div>
 
                 {/* Room icon */}
-                <div className="absolute top-2 left-2 text-sm sm:text-base opacity-40">{room.emoji}</div>
+                <div className="absolute bottom-9 left-2 text-sm sm:text-base opacity-40">{room.emoji}</div>
 
                 {/* Desc on hover */}
                 <div className={`absolute bottom-2.5 left-1/2 -translate-x-1/2 text-[10px] text-center text-gray-500 bg-white/70 rounded-full px-2.5 py-0.5 transition-all duration-300 ${hoveredRoom === room.id ? "opacity-100" : "opacity-0"}`}>
@@ -1080,8 +1080,8 @@ function HouseInterior({
 
                 {/* Partner here indicator */}
                 {isPartnerOnline && partnerRoomIndex === idx && (
-                  <div className="absolute top-2 left-2 z-20 flex items-center gap-1 px-2 py-0.5 rounded-full bg-rose-100/80 border border-rose-200 text-[9px] font-medium text-rose-500 animate-pulse">
-                    <span className="w-1.5 h-1.5 rounded-full bg-rose-400 animate-ping" />
+                  <div className="absolute top-2 left-2 z-20 flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-rose-100/80 border border-rose-200 text-[8px] sm:text-[9px] font-medium text-rose-500 animate-pulse max-w-[60%] truncate">
+                    <span className="w-1.5 h-1.5 rounded-full bg-rose-400 animate-ping flex-shrink-0" />
                     {partnerName}
                   </div>
                 )}
@@ -1091,7 +1091,7 @@ function HouseInterior({
         </div>
 
         {/* Extra spots — soft floating bubbles */}
-        <div className="flex flex-wrap items-center justify-center gap-3 mt-5">
+        <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 mt-5">
           {EXTRA_SPOTS.map((spot) => (
             <button
               key={spot.id}
