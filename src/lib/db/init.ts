@@ -6,7 +6,15 @@ import bcrypt from "bcryptjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
+let initPromise: Promise<void> | null = null;
+
 export async function initializeDatabase() {
+  if (initPromise) return initPromise;
+  initPromise = doInit();
+  return initPromise;
+}
+
+async function doInit() {
   try {
     const connectionString = process.env.DATABASE_URL;
     if (!connectionString) {
@@ -15,7 +23,22 @@ export async function initializeDatabase() {
     }
 
     const schema = readFileSync(join(__dirname, "schema-postgres.sql"), "utf-8");
-    await query(schema);
+    // Split into individual statements — pg.query() only runs the first statement
+    const statements = schema
+      .split(/;\s*\n/)
+      .map((s) => s.trim())
+      .filter((s) => s.length > 0 && !s.startsWith("--"));
+
+    for (const stmt of statements) {
+      try {
+        await query(stmt + ";");
+      } catch (err) {
+        // Ignore "already exists" errors
+        if (!String(err).includes("already exists")) {
+          console.error("Schema statement error:", err);
+        }
+      }
+    }
     console.log("Database initialized successfully");
 
     await hashSeedPasswords();

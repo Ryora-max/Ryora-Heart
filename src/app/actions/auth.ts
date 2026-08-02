@@ -5,8 +5,6 @@ import { v4 as uuidv4 } from "uuid";
 import bcrypt from "bcryptjs";
 import { query, getOne, generateId, initializeDatabase } from "@/lib/db";
 
-initializeDatabase();
-
 const SESSION_DURATION = 7 * 24 * 60 * 60 * 1000;
 
 export interface User {
@@ -26,6 +24,7 @@ export interface Session {
 
 export async function login(username: string, password: string): Promise<Session | null> {
   try {
+    await initializeDatabase();
     const result = await getOne("SELECT * FROM users WHERE username = $1", [username]);
     if (!result) return null;
 
@@ -71,6 +70,7 @@ export async function logout(token: string) {
 }
 
 export async function getSession(token: string): Promise<Session | null> {
+  await initializeDatabase();
   const result = await getOne(`
     SELECT s.*, u.id as user_id, u.username, u.name, u.role, u.relationship, u.avatar_url, u.pair_id
     FROM sessions s
