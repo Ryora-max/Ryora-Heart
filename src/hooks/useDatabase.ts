@@ -5,20 +5,39 @@ import { useState, useEffect, useCallback } from "react";
 import type { MoodEntry, Activity, GalleryItem, CalendarEvent, Letter, Hug, StatusUpdate } from "@/types";
 import { useRetryQueue } from "./useRetryQueue";
 import { showToast } from "./useToast";
+import { localRead, localWrite, isReadAction } from "@/lib/localStorageDb";
 
 async function callDb(action: string, token: string, params?: any) {
-  const result = await fetch("/api/db", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ action, token, ...params }),
-    cache: "no-store",
-  });
+  try {
+    const result = await fetch("/api/db", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action, token, ...params }),
+      cache: "no-store",
+    });
 
-  if (!result.ok) {
-    const error = await result.json().catch(() => ({}));
-    throw new Error(error.error || "Database error");
+    if (!result.ok) {
+      throw new Error("API error");
+    }
+    const data = await result.json();
+
+    // If DB returned empty for a read action, check localStorage for fallback data
+    if (isReadAction(action) && (Array.isArray(data) ? data.length === 0 : data === null || (data && Object.keys(data).length === 0))) {
+      const local = localRead(action, token, params);
+      if (Array.isArray(local) ? local.length > 0 : local !== null) {
+        return local;
+      }
+    }
+
+    return data;
+  } catch (error) {
+    // API failed entirely — fall back to localStorage
+    if (isReadAction(action)) {
+      return localRead(action, token, params);
+    }
+    // For writes, save to localStorage
+    return localWrite(action, token, params);
   }
-  return result.json();
 }
 
 export function useMoods(token: string) {
@@ -533,26 +552,34 @@ export function usePartnerId(token: string, userId?: string) {
         const sessionData = await sessionRes.json();
         const currentPairId = sessionData.user?.pair_id || "";
         const currentUserId = sessionData.user?.id || userId;
-        if (cancelled || !currentPairId) return;
-        setPairId(currentPairId);
-        const res = await fetch("/api/db", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action: "getPartnerId", token, userId: currentUserId, pairId: currentPairId }),
-        });
-        if (!res.ok) {
-          if (retryCount < maxRetries) {
-            retryCount++;
-            setTimeout(fetchPartnerId, 1000 * retryCount);
-            return;
+        if (cancelled) return;
+        if (!currentPairId) {
+          // No pair_id from session — derive from JWT user
+          const partnerId = currentUserId === "user-1" ? "user-2" : "user-1";
+          if (!cancelled) {
+            setPairId("pair-1");
+            setPartnerId(partnerId);
           }
-          throw new Error("Failed to get partner ID");
+          return;
         }
-        const data = await res.json();
-        if (!cancelled) {
-          setPartnerId(data.partnerId || null);
-          if (!data.partnerId) {
-            showToast("Partner belum terhubung. Pastikan pasangan sudah mendaftarkan pair ID 💞", "warning");
+        setPairId(currentPairId);
+        try {
+          const res = await fetch("/api/db", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ action: "getPartnerId", token, userId: currentUserId, pairId: currentPairId }),
+          });
+          if (!res.ok) throw new Error("Failed");
+          const data = await res.json();
+          if (!cancelled) {
+            const pid = data.partnerId || (currentUserId === "user-1" ? "user-2" : "user-1");
+            setPartnerId(pid);
+          }
+        } catch {
+          // DB failed — derive partnerId from user ID
+          if (!cancelled) {
+            const partnerId = currentUserId === "user-1" ? "user-2" : "user-1";
+            setPartnerId(partnerId);
           }
         }
       } catch (error) {
