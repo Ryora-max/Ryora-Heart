@@ -55,9 +55,9 @@ function verifyJWT(token: string): { id: string; username: string; name: string;
 }
 
 export async function POST(request: NextRequest) {
+  const body = await request.json();
+  const { action, token, ...params } = body;
   try {
-    const body = await request.json();
-    const { action, token, ...params } = body;
 
     let userId: string;
     let pairId: string;
@@ -177,6 +177,11 @@ export async function POST(request: NextRequest) {
     }
   } catch (error) {
     console.error("API error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    // Graceful degradation: return empty data for GET operations instead of 500
+    const isRead = ["getMoods", "getActivities", "getGallery", "getCalendarEvents", "getLetters", "getNotifications", "getPresence", "getStatusUpdates", "getHugs", "getLoveMeter", "getLocations", "getUserSettings", "getUserExtra", "getAchievements", "getChatMessages", "getVoiceNotes", "getGameScores", "getPartnerId"].includes(action);
+    if (isRead) {
+      return NextResponse.json(action === "getLoveMeter" ? { percentage: 0 } : action === "getUserSettings" ? null : action === "getPartnerId" ? { partnerId: "" } : action === "getUserExtra" ? null : []);
+    }
+    return NextResponse.json({ error: "Database unavailable" }, { status: 500 });
   }
 }
