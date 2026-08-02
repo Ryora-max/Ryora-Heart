@@ -698,7 +698,6 @@ input:focus, textarea:focus, select:focus, button:focus-visible {
 
 button {
   -webkit-tap-highlight-color: transparent;
-  touch-action: manipulation;
 }
 
 /* Prevent text size adjust on mobile */

@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 
 interface MagneticButtonProps {
   children: ReactNode;
@@ -10,9 +10,14 @@ interface MagneticButtonProps {
 export function MagneticButton({ children, strength = 0.3 }: MagneticButtonProps) {
   const ref = useRef<HTMLDivElement>(null);
   const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [isTouch, setIsTouch] = useState(false);
+
+  useEffect(() => {
+    setIsTouch("ontouchstart" in window || navigator.maxTouchPoints > 0);
+  }, []);
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!ref.current) return;
+    if (isTouch || !ref.current) return;
     const { left, top, width, height } = ref.current.getBoundingClientRect();
     const x = e.clientX - (left + width / 2);
     const y = e.clientY - (top + height / 2);
@@ -20,6 +25,7 @@ export function MagneticButton({ children, strength = 0.3 }: MagneticButtonProps
   };
 
   const handleMouseLeave = () => {
+    if (isTouch) return;
     setPosition({ x: 0, y: 0 });
   };
 
