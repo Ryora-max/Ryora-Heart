@@ -1,5 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
 import { login as authLogin, logout as authLogout, getSession } from "@/app/actions/auth";
+import jwt from "jsonwebtoken";
+
+const JWT_SECRET = process.env.JWT_SECRET || "ryora-dev-secret-change-me";
+const useMock = !process.env.DATABASE_URL;
+
+function createJWT(user: { id: string; username: string; name: string; role: string; relationship: string; pair_id?: string }) {
+  return jwt.sign(
+    { id: user.id, username: user.username, name: user.name, role: user.role, relationship: user.relationship, pair_id: user.pair_id },
+    JWT_SECRET,
+    { expiresIn: "7d" }
+  );
+}
+
+function verifyJWT(token: string): { id: string; username: string; name: string; role: string; relationship: string; pair_id?: string } | null {
+  try {
+    return jwt.verify(token, JWT_SECRET) as { id: string; username: string; name: string; role: string; relationship: string; pair_id?: string };
+  } catch {
+    return null;
+  }
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -16,8 +36,10 @@ export async function POST(request: NextRequest) {
         if (!session) {
           return NextResponse.json({ error: "Username atau password salah" }, { status: 401 });
         }
-        const response = NextResponse.json({ user: session.user, token: session.token });
-        response.cookies.set("ryora-session", session.token, {
+        // Use JWT token for stateless auth (works across serverless instances)
+        const token = useMock ? createJWT(session.user) : session.token;
+        const response = NextResponse.json({ user: session.user, token });
+        response.cookies.set("ryora-session", token, {
           httpOnly: true,
           secure: process.env.NODE_ENV === "production",
           sameSite: "lax",
@@ -33,6 +55,25 @@ export async function POST(request: NextRequest) {
         return logoutResponse;
       }
       case "verify": {
+        if (useMock) {
+          // Stateless JWT verification — works across serverless instances
+          const decoded = verifyJWT(params.token);
+          if (!decoded) {
+            const badResponse = NextResponse.json({ error: "Sesi tidak valid" }, { status: 401 });
+            badResponse.cookies.delete({ name: "ryora-session", path: "/" });
+            return badResponse;
+          }
+          return NextResponse.json({
+            user: {
+              id: decoded.id,
+              username: decoded.username,
+              name: decoded.name,
+              role: decoded.role,
+              relationship: decoded.relationship,
+              pair_id: decoded.pair_id,
+            }
+          });
+        }
         const session = await getSession(params.token);
         if (!session) {
           const badResponse = NextResponse.json({ error: "Sesi tidak valid" }, { status: 401 });
