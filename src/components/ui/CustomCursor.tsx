@@ -128,7 +128,7 @@ export default function CustomCursor() {
     return (
       <button
         onClick={toggleCursor}
-        className="fixed bottom-4 right-4 z-50 p-2 rounded-full bg-white/90 backdrop-blur-sm border-2 border-pink-200 shadow-lg hover:shadow-xl transition-all"
+        className="fixed bottom-20 right-4 z-50 p-2 rounded-full bg-white/90 backdrop-blur-sm border-2 border-pink-200 shadow-lg hover:shadow-xl transition-all"
         title="Enable custom cursor"
       >
         <span className="text-sm">💖</span>
@@ -140,7 +140,7 @@ export default function CustomCursor() {
     <>
       <button
         onClick={toggleCursor}
-        className="fixed bottom-4 right-4 z-50 p-2 rounded-full bg-white/90 backdrop-blur-sm border-2 border-pink-200 shadow-lg hover:shadow-xl transition-all"
+        className="fixed bottom-20 right-4 z-50 p-2 rounded-full bg-white/90 backdrop-blur-sm border-2 border-pink-200 shadow-lg hover:shadow-xl transition-all"
         title="Disable custom cursor"
       >
         <span className="text-sm">✨</span>

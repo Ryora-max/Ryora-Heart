@@ -420,7 +420,7 @@ h1, h2, h3, h4, h5, h6 {
   .animate-extra-spot,
   .animate-scale-in,
   .animate-fade-in {
-    animation: none !important;
+    animation-duration: 0.3s !important;
   }
 }
 

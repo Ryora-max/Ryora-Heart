@@ -194,27 +194,27 @@ export default function MainLayout({
       </main>
 
       {/* Floating top-right controls */}
-      <div className="fixed top-3 right-3 z-50 flex items-center gap-2">
+      <div className="fixed top-3 right-3 z-50 flex items-center gap-1.5 sm:gap-2">
         <button
           onClick={() => router.push("/home")}
-          className="w-10 h-10 rounded-full bg-white/80 backdrop-blur-md shadow-lg flex items-center justify-center text-pink-500 hover:bg-white transition-colors"
+          className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white/80 backdrop-blur-md shadow-lg flex items-center justify-center text-pink-500 hover:bg-white transition-colors"
           aria-label="Home"
         >
-          <Home size={18} />
+          <Home size={16} />
         </button>
         <button
           onClick={() => setIsGuideOpen(true)}
-          className="w-10 h-10 rounded-full bg-white/80 backdrop-blur-md shadow-lg flex items-center justify-center text-text-primary hover:bg-white transition-colors"
+          className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white/80 backdrop-blur-md shadow-lg flex items-center justify-center text-text-primary hover:bg-white transition-colors"
           aria-label="Guide"
         >
-          <BookOpen size={18} />
+          <BookOpen size={16} />
         </button>
         <button
           onClick={handleLogout}
-          className="w-10 h-10 rounded-full bg-white/80 backdrop-blur-md shadow-lg flex items-center justify-center text-red-400 hover:bg-white transition-colors"
+          className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white/80 backdrop-blur-md shadow-lg flex items-center justify-center text-red-400 hover:bg-white transition-colors"
           aria-label="Logout"
         >
-          <LogOut size={18} />
+          <LogOut size={16} />
         </button>
       </div>
 
