@@ -23,6 +23,7 @@ function HouseExterior({
   onKnock,
   knocking,
   cooldown,
+  weather = "clear",
 }: {
   onEnter: () => void;
   isPartnerOnline: boolean;
@@ -32,12 +33,12 @@ function HouseExterior({
   onKnock: () => void;
   knocking: boolean;
   cooldown: boolean;
+  weather?: "clear" | "rain" | "snow";
 }) {
   const stars = useMemo(() => createStars(50), []);
   const partnerPreset = getStatusPreset(partnerStatus);
   const [now, setNow] = useState(new Date());
   const [taps, setTaps] = useState(0);
-  const [weather, setWeather] = useState<"clear" | "rain" | "snow">("clear");
 
   // Mood-based house tint — reflects partner's status
   const moodTint = useMemo(() => {
@@ -75,22 +76,29 @@ function HouseExterior({
     return () => clearInterval(id);
   }, []);
 
-  // Random weather — changes every 5 min
-  useEffect(() => {
-    const pick = () => {
-      const r = Math.random();
-      if (r < 0.15) setWeather("rain");
-      else if (r < 0.22) setWeather("snow");
-      else setWeather("clear");
-    };
-    pick();
-    const id = setInterval(pick, 300000);
-    return () => clearInterval(id);
-  }, []);
-
   const hour = now.getHours();
+  const minutes = now.getMinutes();
+  const timeValue = hour + minutes / 60; // e.g. 14.5 = 2:30pm
   const isNight = hour >= 18 || hour < 6;
   const isDawn = (hour >= 5 && hour < 7) || (hour >= 17 && hour < 19);
+
+  // Smooth sunrise/sunset gradient — 6 time phases
+  const skyGradient = timeValue < 5 ? "from-[#1a1a3e] via-[#2d2d5e] to-[#4a3a6b]" // deep night
+    : timeValue < 6.5 ? "from-[#2d2d5e] via-[#6b5b8e] to-[#c89bb3]" // pre-dawn
+    : timeValue < 8 ? "from-[#c89bb3] via-[#f4c2c2] to-[#fce4ec]" // sunrise
+    : timeValue < 16 ? "from-[#fce4ec] via-[#f8e1e7] to-[#fff0f5]" // day
+    : timeValue < 18 ? "from-[#f4c2c2] via-[#c89bb3] to-[#6b5b8e]" // sunset
+    : timeValue < 20 ? "from-[#6b5b8e] via-[#3d3a5e] to-[#2a2a4e]" // dusk
+    : "from-[#1a1a3e] via-[#2d2d5e] to-[#4a3a6b]"; // night
+
+  // Relationship day counter
+  const relationshipDays = useMemo(() => {
+    if (typeof window === "undefined") return null;
+    const startDate = localStorage.getItem("ryora-relationship-start");
+    if (!startDate) return null;
+    const diff = Date.now() - parseInt(startDate, 10);
+    return Math.floor(diff / (1000 * 60 * 60 * 24));
+  }, [now]);
 
   // Greeting based on time
   const greeting = hour < 5 ? "Tidur yang nyenyak, sayang 🌙" :
@@ -99,15 +107,6 @@ function HouseExterior({
     hour < 18 ? "Selamat sore, sayang 🌸" :
     hour < 22 ? "Selamat malam, sayang 🌙" :
     "Jangan begadang ya, sayang 😴";
-
-  // Soft romantic gradients
-  const skyGradient = isNight
-    ? "from-[#1a1a3e] via-[#2d2d5e] to-[#4a3a6b]"
-    : isDawn && hour >= 17
-    ? "from-[#6b5b8e] via-[#c89bb3] to-[#f4c2c2]"
-    : isDawn
-    ? "from-[#f4c2c2] via-[#f9d5d5] to-[#fce4ec]"
-    : "from-[#fce4ec] via-[#f8e1e7] to-[#fff0f5]";
 
   return (
     <div className={`relative min-h-screen overflow-hidden bg-gradient-to-b ${skyGradient} transition-[background] duration-[2000ms]`}>
@@ -231,6 +230,12 @@ function HouseExterior({
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-100/70 backdrop-blur-sm shadow-sm text-[10px] font-medium text-amber-600 border border-amber-200/60">
             <span>🔥</span>
             <span>{streak} hari beruntun</span>
+          </div>
+        )}
+        {relationshipDays !== null && (
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-100/70 backdrop-blur-sm shadow-sm text-[10px] font-medium text-rose-500 border border-rose-200/60">
+            <span>⭐</span>
+            <span>Hari ke-{relationshipDays} bersama</span>
           </div>
         )}
       </div>
@@ -382,6 +387,7 @@ function HouseInterior({
   galleryPhotos,
   isLoading,
   partnerTyping = false,
+  weather = "clear",
 }: {
   onOpenRoom: (href: string) => void;
   onGoOutside: () => void;
@@ -400,6 +406,7 @@ function HouseInterior({
   galleryPhotos: { id: string; emoji: string }[];
   isLoading?: boolean;
   partnerTyping?: boolean;
+  weather?: "clear" | "rain" | "snow";
 }) {
   const [hoveredRoom, setHoveredRoom] = useState<string | null>(null);
   const [clockNow, setClockNow] = useState(new Date());
@@ -732,6 +739,28 @@ function HouseInterior({
       {/* Interior lamp glow at night */}
       {isInteriorNight && (
         <div className="pointer-events-none absolute top-0 left-1/2 -translate-x-1/2 w-64 h-64 rounded-full" style={{ background: "radial-gradient(circle, rgba(255,200,150,0.08), transparent 70%)" }} />
+      )}
+
+      {/* Rain on window — droplets when raining */}
+      {weather === "rain" && (
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
+          {Array.from({ length: 15 }).map((_, i) => (
+            <div
+              key={`raindrop-${i}`}
+              className="absolute w-px h-6 bg-gradient-to-b from-transparent via-blue-200/30 to-transparent rounded-full"
+              style={{
+                top: `-10px`,
+                left: `${(i * 7) % 100}%`,
+                animation: `rain-fall ${0.8 + (i % 4) * 0.3}s linear ${(i % 5) * 0.2}s infinite`,
+              }}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* Fireplace glow at night */}
+      {isInteriorNight && (
+        <div className="pointer-events-none absolute bottom-0 left-1/2 -translate-x-1/2 w-48 h-32 rounded-full" style={{ background: "radial-gradient(ellipse at center, rgba(255,140,80,0.06), transparent 70%)", animation: "candle-flicker 2s ease-in-out infinite" }} />
       )}
 
       <div className="relative z-10 max-w-2xl mx-auto px-4 sm:px-6 py-4 sm:py-6 pb-28">
@@ -1163,6 +1192,21 @@ export function HouseExperience() {
   }, []);
 
   const [roomTransition, setRoomTransition] = useState(false);
+  const [weather, setWeather] = useState<"clear" | "rain" | "snow">("clear");
+
+  // Random weather — changes every 5 min
+  useEffect(() => {
+    const pick = () => {
+      const r = Math.random();
+      if (r < 0.15) setWeather("rain");
+      else if (r < 0.22) setWeather("snow");
+      else setWeather("clear");
+    };
+    pick();
+    const id = setInterval(pick, 300000);
+    return () => clearInterval(id);
+  }, []);
+
   const handleOpenRoom = useCallback((href: string) => {
     setRoomTransition(true);
     setTimeout(() => router.push(href), 300);
@@ -1185,6 +1229,7 @@ export function HouseExperience() {
           onKnock={sendKnock}
           knocking={knocking}
           cooldown={cooldown}
+          weather={weather}
         />
         {knockReceived && <KnockNotification knock={knockReceived} onDismiss={dismissKnock} onEnter={handleEnter} />}
       </>
@@ -1212,6 +1257,7 @@ export function HouseExperience() {
         galleryPhotos={galleryEmojiPhotos}
         isLoading={chatLoading || lettersLoading || galleryLoading}
         partnerTyping={partnerTyping}
+        weather={weather}
       />
       {knockReceived && <KnockNotification knock={knockReceived} onDismiss={dismissKnock} onEnter={handleEnter} />}
     </>
