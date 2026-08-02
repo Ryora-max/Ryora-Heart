@@ -396,7 +396,8 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 @keyframes rain-fall {
-  0% { transform: translateY(0); opacity: 0.3; }
+  0% { transform: translateY(0); opacity: 0; }
+  10% { opacity: 0.6; }
   100% { transform: translateY(100vh); opacity: 0; }
 }
 
@@ -514,12 +515,6 @@ input:focus, textarea:focus, select:focus, button:focus-visible {
 }
 .animate-heart-float { animation: heart-float 1s ease-out forwards; }
 
-@keyframes rain-fall {
-  0% { transform: translateY(0); opacity: 0; }
-  10% { opacity: 0.6; }
-  100% { transform: translateY(100vh); opacity: 0; }
-}
-
 @keyframes snow-fall {
   0% { transform: translateY(0) translateX(0); opacity: 0; }
   10% { opacity: 0.8; }
@@ -532,11 +527,6 @@ input:focus, textarea:focus, select:focus, button:focus-visible {
   3% { opacity: 1; }
   10% { transform: translate(120px, 56px) rotate(-25deg); opacity: 0; }
   100% { transform: translate(120px, 56px) rotate(-25deg); opacity: 0; }
-}
-
-@keyframes confetti-fall {
-  0% { transform: translateY(0) rotate(0deg); opacity: 1; }
-  100% { transform: translateY(100vh) rotate(360deg); opacity: 0; }
 }
 
 @keyframes candle-flicker {
@@ -664,12 +654,6 @@ input:focus, textarea:focus, select:focus, button:focus-visible {
   75% { transform: rotate(1deg); }
 }
 .animate-house-wobble { animation: house-wobble 5s ease-in-out infinite; }
-
-@keyframes heart-float {
-  0% { transform: translateY(0) scale(1); opacity: 1; }
-  100% { transform: translateY(-30px) scale(0.5); opacity: 0; }
-}
-.animate-heart-float { animation: heart-float 2s ease-out forwards; }
 
 /* Mobile safe area + touch optimization */
 @supports (padding: env(safe-area-inset-bottom)) {

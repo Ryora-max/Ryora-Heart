@@ -922,7 +922,7 @@ function HouseInterior({
                 <div className="w-full h-full rounded-sm bg-gradient-to-br from-rose-100 to-pink-100 flex items-center justify-center text-lg">
                   {photo.emoji}
                 </div>
-                <div className="absolute bottom-1 left-1/2 -translate-x-1/2 text-[10px] text-gray-400 font-medium">kenangan</div>
+                <div className="absolute bottom-1 left-1/2 -translate-x-1/2 text-xs text-gray-400 font-medium">kenangan</div>
               </div>
             ))}
           </div>
@@ -1310,7 +1310,7 @@ export function HouseExperience() {
           onEnter={handleEnter}
           isPartnerOnline={isPartnerOnline}
           isEntering={phase === "entering"}
-          partnerName={user?.relationship || "Pasangan"}
+          partnerName={user?.role === "owner" ? "Ara" : "Ryo"}
           partnerStatus={partnerStatus}
           onKnock={sendKnock}
           knocking={knocking}
@@ -1330,9 +1330,9 @@ export function HouseExperience() {
         onGoOutside={handleGoOutside}
         isPartnerOnline={isPartnerOnline}
         userName={user?.name || "Sayang"}
-        partnerName={user?.relationship || "Pasangan"}
-        partnerEmoji="🧑"
-        myEmoji="👩"
+        partnerName={user?.role === "owner" ? "Ara" : "Ryo"}
+        partnerEmoji={user?.role === "owner" ? "👸" : "�"}
+        myEmoji={user?.role === "owner" ? "🤴" : "�"}
         lovePercentage={currentPercentage}
         partnerRoomIndex={partnerRoomIndex}
         partnerActivity={partnerActivity}

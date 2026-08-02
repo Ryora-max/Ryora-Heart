@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 
 const JWT_SECRET = process.env.JWT_SECRET || "ryora-dev-secret-change-me";
-const useMock = !process.env.DATABASE_URL;
 
 function verifyJWT(token: string): { id: string; username: string; name: string; role: string; relationship: string; pair_id?: string } | null {
   try {
@@ -22,17 +21,21 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Missing file or token" }, { status: 400 });
     }
 
-    if (useMock) {
-      const decoded = verifyJWT(token);
-      if (!decoded) {
+    // Always try JWT first
+    const decoded = verifyJWT(token);
+    if (!decoded && process.env.DATABASE_URL) {
+      // Fall back to DB session
+      try {
+        const { getSession } = await import("@/app/actions/auth");
+        const session = await getSession(token);
+        if (!session) {
+          return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+      } catch {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
       }
-    } else {
-      const { getSession } = await import("@/app/actions/auth");
-      const session = await getSession(token);
-      if (!session) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-      }
+    } else if (!decoded) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const bytes = await file.arrayBuffer();
