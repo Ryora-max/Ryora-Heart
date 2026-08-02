@@ -1,4 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
+import jwt from "jsonwebtoken";
+
+const JWT_SECRET = process.env.JWT_SECRET || "ryora-dev-secret-change-me";
+const useMock = !process.env.DATABASE_URL;
+
+function verifyJWT(token: string): { id: string; username: string; name: string; role: string; relationship: string; pair_id?: string } | null {
+  try {
+    return jwt.verify(token, JWT_SECRET) as { id: string; username: string; name: string; role: string; relationship: string; pair_id?: string };
+  } catch {
+    return null;
+  }
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -10,10 +22,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Missing file or token" }, { status: 400 });
     }
 
-    const { getSession } = await import("@/app/actions/auth");
-    const session = await getSession(token);
-    if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (useMock) {
+      const decoded = verifyJWT(token);
+      if (!decoded) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      }
+    } else {
+      const { getSession } = await import("@/app/actions/auth");
+      const session = await getSession(token);
+      if (!session) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      }
     }
 
     const bytes = await file.arrayBuffer();

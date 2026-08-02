@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/app/actions/auth";
+import jwt from "jsonwebtoken";
 import {
   getMoods,
   addMood,
@@ -43,18 +44,40 @@ import {
 } from "@/app/actions/db";
 import { updateProfile, updateSettings, getUserSettings } from "@/app/actions/auth";
 
+const JWT_SECRET = process.env.JWT_SECRET || "ryora-dev-secret-change-me";
+const useMock = !process.env.DATABASE_URL;
+
+function verifyJWT(token: string): { id: string; username: string; name: string; role: string; relationship: string; pair_id?: string } | null {
+  try {
+    return jwt.verify(token, JWT_SECRET) as { id: string; username: string; name: string; role: string; relationship: string; pair_id?: string };
+  } catch {
+    return null;
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const { action, token, ...params } = body;
 
-    const session = await getSession(token);
-    if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    let userId: string;
+    let pairId: string;
 
-    const userId = session.user.id;
-    const pairId = session.user.pair_id || "";
+    if (useMock) {
+      const decoded = verifyJWT(token);
+      if (!decoded) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      }
+      userId = decoded.id;
+      pairId = decoded.pair_id || "";
+    } else {
+      const session = await getSession(token);
+      if (!session) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      }
+      userId = session.user.id;
+      pairId = session.user.pair_id || "";
+    }
 
     switch (action) {
       case "getMoods":
