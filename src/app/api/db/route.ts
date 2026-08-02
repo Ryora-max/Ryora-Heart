@@ -45,7 +45,6 @@ import {
 import { updateProfile, updateSettings, getUserSettings } from "@/app/actions/auth";
 
 const JWT_SECRET = process.env.JWT_SECRET || "ryora-dev-secret-change-me";
-const useMock = !process.env.DATABASE_URL;
 
 function verifyJWT(token: string): { id: string; username: string; name: string; role: string; relationship: string; pair_id?: string } | null {
   try {
@@ -63,20 +62,26 @@ export async function POST(request: NextRequest) {
     let userId: string;
     let pairId: string;
 
-    if (useMock) {
-      const decoded = verifyJWT(token);
-      if (!decoded) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-      }
+    // Always try JWT first — works stateless across serverless instances
+    const decoded = verifyJWT(token);
+    if (decoded) {
       userId = decoded.id;
       pairId = decoded.pair_id || "";
-    } else {
-      const session = await getSession(token);
-      if (!session) {
+    } else if (process.env.DATABASE_URL) {
+      // Fall back to DB session
+      try {
+        const session = await getSession(token);
+        if (!session) {
+          return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+        userId = session.user.id;
+        pairId = session.user.pair_id || "";
+      } catch (e) {
+        console.error("DB session verify failed:", e);
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
       }
-      userId = session.user.id;
-      pairId = session.user.pair_id || "";
+    } else {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     switch (action) {

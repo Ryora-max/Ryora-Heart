@@ -3,7 +3,12 @@ import { login as authLogin, logout as authLogout, getSession } from "@/app/acti
 import jwt from "jsonwebtoken";
 
 const JWT_SECRET = process.env.JWT_SECRET || "ryora-dev-secret-change-me";
-const useMock = !process.env.DATABASE_URL;
+
+// Fallback users for when DB is unavailable (e.g. Supabase quota exceeded)
+const FALLBACK_USERS = [
+  { id: "user-1", username: "Ryo", password_hash: "$2a$10$placeholder", name: "Ahmad Rio Prawiro", role: "owner", relationship: "Cowo Ara ❤️", pair_id: "pair-1", plainPassword: "11122004" },
+  { id: "user-2", username: "Ara", password_hash: "$2a$10$placeholder", name: "Tiara Pertiwi", role: "partner", relationship: "Cewe Rio ❤️", pair_id: "pair-1", plainPassword: "09062004" },
+];
 
 function createJWT(user: { id: string; username: string; name: string; role: string; relationship: string; pair_id?: string }) {
   return jwt.sign(
@@ -21,6 +26,19 @@ function verifyJWT(token: string): { id: string; username: string; name: string;
   }
 }
 
+function fallbackLogin(username: string, password: string) {
+  const user = FALLBACK_USERS.find((u) => u.username === username && u.plainPassword === password);
+  if (!user) return null;
+  return {
+    id: user.id,
+    username: user.username,
+    name: user.name,
+    role: user.role,
+    relationship: user.relationship,
+    pair_id: user.pair_id,
+  };
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
@@ -32,13 +50,27 @@ export async function POST(request: NextRequest) {
         if (!username || !password) {
           return NextResponse.json({ error: "Username dan password harus diisi" }, { status: 400 });
         }
-        const session = await authLogin(username, password);
-        if (!session) {
+        
+        // Try DB login first, fall back to hardcoded users if DB fails
+        let user: { id: string; username: string; name: string; role: string; relationship: string; pair_id?: string } | null = null;
+        try {
+          const session = await authLogin(username, password);
+          if (session) user = session.user;
+        } catch (e) {
+          console.error("DB login failed, using fallback:", e);
+        }
+        
+        // Fallback: check hardcoded users
+        if (!user) {
+          user = fallbackLogin(username, password);
+        }
+        
+        if (!user) {
           return NextResponse.json({ error: "Username atau password salah" }, { status: 401 });
         }
-        // Use JWT token for stateless auth (works across serverless instances)
-        const token = useMock ? createJWT(session.user) : session.token;
-        const response = NextResponse.json({ user: session.user, token });
+        
+        const token = createJWT(user);
+        const response = NextResponse.json({ user, token });
         response.cookies.set("ryora-session", token, {
           httpOnly: true,
           secure: process.env.NODE_ENV === "production",
@@ -55,14 +87,9 @@ export async function POST(request: NextRequest) {
         return logoutResponse;
       }
       case "verify": {
-        if (useMock) {
-          // Stateless JWT verification — works across serverless instances
-          const decoded = verifyJWT(params.token);
-          if (!decoded) {
-            const badResponse = NextResponse.json({ error: "Sesi tidak valid" }, { status: 401 });
-            badResponse.cookies.delete({ name: "ryora-session", path: "/" });
-            return badResponse;
-          }
+        // Always try JWT first — works stateless across serverless instances
+        const decoded = verifyJWT(params.token);
+        if (decoded) {
           return NextResponse.json({
             user: {
               id: decoded.id,
@@ -74,13 +101,20 @@ export async function POST(request: NextRequest) {
             }
           });
         }
-        const session = await getSession(params.token);
-        if (!session) {
-          const badResponse = NextResponse.json({ error: "Sesi tidak valid" }, { status: 401 });
-          badResponse.cookies.delete({ name: "ryora-session", path: "/" });
-          return badResponse;
+        // Fall back to DB session if JWT fails and DB is available
+        if (process.env.DATABASE_URL) {
+          try {
+            const session = await getSession(params.token);
+            if (session) {
+              return NextResponse.json({ user: session.user });
+            }
+          } catch (e) {
+            console.error("DB verify failed:", e);
+          }
         }
-        return NextResponse.json({ user: session.user });
+        const badResponse = NextResponse.json({ error: "Sesi tidak valid" }, { status: 401 });
+        badResponse.cookies.delete({ name: "ryora-session", path: "/" });
+        return badResponse;
       }
       default:
         return NextResponse.json({ error: "Aksi tidak dikenali" }, { status: 400 });
