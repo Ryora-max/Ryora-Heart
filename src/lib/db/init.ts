@@ -5,7 +5,10 @@ let initPromise: Promise<void> | null = null;
 
 export async function initializeDatabase() {
   if (initPromise) return initPromise;
-  initPromise = doInit();
+  initPromise = doInit().catch((err) => {
+    initPromise = null;
+    throw err;
+  });
   return initPromise;
 }
 
@@ -25,6 +28,9 @@ const SCHEMA_STATEMENTS = [
   `CREATE TABLE IF NOT EXISTS ldr_hugs (id TEXT PRIMARY KEY, sender_id TEXT NOT NULL REFERENCES users(id), receiver_id TEXT NOT NULL REFERENCES users(id), pair_id TEXT NOT NULL, message TEXT NOT NULL, emoji TEXT DEFAULT '🤗', created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)`,
   `CREATE TABLE IF NOT EXISTS ldr_love_meter (id TEXT PRIMARY KEY, user_id TEXT NOT NULL REFERENCES users(id), pair_id TEXT NOT NULL, percentage INTEGER NOT NULL DEFAULT 0, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)`,
   `CREATE TABLE IF NOT EXISTS ldr_locations (id TEXT PRIMARY KEY, user_id TEXT NOT NULL REFERENCES users(id), pair_id TEXT NOT NULL, place TEXT NOT NULL, note TEXT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)`,
+  `CREATE TABLE IF NOT EXISTS chat_messages (id TEXT PRIMARY KEY, user_id TEXT NOT NULL REFERENCES users(id), pair_id TEXT NOT NULL, text TEXT NOT NULL, emoji TEXT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)`,
+  `CREATE TABLE IF NOT EXISTS voice_notes (id TEXT PRIMARY KEY, user_id TEXT NOT NULL REFERENCES users(id), pair_id TEXT NOT NULL, audio_url TEXT NOT NULL, duration INTEGER DEFAULT 0, title TEXT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)`,
+  `CREATE TABLE IF NOT EXISTS game_scores (id TEXT PRIMARY KEY, user_id TEXT NOT NULL REFERENCES users(id), pair_id TEXT NOT NULL, game TEXT NOT NULL, score INTEGER DEFAULT 0, data TEXT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)`,
   `CREATE INDEX IF NOT EXISTS idx_moods_pair_id ON moods(pair_id)`,
   `CREATE INDEX IF NOT EXISTS idx_activities_pair_id ON activities(pair_id)`,
   `CREATE INDEX IF NOT EXISTS idx_gallery_pair_id ON gallery(pair_id)`,
@@ -38,6 +44,9 @@ const SCHEMA_STATEMENTS = [
   `CREATE INDEX IF NOT EXISTS idx_ldr_love_meter_pair_id ON ldr_love_meter(pair_id)`,
   `CREATE INDEX IF NOT EXISTS idx_ldr_locations_pair_id ON ldr_locations(pair_id)`,
   `CREATE INDEX IF NOT EXISTS idx_user_extras_user_key ON user_extras(user_id, key)`,
+  `CREATE INDEX IF NOT EXISTS idx_chat_messages_pair_id ON chat_messages(pair_id)`,
+  `CREATE INDEX IF NOT EXISTS idx_voice_notes_pair_id ON voice_notes(pair_id)`,
+  `CREATE INDEX IF NOT EXISTS idx_game_scores_pair_id ON game_scores(pair_id)`,
   `INSERT INTO users (id, username, password_hash, name, role, relationship, pair_id, created_at) VALUES ('user-1', 'Ryo', 'PLACEHOLDER', 'Ahmad Rio Prawiro', 'owner', 'Cowo Ara ❤️', 'pair-1', CURRENT_TIMESTAMP) ON CONFLICT (username) DO NOTHING`,
   `INSERT INTO users (id, username, password_hash, name, role, relationship, pair_id, created_at) VALUES ('user-2', 'Ara', 'PLACEHOLDER', 'Tiara Pertiwi', 'partner', 'Cewe Rio ❤️', 'pair-1', CURRENT_TIMESTAMP) ON CONFLICT (username) DO NOTHING`,
 ];
@@ -74,10 +83,10 @@ async function hashSeedPasswords() {
   ];
 
   for (const user of users) {
-    const result = await getOne("SELECT id, password_hash, password FROM users WHERE id = $1", [user.id]);
+    const result = await getOne("SELECT id, password_hash FROM users WHERE id = $1", [user.id]);
     if (!result) continue;
 
-    const currentHash = result.password_hash || result.password;
+    const currentHash = result.password_hash;
     if (currentHash && /^\$2[aby]\$\d{2}\$/.test(currentHash)) {
       continue;
     }
