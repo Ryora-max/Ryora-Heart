@@ -141,6 +141,12 @@ function HouseExterior({
       {/* Soft clouds — dreamy */}
       <div className="absolute top-[15%] left-0 opacity-40 text-4xl sm:text-5xl" style={{ animation: "cloud-drift 40s linear infinite" }}>☁️</div>
       <div className="absolute top-[25%] left-0 opacity-30 text-3xl sm:text-4xl" style={{ animation: "cloud-drift 55s linear 12s infinite" }}>☁️</div>
+      {!isNight && (
+        <>
+          <div className="absolute top-[10%] left-0 opacity-25 text-2xl sm:text-3xl" style={{ animation: "cloud-drift 65s linear 5s infinite" }}>☁️</div>
+          <div className="absolute top-[35%] left-0 opacity-20 text-3xl sm:text-4xl" style={{ animation: "cloud-drift 50s linear 20s infinite" }}>☁️</div>
+        </>
+      )}
 
       {/* Floating hearts — ambient */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
@@ -388,6 +394,8 @@ function HouseInterior({
   isLoading,
   partnerTyping = false,
   weather = "clear",
+  latestLetter = null,
+  achievements = [],
 }: {
   onOpenRoom: (href: string) => void;
   onGoOutside: () => void;
@@ -407,6 +415,8 @@ function HouseInterior({
   isLoading?: boolean;
   partnerTyping?: boolean;
   weather?: "clear" | "rain" | "snow";
+  latestLetter?: { snippet: string; author: string; date: string } | null;
+  achievements?: { emoji: string; label: string; unlocked: boolean }[];
 }) {
   const [hoveredRoom, setHoveredRoom] = useState<string | null>(null);
   const [clockNow, setClockNow] = useState(new Date());
@@ -916,6 +926,33 @@ function HouseInterior({
           </div>
         )}
 
+        {/* Love letter preview — snippet of latest letter */}
+        {latestLetter && (
+          <div className="mb-5 max-w-sm mx-auto px-5 py-3 rounded-2xl bg-gradient-to-br from-amber-50/80 to-rose-50/60 backdrop-blur-sm shadow-sm border border-amber-100/60 cursor-pointer hover:scale-[1.02] transition-transform" onClick={() => onOpenRoom("/bedroom")}>
+            <div className="flex items-center gap-2 mb-1.5">
+              <span className="text-base">💌</span>
+              <span className="text-[10px] font-medium text-amber-600 uppercase tracking-wide">Surat dari {latestLetter.author}</span>
+            </div>
+            <p className="text-xs sm:text-sm text-gray-600/80 italic leading-relaxed line-clamp-2">"{latestLetter.snippet}"</p>
+          </div>
+        )}
+
+        {/* Achievement badges */}
+        {achievements.length > 0 && (
+          <div className="flex flex-wrap items-center justify-center gap-2 mb-5">
+            {achievements.map((ach, i) => (
+              <div
+                key={i}
+                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[10px] font-medium border transition-all ${ach.unlocked ? "bg-rose-50/80 border-rose-200/60 text-rose-500 shadow-sm" : "bg-gray-50/40 border-gray-200/40 text-gray-300"}`}
+                title={ach.unlocked ? ach.label : `${ach.label} (terkunci)`}
+              >
+                <span className={ach.unlocked ? "" : "grayscale opacity-40"}>{ach.emoji}</span>
+                <span>{ach.label}</span>
+              </div>
+            ))}
+          </div>
+        )}
+
         {/* Mascot — center, soft, with long-press */}
         <div
           className="flex flex-col items-center mb-5"
@@ -1168,6 +1205,53 @@ export function HouseExperience() {
 
   const galleryEmojiPhotos = useMemo(() => galleryPhotos.slice(0, 2).map((p) => ({ id: p.id, emoji: "📸" })), [galleryPhotos]);
 
+  // Latest letter preview snippet
+  const latestLetter = useMemo(() => {
+    if (lettersLoading || letters.length === 0) return null;
+    const latest = letters[letters.length - 1];
+    const text = latest.content || latest.title || "";
+    return {
+      snippet: text.slice(0, 80) + (text.length > 80 ? "..." : ""),
+      author: latest.createdBy === partnerId ? "Pasangan" : "Kamu",
+      date: latest.createdAt.toISOString(),
+    };
+  }, [letters, lettersLoading, partnerId]);
+
+  // Soft chime when partner comes online
+  const prevPartnerOnline = useRef(false);
+  useEffect(() => {
+    if (isPartnerOnline && !prevPartnerOnline.current && prevPartnerOnline.current !== null) {
+      try {
+        const ctx = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(523, ctx.currentTime);
+        osc.frequency.setValueAtTime(659, ctx.currentTime + 0.15);
+        osc.frequency.setValueAtTime(784, ctx.currentTime + 0.3);
+        gain.gain.setValueAtTime(0.08, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.6);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.6);
+      } catch { /* noop */ }
+    }
+    prevPartnerOnline.current = isPartnerOnline;
+  }, [isPartnerOnline]);
+
+  // Achievement badges — unlockable milestones
+  const achievements = useMemo(() => {
+    const badges: { emoji: string; label: string; unlocked: boolean }[] = [
+      { emoji: "💌", label: "Surat Pertama", unlocked: letters.length >= 1 },
+      { emoji: "💬", label: "10 Pesan", unlocked: chatMessages.length >= 10 },
+      { emoji: "📸", label: "Galeri 5", unlocked: galleryPhotos.length >= 5 },
+      { emoji: "🔥", label: "7 Hari Streak", unlocked: (() => { if (typeof window === "undefined") return false; return parseInt(localStorage.getItem("ryora-streak") || "0", 10) >= 7; })() },
+      { emoji: "💯", label: "Love 100%", unlocked: currentPercentage >= 100 },
+    ];
+    return badges;
+  }, [letters.length, chatMessages.length, galleryPhotos.length, currentPercentage]);
+
   // Partner typing indicator — last message within 15s
   const partnerTyping = useMemo(() => {
     if (!partnerId || chatLoading) return false;
@@ -1258,6 +1342,8 @@ export function HouseExperience() {
         isLoading={chatLoading || lettersLoading || galleryLoading}
         partnerTyping={partnerTyping}
         weather={weather}
+        latestLetter={latestLetter}
+        achievements={achievements}
       />
       {knockReceived && <KnockNotification knock={knockReceived} onDismiss={dismissKnock} onEnter={handleEnter} />}
     </>
