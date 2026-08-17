@@ -2,22 +2,22 @@
 
 import { useRouter, usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { Home, Calendar, Heart, MessageCircle, Settings } from "lucide-react";
+import { Home, Activity, MessageCircle, MapPin, Settings } from "lucide-react";
 
 const NAV_ITEMS = [
-  { href: "/home", label: "Home", icon: Home },
-  { href: "/calendar", label: "Calendar", icon: Calendar },
-  { href: "/dashboard", label: "Dashboard", icon: Heart },
-  { href: "/ldr", label: "LDR", icon: MessageCircle },
+  { href: "/dashboard", label: "Home", icon: Home },
+  { href: "/live", label: "Live", icon: Activity },
+  { href: "/chat", label: "Chat", icon: MessageCircle },
+  { href: "/map", label: "Map", icon: MapPin },
   { href: "/settings", label: "Settings", icon: Settings },
 ] as const;
 
 /**
  * Bottom navigation untuk mobile (PWA-friendly).
  * - Fixed di bottom dengan safe-area-inset
-- Hanya tampil di mobile (md:hidden)
-- Touch target 44px+ (Apple HIG)
-- Active state jelas
+ * - Hanya tampil di mobile (md:hidden)
+ * - Touch target 44px+ (Apple HIG)
+ * - Active state jelas
  */
 export function BottomNav() {
   const router = useRouter();
@@ -33,7 +33,7 @@ export function BottomNav() {
         {NAV_ITEMS.map((item) => {
           const isActive =
             pathname === item.href ||
-            (item.href !== "/home" && pathname.startsWith(item.href));
+            (item.href !== "/dashboard" && pathname.startsWith(item.href));
           const Icon = item.icon;
 
           return (

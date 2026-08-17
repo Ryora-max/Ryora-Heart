@@ -1,129 +1,36 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Bell, Shield, Database, LogOut, Moon, Sun } from "lucide-react";
+import { LogOut, Moon, Sun, Heart } from "lucide-react";
 import { useAuthStore } from "@/stores";
 import { APP_CONFIG } from "@/config";
-import { ProfilePictureUpload } from "@/components/ui/ProfilePictureUpload";
-import { LdrBanner } from "@/components/ldr/LdrBanner";
 import { useTheme } from "@/hooks";
-import { GuideModal } from "@/components/ui/GuideModal";
 
 type Theme = "dark" | "light" | "aurora";
-
-interface Settings {
-  relationshipStartDate: string;
-  distance: string;
-  nextMeetupDate: string;
-  secretPin: string;
-}
-
-const DEFAULT_SETTINGS: Settings = {
-  relationshipStartDate: APP_CONFIG.relationship.startDate,
-  distance: "",
-  nextMeetupDate: "",
-  secretPin: "0101",
-};
 
 export default function SettingsPage() {
   const { user, logout, token } = useAuthStore();
   const { theme, changeTheme } = useTheme();
-  const [isGuideOpen, setIsGuideOpen] = useState(false);
   const [name, setName] = useState(user?.name || "");
   const [relationship, setRelationship] = useState(user?.relationship || "");
-  const [avatarUrl, setAvatarUrl] = useState(user?.avatar_url || "");
-  const [settings, setSettings] = useState<Settings>(() => {
-    if (typeof window === "undefined") return DEFAULT_SETTINGS;
-    try {
-      const stored = localStorage.getItem("ryora-settings");
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        return { ...DEFAULT_SETTINGS, ...parsed };
-      }
-    } catch {}
-    return DEFAULT_SETTINGS;
-  });
   const [saving, setSaving] = useState(false);
-  const [saveError, setSaveError] = useState<string | null>(null);
-  const [saveSuccess, setSaveSuccess] = useState<string | null>(null);
-  const [nameError, setNameError] = useState("");
-  const [relationshipError, setRelationshipError] = useState("");
-
-  useEffect(() => {
-    if (!token) return;
-    fetch("/api/db", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "getUserSettings", token }),
-    })
-      .then((res) => res.ok ? res.json() : null)
-      .then((data) => {
-        if (data) {
-          setSettings({ ...DEFAULT_SETTINGS, ...data });
-        }
-      })
-      .catch(() => {});
-  }, [token]);
-
-  const updateSetting = <K extends keyof Settings>(key: K, value: Settings[K]) => {
-    const prev = settings;
-    const next = { ...prev, [key]: value };
-    setSettings(next);
-    if (key === "secretPin" && typeof window !== "undefined") {
-      localStorage.setItem("ryora-secret-pin", value);
-    }
-    if (typeof window !== "undefined") {
-      localStorage.setItem("ryora-settings", JSON.stringify(next));
-    }
-
-    if (token) {
-      (async () => {
-        try {
-          setSaveError(null);
-          const res = await fetch("/api/db", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ action: "updateSettings", token, data: { [key]: value } }),
-          });
-          if (!res.ok) throw new Error("Failed to save");
-        } catch {
-          setSaveError("Failed to save setting");
-        }
-      })();
-    }
-  };
+  const [saveSuccess, setSaveSuccess] = useState(false);
 
   const handleSave = async () => {
     if (!user || !token) return;
     setSaving(true);
-    setSaveError(null);
-    setSaveSuccess(null);
-    setNameError("");
-    setRelationshipError("");
-
-    if (!name.trim()) {
-      setNameError("Name is required");
-      setSaving(false);
-      return;
-    }
-    if (!relationship.trim()) {
-      setRelationshipError("Relationship is required");
-      setSaving(false);
-      return;
-    }
-
     try {
       await fetch("/api/db", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "updateProfile", token, data: { name, relationship, avatar_url: avatarUrl } }),
+        body: JSON.stringify({ action: "updateProfile", token, data: { name, relationship } }),
       });
-      const updatedUser = { ...user, name, relationship, avatar_url: avatarUrl };
+      const updatedUser = { ...user, name, relationship };
       useAuthStore.getState().setUser(updatedUser);
-      setSaveSuccess("Profile saved successfully!");
-      setTimeout(() => setSaveSuccess(null), 3000);
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 3000);
     } catch {
-      setSaveError("Failed to save profile");
+      console.error("Failed to save profile");
     } finally {
       setSaving(false);
     }
@@ -139,184 +46,91 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="page-bg p-4 md:p-8">
-      <div className="max-w-4xl mx-auto">
-        <div className="text-center mb-8">
-          <h1 className="text-gradient-primary text-4xl md:text-5xl font-bold mb-2">
+    <div className="page-bg p-4 md:p-8 min-h-screen">
+      <div className="max-w-2xl mx-auto">
+        <div className="text-center mb-8 pt-4">
+          <h1 className="text-gradient-primary text-3xl md:text-4xl font-bold mb-2">
             ⚙️ Settings
           </h1>
-          <p className="text-body">Manage your preferences</p>
+          <p className="text-body text-sm">Atur profil & preferensi</p>
         </div>
 
-        <LdrBanner tagline="Setting LDR: notifikasi prioritas = chat doi. 🔔💞" />
-
-         <div className="surface-card p-4 sm:p-6 mb-6">
-           <h3 className="text-heading text-xl font-bold mb-4">Profile</h3>
-           <div className="flex flex-col items-start gap-4">
-             <ProfilePictureUpload currentUrl={avatarUrl} onUpload={setAvatarUrl} />
-             <div className="flex-1 space-y-4 w-full">
-               <div>
-                 <label className="text-body text-sm block mb-2">Name</label>
-                 <input
-                   type="text"
-                   value={name}
-                   onChange={(e) => { setName(e.target.value); setNameError(""); }}
-                   className="input-soft w-full px-4 py-3"
-                 />
-                {nameError && <p className="text-red-500 text-xs mt-1">{nameError}</p>}
-              </div>
-              <div>
-                <label className="text-body text-sm block mb-2">Relationship</label>
-                <input
-                  type="text"
-                  value={relationship}
-                  onChange={(e) => { setRelationship(e.target.value); setRelationshipError(""); }}
-                  className="input-soft w-full px-4 py-2"
-                />
-                {relationshipError && <p className="text-red-500 text-xs mt-1">{relationshipError}</p>}
-              </div>
-                <button
-                  onClick={handleSave}
-                  disabled={saving}
-                  className="touch-target touch-press w-full py-2 rounded-xl text-white font-bold transition-all shadow-lg hover:shadow-xl disabled:opacity-50"
-                  style={{ background: "linear-gradient(to right, var(--primary), var(--secondary))" }}
-                >
-                  {saving ? "Saving..." : "Save Changes"}
-                </button>
-                {saveError && (
-                  <p className="text-red-500 text-xs mt-2 text-center">{saveError}</p>
-                )}
-                {saveSuccess && (
-                  <p className="text-accent text-xs mt-2 text-center">{saveSuccess}</p>
-                )}
+        {/* Profile */}
+        <div className="surface-card p-5 mb-5">
+          <h3 className="text-heading text-lg font-bold mb-4 flex items-center gap-2">
+            <Heart size={18} className="text-primary" /> Profile
+          </h3>
+          <div className="space-y-4">
+            <div>
+              <label className="text-body text-sm block mb-2">Nama</label>
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="input-soft w-full px-4 py-3"
+              />
             </div>
+            <div>
+              <label className="text-body text-sm block mb-2">Relationship</label>
+              <input
+                type="text"
+                value={relationship}
+                onChange={(e) => setRelationship(e.target.value)}
+                className="input-soft w-full px-4 py-3"
+              />
+            </div>
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              className="touch-target touch-press w-full py-2.5 rounded-xl text-white font-bold transition-all shadow-lg disabled:opacity-50"
+              style={{ background: "linear-gradient(to right, var(--primary), var(--secondary))" }}
+            >
+              {saving ? "Menyimpan..." : "Simpan"}
+            </button>
+            {saveSuccess && (
+              <p className="text-accent text-xs text-center">✓ Profile tersimpan</p>
+            )}
           </div>
         </div>
 
-        <div className="surface-card p-6 mb-6">
-          <h3 className="text-heading text-xl font-bold mb-4">Appearance</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        {/* Theme */}
+        <div className="surface-card p-5 mb-5">
+          <h3 className="text-heading text-lg font-bold mb-4">Tema</h3>
+          <div className="grid grid-cols-3 gap-3">
             {[
               { value: "dark", label: "Dark", icon: <Moon size={18} /> },
               { value: "light", label: "Light", icon: <Sun size={18} /> },
-              { value: "aurora", label: "Aurora", icon: <Sun size={18} /> },
-             ].map((t, i) => (
-                <button
-                  key={t.value}
-                  onClick={() => changeTheme(t.value as Theme)}
-                  className={`settings-item animate-fade-in-left touch-target touch-press p-4 rounded-xl border-2 transition-all cursor-pointer flex items-center gap-3 ${theme === t.value ? "" : "hover:opacity-80"}`}
-                  style={{
-                    animationDelay: `${i * 0.1}s`,
-                    background: theme === t.value ? "var(--primary-soft)" : "var(--surface-warm)",
-                    borderColor: theme === t.value ? "var(--primary)" : "var(--border)",
-                    color: theme === t.value ? "var(--primary)" : "var(--text-secondary)",
-                  }}
-               >
-                <div>{t.icon}</div>
-                <span className="font-medium" style={{ color: theme === t.value ? "var(--primary)" : "var(--text-primary)" }}>{t.label}</span>
+              { value: "aurora", label: "Aurora", icon: <Heart size={18} /> },
+            ].map((t) => (
+              <button
+                key={t.value}
+                onClick={() => changeTheme(t.value as Theme)}
+                className="touch-target touch-press p-3 rounded-xl border-2 transition-all cursor-pointer flex flex-col items-center gap-2"
+                style={{
+                  background: theme === t.value ? "var(--primary-soft)" : "var(--surface-warm)",
+                  borderColor: theme === t.value ? "var(--primary)" : "var(--border)",
+                  color: theme === t.value ? "var(--primary)" : "var(--text-secondary)",
+                }}
+              >
+                {t.icon}
+                <span className="text-xs font-medium">{t.label}</span>
               </button>
             ))}
           </div>
         </div>
 
-         <div className="surface-card p-4 sm:p-6 mb-6">
-           <h3 className="text-heading text-xl font-bold mb-4">Relationship</h3>
-           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-             <div>
-               <label className="text-body text-sm block mb-2">Relationship Start Date</label>
-               <input
-                 type="date"
-                 value={settings.relationshipStartDate}
-                 onChange={(e) => updateSetting("relationshipStartDate", e.target.value)}
-                 className="input-soft w-full px-4 py-3 text-sm"
-               />
-             </div>
-             <div>
-               <label className="text-body text-sm block mb-2">Distance (KM)</label>
-               <input
-                 type="number"
-                 value={settings.distance}
-                 onChange={(e) => updateSetting("distance", e.target.value)}
-                 placeholder="e.g. 1200"
-                 className="input-soft w-full px-4 py-3 text-sm"
-               />
-             </div>
-             <div>
-               <label className="text-body text-sm block mb-2">Next Meetup Date</label>
-               <input
-                 type="date"
-                 value={settings.nextMeetupDate}
-                 onChange={(e) => updateSetting("nextMeetupDate", e.target.value)}
-                 className="input-soft w-full px-4 py-3 text-sm"
-               />
-             </div>
-             <div>
-               <label className="text-body text-sm block mb-2">Secret Box PIN</label>
-               <input
-                 type="password"
-                 maxLength={4}
-                 value={settings.secretPin}
-                 onChange={(e) => updateSetting("secretPin", e.target.value.replace(/\D/g, "").slice(0, 4))}
-                 placeholder="****"
-                 className="input-soft w-full px-4 py-3 text-sm tracking-widest"
-               />
-             </div>
-           </div>
-         </div>
-
-        <div className="space-y-3 mb-6">
-          {[
-            { icon: <Bell size={20} />, label: "Notifications", description: "Manage alerts" },
-            { icon: <Shield size={20} />, label: "Privacy & Security", description: "Control your data" },
-            { icon: <Database size={20} />, label: "Data Management", description: "Export or clear data" },
-          ].map((item, i) => (
-            <div key={i} className="settings-item animate-fade-in-left surface-card p-4 flex items-center gap-4 transition-all" style={{ animationDelay: `${0.3 + i * 0.1}s` }}>
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: "var(--surface-warm)", color: "var(--text-secondary)" }}>{item.icon}</div>
-              <div className="flex-1">
-                <span className="text-heading font-medium block">{item.label}</span>
-                <span className="text-body text-sm">{item.description}</span>
-              </div>
-              <span className="text-muted">→</span>
-            </div>
-          ))}
-        </div>
-
-        <div className="surface-card p-6 mb-6" style={{ borderColor: "color-mix(in srgb, var(--peach) 40%, var(--border))" }}>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: "color-mix(in srgb, var(--peach) 20%, transparent)", color: "var(--peach)" }}>
-                <Bell size={20} />
-              </div>
-              <div>
-                <h3 className="text-heading text-lg font-bold">Buku Panduan Penggunaan 📘</h3>
-                <p className="text-muted text-xs">Panduan lengkap notifikasi, status online & fitur LDR</p>
-              </div>
-            </div>
-            <button
-              onClick={() => setIsGuideOpen(true)}
-              className="touch-target touch-press px-4 py-2.5 rounded-xl text-white text-xs font-bold transition-all shadow-md cursor-pointer"
-              style={{ background: "var(--peach)" }}
-            >
-              Buka Panduan
-            </button>
-          </div>
-        </div>
-
+        {/* Logout */}
         <button
           onClick={handleLogout}
           className="touch-target touch-press w-full py-3 rounded-xl border-2 text-red-500 transition-all cursor-pointer flex items-center justify-center gap-2 font-medium"
           style={{ borderColor: "color-mix(in srgb, #ef4444 30%, transparent)", background: "color-mix(in srgb, #ef4444 5%, transparent)" }}
-          onMouseEnter={(e) => { e.currentTarget.style.background = "color-mix(in srgb, #ef4444 10%, transparent)"; }}
-          onMouseLeave={(e) => { e.currentTarget.style.background = "color-mix(in srgb, #ef4444 5%, transparent)"; }}
         >
           <LogOut size={18} />
           Logout
         </button>
 
-        <GuideModal isOpen={isGuideOpen} onClose={() => setIsGuideOpen(false)} />
-
-        <div className="mt-8 text-center">
-          <p className="text-muted text-sm">{APP_CONFIG.name} • {APP_CONFIG.subtitle}</p>
+        <div className="mt-8 text-center pb-4">
+          <p className="text-muted text-xs">{APP_CONFIG.name} • {APP_CONFIG.subtitle}</p>
         </div>
       </div>
     </div>

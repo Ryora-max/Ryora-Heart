@@ -22,14 +22,8 @@ export const APP_CONFIG = {
 
 export const ROOMS = [
   { name: "Dashboard", href: "/dashboard", emoji: "🏠" },
-  { name: "Living Room", href: "/living-room", emoji: "🛋️" },
-  { name: "Bedroom", href: "/bedroom", emoji: "🛏️" },
-  { name: "Gallery", href: "/gallery", emoji: "📸" },
-  { name: "Garden", href: "/garden", emoji: "🌸" },
-  { name: "Rooftop", href: "/rooftop", emoji: "🌙" },
-  { name: "Calendar", href: "/calendar", emoji: "📅" },
-  { name: "Achievements", href: "/achievements", emoji: "🏆" },
-  { name: "Secret Box", href: "/secret-box", emoji: "💝" },
-  { name: "LDR Zone", href: "/ldr", emoji: "💞" },
+  { name: "Live", href: "/live", emoji: "📍" },
+  { name: "Chat", href: "/chat", emoji: "💬" },
+  { name: "Map", href: "/map", emoji: "🗺️" },
   { name: "Settings", href: "/settings", emoji: "⚙️" },
 ] as const;

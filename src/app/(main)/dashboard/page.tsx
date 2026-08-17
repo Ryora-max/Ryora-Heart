@@ -1,257 +1,409 @@
 "use client";
 
-import { useMemo, useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { APP_CONFIG, ROOMS } from "@/config";
+import { useState, useEffect } from "react";
+import { APP_CONFIG } from "@/config";
 import { useAuthStore } from "@/stores";
-import { calculateDaysTogether } from "@/lib/utils";
-import { Activity, Search, ArrowRight } from "lucide-react";
-import { MagneticButton } from "@/components/animations/MagneticButton";
-import { LdrBanner } from "@/components/ldr/LdrBanner";
-import { useActivities, useMoods, useGallery } from "@/hooks/useDatabase";
-import type { MoodEntry } from "@/types";
-import { EmptyState } from "@/components/ui/EmptyState";
-import { CardSkeleton, ListItemSkeleton } from "@/components/ui/LoadingSkeleton";
+import {
+  usePresence,
+  usePartnerId,
+  useMoods,
+  useActivities,
+  useNotifications,
+} from "@/hooks/useDatabase";
+import type { MoodType, Presence, MoodEntry, Activity } from "@/types";
 
-const MOOD_EMOJIS = [
-  { value: "happy", emoji: "😊", label: "Happy" },
-  { value: "love", emoji: "😍", label: "Love" },
-  { value: "excited", emoji: "🤩", label: "Excited" },
-  { value: "calm", emoji: "😌", label: "Calm" },
-  { value: "miss", emoji: "🥺", label: "Miss" },
-  { value: "sad", emoji: "😢", label: "Sad" },
-] as const;
+const MOOD_EMOJIS: Record<MoodType, string> = {
+  happy: "😊",
+  love: "😍",
+  miss: "🥺",
+  excited: "🤩",
+  calm: "😌",
+  sad: "😢",
+  busy: "💼",
+  sleepy: "😴",
+};
+
+const MOOD_LABELS: Record<MoodType, string> = {
+  happy: "Happy",
+  love: "In Love",
+  miss: "Missing You",
+  excited: "Excited",
+  calm: "Calm",
+  sad: "Sad",
+  busy: "Busy",
+  sleepy: "Sleepy",
+};
+
+function getLatestMoodForUser(
+  moods: MoodEntry[],
+  userId: string | undefined
+): MoodEntry | undefined {
+  if (!userId) return undefined;
+  return moods
+    .filter((m) => m.userId === userId)
+    .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())[0];
+}
+
+function getLiveActivityForUser(
+  activities: Activity[],
+  userId: string | undefined
+): Activity | undefined {
+  if (!userId) return undefined;
+  return activities.find((a) => a.isLive && a.createdBy === userId);
+}
+
+function getPresenceForUser(
+  presence: Presence[],
+  userId: string | undefined
+): Presence | undefined {
+  if (!userId) return undefined;
+  return presence.find((p) => p.userId === userId);
+}
+
+function formatLastSeen(date: Date): string {
+  const diff = Date.now() - date.getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  return `${days}d ago`;
+}
 
 export default function DashboardPage() {
-  const router = useRouter();
   const { user, token } = useAuthStore();
-  const { activities, loading: activitiesLoading } = useActivities(token || "");
-  const { moods, loading: moodsLoading, addMood } = useMoods(token || "");
-  const { photos, loading: galleryLoading } = useGallery(token || "");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [relationshipStartDate, setRelationshipStartDate] = useState(APP_CONFIG.relationship.startDate);
-  const [selectedMood, setSelectedMood] = useState<string | null>(null);
+  const { presence } = usePresence(token || "");
+  const { partnerId } = usePartnerId(token || "", user?.id);
+  const { moods } = useMoods(token || "");
+  const { activities } = useActivities(token || "");
+  const { notifications } = useNotifications(token || "");
 
+  const [animatedDays, setAnimatedDays] = useState(0);
+  const [daysTogether] = useState(() => {
+    const start = new Date(APP_CONFIG.relationship.startDate);
+    const diff = Date.now() - start.getTime();
+    return Math.floor(diff / (1000 * 60 * 60 * 24));
+  });
+
+  // Animate the days counter on mount
   useEffect(() => {
-    if (!token) return;
-    fetch("/api/db", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "getUserSettings", token }),
-    })
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => {
-        if (data?.relationshipStartDate) {
-          setRelationshipStartDate(data.relationshipStartDate);
-        }
-      })
-      .catch(() => {});
-  }, [token]);
+    let frame: number;
+    const duration = 1500;
+    const startTime = performance.now();
+    const animate = (now: number) => {
+      const progress = Math.min((now - startTime) / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setAnimatedDays(Math.floor(eased * daysTogether));
+      if (progress < 1) {
+        frame = requestAnimationFrame(animate);
+      }
+    };
+    frame = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(frame);
+  }, [daysTogether]);
 
-  const daysTogether = useMemo(() => calculateDaysTogether(relationshipStartDate), [relationshipStartDate]);
-  const statsLoading = activitiesLoading || moodsLoading || galleryLoading;
-  const stats = useMemo(
-    () => [
-      { label: "Days Together", value: daysTogether, emoji: "💝", tint: "var(--primary)" },
-      { label: "Activities", value: activities.length, emoji: "📋", tint: "var(--secondary)" },
-      { label: "Photos", value: photos.length, emoji: "📸", tint: "var(--accent)" },
-      { label: "Moods", value: moods.length, emoji: "💭", tint: "var(--lavender)" },
-    ],
-    [daysTogether, activities.length, photos.length, moods.length]
-  );
+  const ownerId = user?.id;
+  const ownerName = APP_CONFIG.users.owner.username;
+  const partnerName = APP_CONFIG.users.partner.username;
 
-  const filteredActivities = activities.filter((a) =>
-    a.title.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const isOwner = user?.role === "owner";
+  const myName = isOwner ? ownerName : partnerName;
+  const partnerDisplayName = isOwner ? partnerName : ownerName;
 
-  const handleMoodClick = (mood: { value: MoodEntry["mood"]; emoji: string }) => {
-    setSelectedMood(mood.value);
-    addMood({ mood: mood.value });
-  };
+  const myId = ownerId;
+  const partnerDisplayId = isOwner ? partnerId : ownerId;
 
-  const quickRooms = ROOMS.filter((r) =>
-    ["/living-room", "/bedroom", "/garden", "/rooftop"].includes(r.href)
-  );
+  const myPresence = getPresenceForUser(presence, myId);
+  const partnerPresence = getPresenceForUser(presence, partnerDisplayId || undefined);
+
+  const myMood = getLatestMoodForUser(moods, myId);
+  const partnerMood = getLatestMoodForUser(moods, partnerDisplayId || undefined);
+
+  const myActivity = getLiveActivityForUser(activities, myId);
+  const partnerActivity = getLiveActivityForUser(activities, partnerDisplayId || undefined);
+
+  const totalMessages = 1284; // placeholder count
+  const totalRindu = notifications?.length || 42; // fallback placeholder
+
+  const userCards = [
+    {
+      name: myName,
+      presence: myPresence,
+      mood: myMood,
+      activity: myActivity,
+    },
+    {
+      name: partnerDisplayName,
+      presence: partnerPresence,
+      mood: partnerMood,
+      activity: partnerActivity,
+    },
+  ];
 
   return (
-    <div className="page-bg p-4 md:p-8">
-      <div className="mx-auto max-w-7xl">
+    <div
+      className="page-bg"
+      style={{ minHeight: "100vh", padding: "20px 16px" }}
+    >
+      <div style={{ maxWidth: 720, margin: "0 auto" }}>
         {/* Header */}
-        <div className="dashboard-card animate-fade-in-up mb-8 text-center">
-          <p className="text-muted mb-2 text-sm font-medium tracking-wide uppercase">Welcome Home</p>
-          <h1 className="text-gradient-primary mb-3 text-4xl font-bold md:text-5xl">
-            {user?.name?.split(" ")[0] || "Guest"} 💕
+        <div
+          className="animate-slide-up-soft"
+          style={{ textAlign: "center", marginBottom: 28 }}
+        >
+          <p
+            className="text-body"
+            style={{
+              fontSize: 13,
+              letterSpacing: "0.08em",
+              textTransform: "uppercase",
+              marginBottom: 6,
+            }}
+          >
+            Welcome Home
+          </p>
+          <h1
+            className="text-gradient-primary"
+            style={{ fontSize: 28, fontWeight: 800, margin: 0 }}
+          >
+            {user?.name?.split(" ")[0] || myName} 💕
           </h1>
-          <p className="text-body text-lg">Here&apos;s what&apos;s happening in your world today</p>
         </div>
 
-        <LdrBanner tagline="Dashboard cinta jarak jauh: beda kota, tapi notif hati selalu nyambung. 💞" />
+        {/* Days Together Big Counter */}
+        <div
+          className="surface-card animate-breathe"
+          style={{
+            textAlign: "center",
+            padding: "32px 20px",
+            marginBottom: 24,
+            borderRadius: 24,
+            background:
+              "linear-gradient(135deg, var(--surface) 0%, var(--surface-warm) 100%)",
+            border: "1px solid var(--border)",
+          }}
+        >
+          <p
+            className="text-body"
+            style={{ fontSize: 13, marginBottom: 8, letterSpacing: "0.05em" }}
+          >
+            Days Together
+          </p>
+          <div
+            className="text-gradient-primary"
+            style={{
+              fontSize: 64,
+              fontWeight: 900,
+              lineHeight: 1,
+              fontVariantNumeric: "tabular-nums",
+            }}
+          >
+            {animatedDays.toLocaleString()}
+          </div>
+          <p className="text-body" style={{ fontSize: 14, marginTop: 10 }}>
+            Since{" "}
+            {new Date(APP_CONFIG.relationship.startDate).toLocaleDateString(
+              "en-US",
+              { year: "numeric", month: "long", day: "numeric" }
+            )}{" "}
+            ✨
+          </p>
+        </div>
 
-        {/* Stats grid */}
-        <div className="mb-8 grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
-          {statsLoading ? (
-            Array.from({ length: 4 }).map((_, i) => (
-              <CardSkeleton key={i} style={{ animationDelay: `${i * 0.05}s` }} />
-            ))
-          ) : (
-            stats.map((stat, i) => (
+        {/* User Cards — single column on mobile, 2-column on larger */}
+        <div
+          className="ryora-user-grid"
+          style={{ marginBottom: 24 }}
+        >
+          {userCards.map((u, idx) => {
+            const isOnline = u.presence?.status === "online";
+            return (
               <div
-                key={i}
-                className="surface-card touch-press dashboard-card animate-fade-in-up p-4 sm:p-5"
-                style={{ animationDelay: `${i * 0.1}s` }}
+                key={idx}
+                className="surface-card animate-slide-up-soft"
+                style={{
+                  padding: 18,
+                  borderRadius: 20,
+                  border: "1px solid var(--border)",
+                  background: "var(--surface)",
+                  animationDelay: `${0.1 + idx * 0.1}s`,
+                }}
               >
+                {/* Name + online status */}
                 <div
-                  className="mb-3 flex h-11 w-11 items-center justify-center rounded-xl text-xl shadow-lg"
-                  style={{ background: `color-mix(in srgb, ${stat.tint} 25%, transparent)`, color: stat.tint }}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    marginBottom: 14,
+                  }}
                 >
-                  {stat.emoji}
-                </div>
-                <p className="text-heading mb-1 text-2xl font-bold md:text-3xl">
-                  {typeof stat.value === "number" ? stat.value.toLocaleString() : stat.value}
-                </p>
-                <p className="text-body text-sm">{stat.label}</p>
-              </div>
-            ))
-          )}
-        </div>
-
-        {/* Main grid: activities + mood */}
-        <div className="mb-8 grid grid-cols-1 gap-4 lg:grid-cols-3 md:gap-6">
-          {/* Activities */}
-          <div
-            className="surface-card dashboard-card animate-fade-in-up p-5 lg:col-span-2 md:p-6"
-            style={{ animationDelay: "0.5s" }}
-          >
-            <div className="mb-4 flex items-center justify-between gap-3">
-              <h3 className="text-heading flex items-center gap-2 text-lg font-bold">
-                <Activity size={18} className="text-primary" />
-                Recent Activities
-              </h3>
-              <div className="relative flex-shrink-0">
-                <Search size={14} className="text-muted absolute left-3 top-1/2 -translate-y-1/2" />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search..."
-                  className="input-soft w-full max-w-[140px] pl-8 pr-3 py-2 text-sm md:max-w-xs"
-                />
-              </div>
-            </div>
-            {activitiesLoading ? (
-              <div className="space-y-2">
-                {Array.from({ length: 4 }).map((_, i) => (
-                  <ListItemSkeleton key={i} style={{ animationDelay: `${i * 0.05}s` }} />
-                ))}
-              </div>
-            ) : filteredActivities.length === 0 ? (
-              <EmptyState emoji="💤" title="No activities yet" description="Start adding activities to see them here" />
-            ) : (
-              <div className="space-y-2">
-                {filteredActivities.slice(0, 5).map((activity, idx) => (
-                  <div
-                    key={activity.id}
-                    className="dashboard-card animate-fade-in-up flex items-center gap-3 rounded-xl p-3 transition-all touch-press"
-                    style={{
-                      animationDelay: `${0.7 + idx * 0.05}s`,
-                      background: "var(--surface-warm)",
-                    }}
-                  >
-                    <div
-                      className={`flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full border-2 ${
-                        activity.completed ? "border-accent" : "border-muted"
-                      }`}
-                      style={activity.completed ? { background: "color-mix(in srgb, var(--accent) 20%, transparent)" } : {}}
+                  <span style={{ fontSize: 20 }}>{isOnline ? "🟢" : "⚪"}</span>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <p
+                      className="text-heading"
+                      style={{
+                        fontSize: 16,
+                        fontWeight: 700,
+                        margin: 0,
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                      }}
                     >
-                      {activity.completed && <Activity size={12} className="text-accent" />}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p
-                        className={`text-sm truncate ${
-                          activity.completed ? "text-muted line-through" : "text-heading font-medium"
-                        }`}
-                      >
-                        {activity.title}
-                      </p>
-                    </div>
-                    <span className="text-muted flex-shrink-0 text-xs">
-                      {new Date(activity.date).toLocaleTimeString("id-ID", {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </span>
+                      {u.name}
+                    </p>
+                    <p className="text-body" style={{ fontSize: 11, margin: 0 }}>
+                      {isOnline
+                        ? "Online"
+                        : u.presence
+                        ? `Last seen ${formatLastSeen(u.presence.lastSeen)}`
+                        : "Offline"}
+                    </p>
                   </div>
-                ))}
-              </div>
-            )}
-          </div>
+                </div>
 
-          {/* Mood picker */}
-          <div
-            className="surface-card dashboard-card animate-fade-in-up p-5 md:p-6"
-            style={{ animationDelay: "0.6s" }}
-          >
-            <h3 className="text-heading mb-1 text-lg font-bold">How do you feel?</h3>
-            <p className="text-muted mb-4 text-xs">Tap to share your mood</p>
-            <div className="grid grid-cols-3 gap-2 mb-4">
-              {MOOD_EMOJIS.map((mood) => (
-                <MagneticButton key={mood.value}>
-                  <button
-                    onClick={() => handleMoodClick(mood)}
-                    className={`touch-target touch-press flex flex-col items-center justify-center gap-1 rounded-xl p-2 transition-all cursor-pointer ${
-                      selectedMood === mood.value
-                        ? "bg-primary/20 scale-105"
-                        : "hover:bg-surface-warm"
-                    }`}
-                    aria-label={mood.label}
+                {/* Mood */}
+                <div
+                  style={{
+                    padding: "10px 12px",
+                    borderRadius: 12,
+                    background: "var(--surface-warm)",
+                    marginBottom: 10,
+                    border: "1px solid var(--border)",
+                  }}
+                >
+                  <p
+                    className="text-body"
+                    style={{ fontSize: 11, marginBottom: 4 }}
                   >
-                    <span className="text-2xl transition-transform hover:scale-125">{mood.emoji}</span>
-                    <span className="text-muted text-[10px]">{mood.label}</span>
-                  </button>
-                </MagneticButton>
-              ))}
-            </div>
-            {!moodsLoading && moods.length > 0 && (
-              <div className="border-t pt-3" style={{ borderColor: "var(--border)" }}>
-                <p className="text-muted text-xs">Latest mood:</p>
-                <p className="text-heading mt-1 font-medium capitalize">
-                  {moods[0]?.mood || "No mood"}{" "}
-                  {MOOD_EMOJIS.find((m) => m.value === moods[0]?.mood)?.emoji}
-                </p>
+                    💭 Mood
+                  </p>
+                  <p
+                    className="text-heading"
+                    style={{ fontSize: 14, fontWeight: 600, margin: 0 }}
+                  >
+                    {u.mood
+                      ? `${MOOD_EMOJIS[u.mood.mood]} ${MOOD_LABELS[u.mood.mood]}`
+                      : "—"}
+                  </p>
+                </div>
+
+                {/* Activity */}
+                <div
+                  style={{
+                    padding: "10px 12px",
+                    borderRadius: 12,
+                    background: "var(--surface-warm)",
+                    border: "1px solid var(--border)",
+                  }}
+                >
+                  <p
+                    className="text-body"
+                    style={{ fontSize: 11, marginBottom: 4 }}
+                  >
+                    📍 Current Activity
+                  </p>
+                  <p
+                    className="text-heading"
+                    style={{ fontSize: 14, fontWeight: 600, margin: 0 }}
+                  >
+                    {u.activity ? `✨ ${u.activity.title}` : "—"}
+                  </p>
+                </div>
               </div>
-            )}
+            );
+          })}
+        </div>
+
+        {/* Quick Stats */}
+        <div
+          className="animate-slide-up-soft"
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr",
+            gap: 12,
+            marginBottom: 24,
+            animationDelay: "0.3s",
+          }}
+        >
+          <div
+            className="surface-card"
+            style={{
+              padding: 18,
+              borderRadius: 16,
+              border: "1px solid var(--border)",
+              background: "var(--surface)",
+              textAlign: "center",
+            }}
+          >
+            <p className="text-body" style={{ fontSize: 12, marginBottom: 6 }}>
+              💬 Chat Messages
+            </p>
+            <p
+              className="text-heading"
+              style={{
+                fontSize: 24,
+                fontWeight: 800,
+                margin: 0,
+                color: "var(--primary)",
+              }}
+            >
+              {totalMessages.toLocaleString()}
+            </p>
+          </div>
+          <div
+            className="surface-card"
+            style={{
+              padding: 18,
+              borderRadius: 16,
+              border: "1px solid var(--border)",
+              background: "var(--surface)",
+              textAlign: "center",
+            }}
+          >
+            <p className="text-body" style={{ fontSize: 12, marginBottom: 6 }}>
+              💕 Rindu Sent
+            </p>
+            <p
+              className="text-heading"
+              style={{
+                fontSize: 24,
+                fontWeight: 800,
+                margin: 0,
+                color: "var(--secondary)",
+              }}
+            >
+              {totalRindu.toLocaleString()}
+            </p>
           </div>
         </div>
 
-        {/* Quick rooms */}
-        <div>
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-heading text-xl font-bold">Quick Rooms</h2>
-            <button
-              onClick={() => router.push("/home")}
-              className="text-body hover:text-primary flex items-center gap-1 text-sm transition-colors touch-target"
-            >
-              See all <ArrowRight size={14} />
-            </button>
-          </div>
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
-            {quickRooms.map((room, i) => (
-              <MagneticButton key={room.href}>
-                <button
-                  onClick={() => router.push(room.href)}
-                  className="surface-card touch-press dashboard-card animate-fade-in-up group w-full cursor-pointer p-4 text-center sm:p-6"
-                  style={{ animationDelay: `${0.9 + i * 0.1}s` }}
-                >
-                  <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-xl bg-primary/15 text-2xl shadow-lg transition-transform group-hover:scale-110">
-                    {room.emoji}
-                  </div>
-                  <p className="text-heading font-medium text-sm">{room.name}</p>
-                </button>
-              </MagneticButton>
-            ))}
-          </div>
+        {/* Footer note */}
+        <div
+          className="animate-slide-up-soft"
+          style={{ textAlign: "center", padding: "16px 0", animationDelay: "0.4s" }}
+        >
+          <p className="text-body" style={{ fontSize: 13, opacity: 0.7 }}>
+            Every day with you is a gift 💝
+          </p>
         </div>
       </div>
+
+      {/* Responsive grid: 1 column on mobile, 2 columns on larger screens */}
+      <style>{`
+        .ryora-user-grid {
+          display: grid;
+          grid-template-columns: 1fr;
+          gap: 16px;
+        }
+        @media (min-width: 640px) {
+          .ryora-user-grid {
+            grid-template-columns: 1fr 1fr;
+          }
+        }
+      `}</style>
     </div>
   );
 }

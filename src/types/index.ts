@@ -7,25 +7,18 @@ export interface User {
   avatar_url?: string;
   token?: string;
   pair_id?: string;
-}
-
-export interface RelationshipStats {
-  daysTogether: number;
-  firstChat: Date;
-  firstCall: Date;
-  firstMeet: Date;
-  totalPhotos: number;
-  totalLetters: number;
-  totalTrips: number;
+  email?: string;
 }
 
 export interface MoodEntry {
   id: string;
   userId: string;
-  mood: "happy" | "love" | "miss" | "excited" | "calm" | "sad";
+  mood: MoodType;
   note?: string;
   createdAt: Date;
 }
+
+export type MoodType = "happy" | "love" | "miss" | "excited" | "calm" | "sad" | "busy" | "sleepy";
 
 export interface Activity {
   id: string;
@@ -35,60 +28,48 @@ export interface Activity {
   date: Date;
   completed: boolean;
   createdBy: string;
+  mood?: MoodType;
+  startTime?: Date;
+  endTime?: Date;
+  isLive?: boolean;
 }
 
-export interface GalleryItem {
-  id: string;
-  url: string;
-  caption?: string;
-  createdAt: Date;
-  createdBy: string;
-  aspectRatio?: number;
-}
-
-export interface Letter {
-  id: string;
-  title: string;
-  content: string;
-  type: "open_when" | "love_letter" | "secret";
-  openDate?: Date;
-  createdAt: Date;
-  createdBy: string;
-}
-
-export interface CalendarEvent {
-  id: string;
-  title: string;
-  date: Date;
-  type: "vc" | "birthday" | "anniversary" | "reminder";
-  description?: string;
-}
-
-export interface Hug {
+export interface ChatMessage {
   id: string;
   senderId: string;
   receiverId: string;
-  message: string;
-  emoji: string;
+  content: string;
   createdAt: Date;
+  readAt?: Date;
 }
 
-export interface StatusUpdate {
+export type RinduLevel = "kangen" | "rindu" | "rindu_banget";
+
+export interface RinduNotification {
+  id: string;
+  senderId: string;
+  receiverId: string;
+  level: RinduLevel;
+  message?: string;
+  createdAt: Date;
+  respondedAt?: Date;
+  response?: "aku_juga" | "ignored";
+}
+
+export interface LiveLocation {
   id: string;
   userId: string;
-  message: string;
-  emoji: string;
-  createdAt: Date;
+  place: string;
+  note?: string;
+  lat?: number;
+  lng?: number;
+  accuracy?: number;
+  updatedAt?: Date;
 }
 
-export interface Achievement {
+export interface Presence {
   id: string;
-  title: string;
-  description: string;
-  icon: string;
-  unlockedAt?: Date;
-  requirement: {
-    type: "days" | "photos" | "letters" | "trips" | "video_calls";
-    value: number;
-  };
+  userId: string;
+  status: "online" | "offline";
+  lastSeen: Date;
 }

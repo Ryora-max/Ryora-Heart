@@ -3,7 +3,7 @@
   "appName": "Ryora",
   "webDir": "out",
   "server": {
-    "url": "https://ryora-placeholder.vercel.app",
+    "url": "https://ryora-ten.vercel.app",
     "cleartext": true,
     "initialRoute": "/"
   },

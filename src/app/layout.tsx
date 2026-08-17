@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Sora, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
-import { AuroraBackground } from "@/components/home/AuroraBackground";
 import Loader from "@/components/animations/Loader";
 import { ServiceWorkerRegistrar } from "@/components/pwa/ServiceWorkerRegistrar";
 import { InstallPrompt } from "@/components/pwa/InstallPrompt";
@@ -58,7 +57,6 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${sora.variable} ${jakarta.variable} h-full antialiased`}>
       <body className="min-h-screen flex flex-col bg-background text-foreground overflow-x-hidden">
-      <AuroraBackground />
       <Loader />
       <ServiceWorkerRegistrar />
       <InstallPrompt />

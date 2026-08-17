@@ -34,6 +34,12 @@ import {
   getUserExtra,
   setUserExtra,
   getAchievements,
+  getChatMessages,
+  sendChatMessage,
+  markChatRead,
+  getRinduNotifications,
+  sendRindu,
+  respondRindu,
 } from "@/app/actions/db";
 import { updateProfile, updateSettings, getUserSettings } from "@/app/actions/auth";
 
@@ -59,7 +65,7 @@ export async function POST(request: NextRequest) {
       case "getActivities":
         return NextResponse.json(await getActivities(pairId));
       case "createActivity":
-        return NextResponse.json(await createActivity(userId, pairId, params.title, params.type, params.date, params.description));
+        return NextResponse.json(await createActivity(userId, pairId, params.title, params.type || "schedule", params.date, params.description, params.mood, params.isLive));
       case "toggleActivity":
         return NextResponse.json(await toggleActivity(userId, pairId, params.activityId, params.completed));
       case "updateActivity":
@@ -110,7 +116,7 @@ export async function POST(request: NextRequest) {
       case "getLoveMeter":
         return NextResponse.json(await getLoveMeter(pairId));
       case "addLocation":
-        return NextResponse.json(await addLocation(userId, pairId, params.place, params.note));
+        return NextResponse.json(await addLocation(userId, pairId, params.place, params.note, params.lat, params.lng, params.accuracy));
       case "getLocations":
         return NextResponse.json(await getLocations(pairId));
       case "updateProfile":
@@ -127,6 +133,20 @@ export async function POST(request: NextRequest) {
         return NextResponse.json(await setUserExtra(userId, pairId, params.key, params.value));
       case "getAchievements":
         return NextResponse.json(await getAchievements(pairId));
+      // ─── Chat ───
+      case "getChatMessages":
+        return NextResponse.json(await getChatMessages(pairId));
+      case "sendChatMessage":
+        return NextResponse.json(await sendChatMessage(userId, pairId, params.receiverId, params.content));
+      case "markChatRead":
+        return NextResponse.json(await markChatRead(userId, pairId));
+      // ─── Rindu ───
+      case "getRinduNotifications":
+        return NextResponse.json(await getRinduNotifications(pairId));
+      case "sendRindu":
+        return NextResponse.json(await sendRindu(userId, pairId, params.receiverId, params.level, params.message));
+      case "respondRindu":
+        return NextResponse.json(await respondRindu(userId, pairId, params.rinduId, params.response));
       default:
         return NextResponse.json({ error: "Invalid action" }, { status: 400 });
     }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Bell, X } from "lucide-react";
 import { useNotifications } from "@/hooks/useDatabase";
 import { useAuthStore } from "@/stores";
@@ -8,20 +8,18 @@ import { useAuthStore } from "@/stores";
 export function NotificationButton() {
   const [open, setOpen] = useState(false);
   const { token } = useAuthStore();
-  const { notifications, unreadCount, refetch } = useNotifications(token || "");
+  const { notifications, markRead } = useNotifications(token || "");
+
+  const unreadCount = useMemo(
+    () => notifications.filter((n: any) => !n.read).length,
+    [notifications]
+  );
 
   useEffect(() => {
-    if (open) {
-      refetch();
-      if (token) {
-        fetch("/api/db", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action: "markNotificationsAsRead", token }),
-        }).catch(() => {});
-      }
+    if (open && unreadCount > 0) {
+      markRead();
     }
-  }, [open, token, refetch]);
+  }, [open, unreadCount, markRead]);
 
   return (
     <div className="relative">
@@ -53,7 +51,7 @@ export function NotificationButton() {
               {notifications.length === 0 ? (
                 <p className="text-text-muted text-center py-6 text-sm">No notifications yet 💤</p>
               ) : (
-                notifications.slice(0, 15).map((n) => (
+                notifications.slice(0, 15).map((n: any) => (
                   <div key={n.id} className={`p-3 border-b border-border hover:bg-surface-warm transition-all ${!n.read ? "bg-surface-warm" : ""}`}>
                     <p className={`text-sm ${!n.read ? "font-semibold text-text-primary" : "text-text-secondary"}`}>
                       {n.message}

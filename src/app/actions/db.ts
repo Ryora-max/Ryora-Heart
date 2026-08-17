@@ -30,6 +30,10 @@ function mapActivity(r: any) {
     date: r.date,
     completed: r.completed,
     createdBy: r.created_by,
+    mood: r.mood || undefined,
+    startTime: r.start_time || undefined,
+    endTime: r.end_time || undefined,
+    isLive: r.is_live || false,
   };
 }
 
@@ -100,7 +104,11 @@ function mapLocation(r: any) {
     userId: r.user_id,
     place: r.place,
     note: r.note || undefined,
+    lat: r.lat || undefined,
+    lng: r.lng || undefined,
+    accuracy: r.accuracy || undefined,
     createdAt: r.created_at,
+    updatedAt: r.updated_at || undefined,
   };
 }
 
@@ -202,9 +210,10 @@ export async function getActivities(pairId: string) {
   return (data || []).map(mapActivity);
 }
 
-export async function createActivity(userId: string, pairId: string, title: string, type: string, date: string, description?: string) {
+export async function createActivity(userId: string, pairId: string, title: string, type: string, date: string, description?: string, mood?: string, isLive?: boolean) {
   const supabase = getSupabaseServer();
   const id = genId();
+  const now = new Date().toISOString();
 
   const { error } = await supabase.from("activities").insert({
     id,
@@ -215,12 +224,15 @@ export async function createActivity(userId: string, pairId: string, title: stri
     date,
     completed: false,
     created_by: userId,
+    mood: mood || null,
+    is_live: isLive || false,
+    start_time: isLive ? now : null,
   });
   if (error) throw error;
 
   await notifyPartner(supabase, userId, pairId, `New activity created: ${title}`, "activity");
 
-  return { id, pair_id: pairId, title, description, type, date, completed: false, createdBy: userId };
+  return { id, pair_id: pairId, title, description, type, date, completed: false, mood, isLive, createdBy: userId };
 }
 
 export async function toggleActivity(userId: string, pairId: string, activityId: string, completed: boolean) {
@@ -604,10 +616,34 @@ export async function getLoveMeter(pairId: string) {
 
 // ─── Locations ────────────────────────────────────────────────────────────
 
-export async function addLocation(userId: string, pairId: string, place: string, note?: string) {
+export async function addLocation(userId: string, pairId: string, place: string, note?: string, lat?: number, lng?: number, accuracy?: number) {
   const supabase = getSupabaseServer();
   const id = genId();
   const now = new Date().toISOString();
+
+  // Upsert: update existing user location, or insert new
+  const { data: existing } = await supabase
+    .from("ldr_locations")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("pair_id", pairId)
+    .maybeSingle();
+
+  if (existing) {
+    const { error } = await supabase
+      .from("ldr_locations")
+      .update({
+        place,
+        note: note || null,
+        lat: lat || null,
+        lng: lng || null,
+        accuracy: accuracy || null,
+        updated_at: now,
+      })
+      .eq("id", existing.id);
+    if (error) throw error;
+    return { id: existing.id, userId, place, note, lat, lng, accuracy, updatedAt: now };
+  }
 
   const { error } = await supabase.from("ldr_locations").insert({
     id,
@@ -615,13 +651,17 @@ export async function addLocation(userId: string, pairId: string, place: string,
     pair_id: pairId,
     place,
     note: note || null,
+    lat: lat || null,
+    lng: lng || null,
+    accuracy: accuracy || null,
     created_at: now,
+    updated_at: now,
   });
   if (error) throw error;
 
   await notifyPartner(supabase, userId, pairId, `Location update: ${place}`, "location");
 
-  return { id, userId, place, note, createdAt: now };
+  return { id, userId, place, note, lat, lng, accuracy, createdAt: now, updatedAt: now };
 }
 
 export async function getLocations(pairId: string) {
@@ -710,4 +750,114 @@ export async function getAchievements(pairId: string) {
     meetupPassed,
     milestoneCount: milestoneCount || 0,
   };
+}
+
+// ─── Chat Messages ────────────────────────────────────────────────────────
+
+function mapChatMessage(r: any) {
+  return {
+    id: r.id,
+    senderId: r.sender_id,
+    receiverId: r.receiver_id,
+    content: r.content,
+    createdAt: r.created_at,
+    readAt: r.read_at || undefined,
+  };
+}
+
+export async function getChatMessages(pairId: string) {
+  const supabase = getSupabaseServer();
+  const { data, error } = await supabase
+    .from("chat_messages")
+    .select("*")
+    .eq("pair_id", pairId)
+    .order("created_at", { ascending: true })
+    .limit(200);
+  if (error) throw error;
+  return (data || []).map(mapChatMessage);
+}
+
+export async function sendChatMessage(userId: string, pairId: string, receiverId: string, content: string) {
+  const supabase = getSupabaseServer();
+  const id = genId();
+  const now = new Date().toISOString();
+  const { error } = await supabase.from("chat_messages").insert({
+    id,
+    pair_id: pairId,
+    sender_id: userId,
+    receiver_id: receiverId,
+    content,
+    created_at: now,
+  });
+  if (error) throw error;
+  return { id, senderId: userId, receiverId, content, createdAt: now };
+}
+
+export async function markChatRead(userId: string, pairId: string) {
+  const supabase = getSupabaseServer();
+  const now = new Date().toISOString();
+  const { error } = await supabase
+    .from("chat_messages")
+    .update({ read_at: now })
+    .eq("pair_id", pairId)
+    .eq("receiver_id", userId)
+    .is("read_at", null);
+  if (error) throw error;
+  return { success: true };
+}
+
+// ─── Rindu Notifications ──────────────────────────────────────────────────
+
+function mapRindu(r: any) {
+  return {
+    id: r.id,
+    senderId: r.sender_id,
+    receiverId: r.receiver_id,
+    level: r.level,
+    message: r.message || undefined,
+    createdAt: r.created_at,
+    respondedAt: r.responded_at || undefined,
+    response: r.response,
+  };
+}
+
+export async function getRinduNotifications(pairId: string) {
+  const supabase = getSupabaseServer();
+  const { data, error } = await supabase
+    .from("rindu_notifications")
+    .select("*")
+    .eq("pair_id", pairId)
+    .order("created_at", { ascending: false })
+    .limit(20);
+  if (error) throw error;
+  return (data || []).map(mapRindu);
+}
+
+export async function sendRindu(userId: string, pairId: string, receiverId: string, level: string, message?: string) {
+  const supabase = getSupabaseServer();
+  const id = genId();
+  const now = new Date().toISOString();
+  const { error } = await supabase.from("rindu_notifications").insert({
+    id,
+    pair_id: pairId,
+    sender_id: userId,
+    receiver_id: receiverId,
+    level,
+    message: message || null,
+    created_at: now,
+  });
+  if (error) throw error;
+  return { id, senderId: userId, receiverId, level, message, createdAt: now };
+}
+
+export async function respondRindu(userId: string, pairId: string, rinduId: string, response: string) {
+  const supabase = getSupabaseServer();
+  const now = new Date().toISOString();
+  const { error } = await supabase
+    .from("rindu_notifications")
+    .update({ responded_at: now, response })
+    .eq("id", rinduId)
+    .eq("receiver_id", userId);
+  if (error) throw error;
+  return { success: true };
 }

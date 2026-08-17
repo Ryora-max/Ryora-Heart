@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import type { MoodEntry, Activity, GalleryItem, CalendarEvent, Letter, Hug, StatusUpdate } from "@/types";
+import type { MoodEntry, Activity, ChatMessage, RinduNotification, RinduLevel, LiveLocation, Presence, MoodType } from "@/types";
 import { useRetryQueue } from "./useRetryQueue";
 import { showToast } from "./useToast";
 import { usePolling } from "./usePolling";
@@ -15,7 +15,6 @@ async function callDb(action: string, token: string, params?: any) {
     body: JSON.stringify({ action, token, ...params }),
     cache: "no-store",
   });
-
   if (!result.ok) {
     const error = await result.json().catch(() => ({}));
     throw new Error(error.error || "Database error");
@@ -23,23 +22,16 @@ async function callDb(action: string, token: string, params?: any) {
   return result.json();
 }
 
-/**
- * Hook helper: subscribe ke realtime untuk satu tabel,
- * trigger refetch callback saat ada perubahan.
- * Refetch di-debounce supaya tidak multiple fetch saat burst events.
- */
 function useRealtimeRefetch(table: string, refetch: () => void, enabled: boolean) {
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const refetchRef = useRef(refetch);
   useEffect(() => {
     refetchRef.current = refetch;
   }, [refetch]);
-
   useRealtime(
     table,
     undefined,
     () => {
-      // Debounce: kalau multiple events datang dalam 300ms, hanya refetch sekali
       if (timerRef.current) clearTimeout(timerRef.current);
       timerRef.current = setTimeout(() => {
         refetchRef.current();
@@ -50,6 +42,53 @@ function useRealtimeRefetch(table: string, refetch: () => void, enabled: boolean
   );
 }
 
+// ─── Presence ─────────────────────────────────────────────────
+export function usePresence(token: string) {
+  const [presence, setPresence] = useState<Presence[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { enqueue, flush } = useRetryQueue();
+
+  const fetchPresence = useCallback(async () => {
+    try {
+      const data = await callDb("getPresence", token);
+      setPresence(data.map((p: any) => ({
+        id: p.id,
+        userId: p.userId,
+        status: p.status,
+        lastSeen: new Date(p.lastSeen),
+      })));
+    } catch (error) {
+      enqueue({ action: "getPresence", token });
+      console.error("Error fetching presence:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, [token, enqueue]);
+
+  usePolling(fetchPresence, 15000, true);
+  useRealtimeRefetch("ldr_presence", fetchPresence, true);
+
+  const updatePresence = useCallback(async (status: "online" | "offline") => {
+    try {
+      await callDb("updatePresence", token, { status });
+    } catch (error) {
+      console.error("Error updating presence:", error);
+    }
+  }, [token]);
+
+  return { presence, loading, updatePresence, flushOffline: flush };
+}
+
+export function usePartnerId(token: string, userId?: string) {
+  const [partnerId, setPartnerId] = useState<string | null>(null);
+  useEffect(() => {
+    if (!token || !userId) return;
+    callDb("getPartnerId", token).then((data) => setPartnerId(data.partnerId)).catch(() => {});
+  }, [token, userId]);
+  return { partnerId };
+}
+
+// ─── Moods ────────────────────────────────────────────────────
 export function useMoods(token: string) {
   const [moods, setMoods] = useState<MoodEntry[]>([]);
   const [loading, setLoading] = useState(true);
@@ -61,7 +100,7 @@ export function useMoods(token: string) {
       setMoods(data.map((m: any) => ({
         id: m.id,
         userId: m.userId,
-        mood: m.mood as MoodEntry["mood"],
+        mood: m.mood as MoodType,
         note: m.note || undefined,
         createdAt: new Date(m.createdAt),
       })));
@@ -76,7 +115,7 @@ export function useMoods(token: string) {
   usePolling(fetchMoods, 30000, true);
   useRealtimeRefetch("moods", fetchMoods, true);
 
-  const addMood = useCallback(async (mood: { mood: MoodEntry["mood"]; note?: string }) => {
+  const addMood = useCallback(async (mood: { mood: MoodType; note?: string }) => {
     try {
       await callDb("addMood", token, { mood: mood.mood, note: mood.note });
       showToast("Mood saved 💭", "success");
@@ -90,6 +129,7 @@ export function useMoods(token: string) {
   return { moods, loading, addMood, flushOffline: flush };
 }
 
+// ─── Live Activities (with mood + time) ───────────────────────
 export function useActivities(token: string) {
   const [activities, setActivities] = useState<Activity[]>([]);
   const [loading, setLoading] = useState(true);
@@ -106,6 +146,10 @@ export function useActivities(token: string) {
         date: new Date(a.date),
         completed: Boolean(a.completed),
         createdBy: a.createdBy,
+        mood: a.mood as MoodType | undefined,
+        startTime: a.startTime ? new Date(a.startTime) : undefined,
+        endTime: a.endTime ? new Date(a.endTime) : undefined,
+        isLive: a.isLive,
       })));
     } catch (error) {
       enqueue({ action: "getActivities", token });
@@ -118,10 +162,23 @@ export function useActivities(token: string) {
   usePolling(fetchActivities, 30000, true);
   useRealtimeRefetch("activities", fetchActivities, true);
 
-  const createActivity = useCallback(async (title: string, type: Activity["type"], date: Date, description?: string) => {
+  const createActivity = useCallback(async (data: {
+    title: string;
+    type?: Activity["type"];
+    mood?: MoodType;
+    description?: string;
+    isLive?: boolean;
+  }) => {
     try {
-      await callDb("createActivity", token, { title, type, date: date.toISOString(), description });
-      showToast("Activity created 📅", "success");
+      await callDb("createActivity", token, {
+        title: data.title,
+        type: data.type || "schedule",
+        mood: data.mood,
+        description: data.description,
+        isLive: data.isLive,
+        date: new Date().toISOString(),
+      });
+      showToast("Activity ditambahkan ✨", "success");
       fetchActivities();
     } catch (error) {
       showToast("Gagal membuat activity", "error");
@@ -129,24 +186,14 @@ export function useActivities(token: string) {
     }
   }, [token, fetchActivities]);
 
-  const toggleActivity = useCallback(async (id: string, completed: boolean) => {
+  const stopActivity = useCallback(async (id: string) => {
     try {
-      await callDb("toggleActivity", token, { activityId: id, completed });
+      await callDb("updateActivity", token, { activityId: id, title: undefined, description: undefined, endTime: new Date().toISOString(), isLive: false });
+      showToast("Activity selesai ✓", "success");
       fetchActivities();
     } catch (error) {
-      showToast("Gagal mengubah activity", "error");
-      console.error("Error toggling activity:", error);
-    }
-  }, [token, fetchActivities]);
-
-  const updateActivity = useCallback(async (id: string, updates: { title?: string; description?: string }) => {
-    try {
-      await callDb("updateActivity", token, { activityId: id, ...updates });
-      showToast("Activity diperbarui ✅", "success");
-      fetchActivities();
-    } catch (error) {
-      showToast("Gagal memperbarui activity", "error");
-      console.error("Error updating activity:", error);
+      showToast("Gagal update activity", "error");
+      console.error("Error stopping activity:", error);
     }
   }, [token, fetchActivities]);
 
@@ -161,469 +208,191 @@ export function useActivities(token: string) {
     }
   }, [token, fetchActivities]);
 
-  return { activities, loading, createActivity, toggleActivity, updateActivity, deleteActivity, flushOffline: flush };
+  return { activities, loading, createActivity, stopActivity, deleteActivity, flushOffline: flush };
 }
 
-export function useGallery(token: string) {
-  const [photos, setPhotos] = useState<GalleryItem[]>([]);
+// ─── Chat ─────────────────────────────────────────────────────
+export function useChat(token: string, pairId?: string, userId?: string) {
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(true);
   const { enqueue, flush } = useRetryQueue();
 
-  const fetchGallery = useCallback(async () => {
+  const fetchMessages = useCallback(async () => {
     try {
-      const data = await callDb("getGallery", token);
-      setPhotos(data.map((g: any) => ({
-        id: g.id,
-        url: g.url,
-        caption: g.caption || undefined,
-        createdAt: new Date(g.createdAt),
-        createdBy: g.createdBy,
+      const data = await callDb("getChatMessages", token);
+      setMessages(data.map((m: any) => ({
+        id: m.id,
+        senderId: m.senderId,
+        receiverId: m.receiverId,
+        content: m.content,
+        createdAt: new Date(m.createdAt),
+        readAt: m.readAt ? new Date(m.readAt) : undefined,
       })));
     } catch (error) {
-      enqueue({ action: "getGallery", token });
-      console.error("Error fetching gallery:", error);
+      enqueue({ action: "getChatMessages", token });
+      console.error("Error fetching chat:", error);
     } finally {
       setLoading(false);
     }
   }, [token, enqueue]);
 
-  usePolling(fetchGallery, 30000, true);
-  useRealtimeRefetch("gallery", fetchGallery, true);
+  usePolling(fetchMessages, 10000, true);
+  useRealtimeRefetch("chat_messages", fetchMessages, true);
 
-  const addPhoto = useCallback(async (url: string, caption?: string) => {
+  const sendMessage = useCallback(async (content: string, receiverId: string) => {
     try {
-      await callDb("addPhoto", token, { url, caption });
-      showToast("Foto berhasil diupload 📸", "success");
-      fetchGallery();
+      await callDb("sendChatMessage", token, { content, receiverId });
+      fetchMessages();
     } catch (error) {
-      showToast("Gagal upload foto", "error");
-      console.error("Error adding photo:", error);
+      showToast("Gagal kirim pesan", "error");
+      console.error("Error sending chat:", error);
     }
-  }, [token, fetchGallery]);
+  }, [token, fetchMessages]);
 
-  const deletePhoto = useCallback(async (id: string) => {
+  const markRead = useCallback(async () => {
     try {
-      await callDb("deletePhoto", token, { photoId: id });
-      showToast("Foto dihapus 🗑️", "success");
-      fetchGallery();
+      await callDb("markChatRead", token);
+      fetchMessages();
     } catch (error) {
-      showToast("Gagal menghapus foto", "error");
-      console.error("Error deleting photo:", error);
+      console.error("Error marking read:", error);
     }
-  }, [token, fetchGallery]);
+  }, [token, fetchMessages]);
 
-  return { photos, loading, addPhoto, deletePhoto, flushOffline: flush };
+  return { messages, loading, sendMessage, markRead, flushOffline: flush };
 }
 
-export function useCalendarEvents(token: string) {
-  const [events, setEvents] = useState<CalendarEvent[]>([]);
+// ─── Rindu Notifications ──────────────────────────────────────
+export function useRindu(token: string) {
+  const [rinduList, setRinduList] = useState<RinduNotification[]>([]);
   const [loading, setLoading] = useState(true);
-  const { enqueue, flush } = useRetryQueue();
 
-  const fetchEvents = useCallback(async () => {
+  const fetchRindu = useCallback(async () => {
     try {
-      const data = await callDb("getCalendarEvents", token);
-      setEvents(data.map((e: any) => ({
-        id: e.id,
-        title: e.title,
-        date: new Date(e.date),
-        type: e.type as CalendarEvent["type"],
-        description: e.description || undefined,
+      const data = await callDb("getRinduNotifications", token);
+      setRinduList(data.map((r: any) => ({
+        id: r.id,
+        senderId: r.senderId,
+        receiverId: r.receiverId,
+        level: r.level as RinduLevel,
+        message: r.message || undefined,
+        createdAt: new Date(r.createdAt),
+        respondedAt: r.respondedAt ? new Date(r.respondedAt) : undefined,
+        response: r.response,
       })));
     } catch (error) {
-      enqueue({ action: "getCalendarEvents", token });
-      console.error("Error fetching events:", error);
+      console.error("Error fetching rindu:", error);
     } finally {
       setLoading(false);
     }
-  }, [token, enqueue]);
+  }, [token]);
 
-  usePolling(fetchEvents, 30000, true);
-  useRealtimeRefetch("calendar_events", fetchEvents, true);
+  usePolling(fetchRindu, 15000, true);
+  useRealtimeRefetch("rindu_notifications", fetchRindu, true);
 
-  const addCalendarEvent = useCallback(async (title: string, date: Date, type: CalendarEvent["type"], description?: string) => {
+  const sendRindu = useCallback(async (level: RinduLevel, receiverId: string, message?: string) => {
     try {
-      await callDb("addCalendarEvent", token, { title, date: date.toISOString(), type, description });
-      showToast("Event ditambahkan 📅", "success");
-      fetchEvents();
+      await callDb("sendRindu", token, { level, receiverId, message });
+      showToast(`${level === "rindu_banget" ? "Rindu banget" : level === "rindu" ? "Rindu" : "Kangen"} terkirim 💕`, "success");
     } catch (error) {
-      showToast("Gagal menambahkan event", "error");
-      console.error("Error adding event:", error);
+      showToast("Gagal kirim rindu", "error");
+      console.error("Error sending rindu:", error);
     }
-  }, [token, fetchEvents]);
+  }, [token]);
 
-  const updateCalendarEvent = useCallback(async (eventId: string, data: { title?: string; date?: Date; type?: CalendarEvent["type"]; description?: string }) => {
+  const respondRindu = useCallback(async (id: string, response: "aku_juga" | "ignored") => {
     try {
-      const payload: any = { eventId, data };
-      if (data.date instanceof Date) payload.data.date = data.date.toISOString();
-      await callDb("updateCalendarEvent", token, payload);
-      showToast("Event diperbarui 📅", "success");
-      fetchEvents();
+      await callDb("respondRindu", token, { rinduId: id, response });
+      fetchRindu();
     } catch (error) {
-      showToast("Gagal memperbarui event", "error");
-      console.error("Error updating event:", error);
+      console.error("Error responding rindu:", error);
     }
-  }, [token, fetchEvents]);
+  }, [token, fetchRindu]);
 
-  const deleteCalendarEvent = useCallback(async (eventId: string) => {
-    try {
-      await callDb("deleteCalendarEvent", token, { eventId });
-      showToast("Event dihapus 🗑️", "success");
-      fetchEvents();
-    } catch (error) {
-      showToast("Gagal menghapus event", "error");
-      console.error("Error deleting event:", error);
-    }
-  }, [token, fetchEvents]);
-
-  return { events, loading, addCalendarEvent, updateCalendarEvent, deleteCalendarEvent, flushOffline: flush };
+  return { rinduList, loading, sendRindu, respondRindu };
 }
 
-export function useLetters(token: string) {
-  const [letters, setLetters] = useState<Letter[]>([]);
+// ─── Live Location ────────────────────────────────────────────
+export function useLiveLocation(token: string) {
+  const [locations, setLocations] = useState<LiveLocation[]>([]);
   const [loading, setLoading] = useState(true);
-  const { enqueue, flush } = useRetryQueue();
-
-  const fetchLetters = useCallback(async () => {
-    try {
-      const data = await callDb("getLetters", token);
-      setLetters(data.map((l: any) => ({
-        id: l.id,
-        title: l.title,
-        content: l.content,
-        type: l.type as Letter["type"],
-        openDate: l.openDate ? new Date(l.openDate) : undefined,
-        createdAt: new Date(l.createdAt),
-        createdBy: l.createdBy,
-      })));
-    } catch (error) {
-      enqueue({ action: "getLetters", token });
-      console.error("Error fetching letters:", error);
-    } finally {
-      setLoading(false);
-    }
-  }, [token, enqueue]);
-
-  usePolling(fetchLetters, 30000, true);
-  useRealtimeRefetch("letters", fetchLetters, true);
-
-  const createLetter = useCallback(async (letter: { title: string; content: string; type: Letter["type"]; openDate?: Date }) => {
-    try {
-      await callDb("createLetter", token, { letter: { ...letter, openDate: letter.openDate?.toISOString() } });
-      showToast("Surat terkirim 💌", "success");
-      fetchLetters();
-    } catch (error) {
-      showToast("Gagal mengirim surat", "error");
-      console.error("Error creating letter:", error);
-    }
-  }, [token, fetchLetters]);
-
-  return { letters, loading, refetch: fetchLetters, createLetter, flushOffline: flush };
-}
-
-export function usePresence(token: string) {
-  const [presence, setPresence] = useState<{ userId: string; status: string; lastSeen: string }[]>([]);
-  const { enqueue, flush } = useRetryQueue();
-
-  const fetchPresence = useCallback(async () => {
-    try {
-      const data = await callDb("getPresence", token);
-      setPresence(data.map((p: any) => ({
-        userId: p.user_id,
-        status: p.status,
-        lastSeen: p.last_seen,
-      })));
-    } catch (error) {
-      enqueue({ action: "getPresence", token });
-      console.error("Error fetching presence:", error);
-    }
-  }, [token, enqueue]);
-
-  usePolling(fetchPresence, 15000, true);
-  useRealtimeRefetch("ldr_presence", fetchPresence, true);
-
-  const updatePresence = useCallback(async (status: string) => {
-    try {
-      await callDb("updatePresence", token, { status });
-      fetchPresence();
-    } catch (error) {
-      console.error("Error updating presence:", error);
-    }
-  }, [token, fetchPresence]);
-
-  return { presence, updatePresence, flushOffline: flush };
-}
-
-export function useStatusUpdates(token: string) {
-  const [updates, setUpdates] = useState<StatusUpdate[]>([]);
-  const { enqueue, flush } = useRetryQueue();
-
-  const fetchUpdates = useCallback(async () => {
-    try {
-      const data = await callDb("getStatusUpdates", token);
-      setUpdates(data);
-    } catch (error) {
-      enqueue({ action: "getStatusUpdates", token });
-      console.error("Error fetching status updates:", error);
-    }
-  }, [token, enqueue]);
-
-  usePolling(fetchUpdates, 30000, true);
-  useRealtimeRefetch("ldr_status_updates", fetchUpdates, true);
-
-  const addUpdate = useCallback(async (message: string, emoji?: string) => {
-    try {
-      await callDb("addStatusUpdate", token, { message, emoji });
-      showToast("Status updated 💬", "success");
-      fetchUpdates();
-    } catch (error) {
-      showToast("Gagal update status", "error");
-      console.error("Error adding status update:", error);
-    }
-  }, [token, fetchUpdates]);
-
-  return { updates, addUpdate, refetch: fetchUpdates, flushOffline: flush };
-}
-
-export function useHugs(token: string) {
-  const [hugs, setHugs] = useState<Hug[]>([]);
-  const { enqueue, flush } = useRetryQueue();
-
-  const fetchHugs = useCallback(async () => {
-    try {
-      const data = await callDb("getHugs", token);
-      setHugs(data.map((h: any) => ({
-        id: h.id,
-        senderId: h.sender_id,
-        receiverId: h.receiver_id,
-        message: h.message,
-        emoji: h.emoji,
-        createdAt: new Date(h.createdAt),
-      })));
-    } catch (error) {
-      enqueue({ action: "getHugs", token });
-      console.error("Error fetching hugs:", error);
-    }
-  }, [token, enqueue]);
-
-  usePolling(fetchHugs, 30000, true);
-  useRealtimeRefetch("ldr_hugs", fetchHugs, true);
-
-  const sendHug = useCallback(async (receiverId: string, message?: string) => {
-    try {
-      await callDb("sendHug", token, { receiverId, message });
-      showToast("Peluk terkirim! 🤗", "success");
-      fetchHugs();
-    } catch (error) {
-      showToast("Gagal mengirim peluk", "error");
-      console.error("Error sending hug:", error);
-    }
-  }, [token, fetchHugs]);
-
-  return { hugs, sendHug, refetch: fetchHugs, flushOffline: flush };
-}
-
-export function useLoveMeter(token: string) {
-  const [history, setHistory] = useState<{ userId: string; percentage: number; createdAt: Date }[]>([]);
-  const { enqueue, flush } = useRetryQueue();
-
-  const fetchHistory = useCallback(async () => {
-    try {
-      const data = await callDb("getLoveMeter", token);
-      setHistory(data.map((l: any) => ({
-        userId: l.userId,
-        percentage: l.percentage,
-        createdAt: new Date(l.createdAt),
-      })));
-    } catch (error) {
-      enqueue({ action: "getLoveMeter", token });
-      console.error("Error fetching love meter:", error);
-    }
-  }, [token, enqueue]);
-
-  usePolling(fetchHistory, 30000, true);
-  useRealtimeRefetch("ldr_love_meter", fetchHistory, true);
-
-  const update = useCallback(async (percentage: number) => {
-    try {
-      await callDb("updateLoveMeter", token, { percentage });
-      showToast(`Love meter updated: ${percentage}% 💗`, "success");
-      fetchHistory();
-    } catch (error) {
-      showToast("Gagal update love meter", "error");
-      console.error("Error updating love meter:", error);
-    }
-  }, [token, fetchHistory]);
-
-  const currentPercentage = history.length > 0 ? history[0].percentage : 0;
-
-  return { history, currentPercentage, update, refetch: fetchHistory, flushOffline: flush };
-}
-
-export function useNotifications(token: string) {
-  const [notifications, setNotifications] = useState<{ id: string; message: string; type: string; read: boolean; createdAt: string }[]>([]);
-  const { enqueue, flush } = useRetryQueue();
-
-  const fetchNotifications = useCallback(async () => {
-    try {
-      const data = await callDb("getNotifications", token);
-      setNotifications(data);
-    } catch (error) {
-      enqueue({ action: "getNotifications", token });
-      console.error("Error fetching notifications:", error);
-    }
-  }, [token, enqueue]);
-
-  usePolling(fetchNotifications, 30000, true);
-  useRealtimeRefetch("notifications", fetchNotifications, true);
-
-  const unreadCount = notifications.filter((n) => !n.read).length;
-
-  return { notifications, unreadCount, refetch: fetchNotifications, flushOffline: flush };
-}
-
-export function usePartnerId(token: string, userId?: string) {
-  const [partnerId, setPartnerId] = useState<string | null>(null);
-  const [pairId, setPairId] = useState<string>("");
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!token || !userId) return;
-    let cancelled = false;
-    let retryCount = 0;
-    const maxRetries = 3;
-
-    const fetchPartnerId = async () => {
-      try {
-        setError(null);
-        // Verify session via Supabase cookies (token di body diabaikan)
-        const sessionRes = await fetch("/api/auth", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action: "verify" }),
-        });
-        if (!sessionRes.ok) {
-          if (retryCount < maxRetries) {
-            retryCount++;
-            setTimeout(fetchPartnerId, 1000 * retryCount);
-            return;
-          }
-          throw new Error("Session verification failed");
-        }
-        const sessionData = await sessionRes.json();
-        const currentPairId = sessionData.user?.pair_id || "";
-        const currentUserId = sessionData.user?.id || userId;
-        if (cancelled || !currentPairId) return;
-        setPairId(currentPairId);
-        const res = await fetch("/api/db", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action: "getPartnerId", userId: currentUserId, pairId: currentPairId }),
-        });
-        if (!res.ok) {
-          if (retryCount < maxRetries) {
-            retryCount++;
-            setTimeout(fetchPartnerId, 1000 * retryCount);
-            return;
-          }
-          throw new Error("Failed to get partner ID");
-        }
-        const data = await res.json();
-        if (!cancelled) {
-          setPartnerId(data.partnerId || null);
-          if (!data.partnerId) {
-            showToast("Partner belum terhubung. Pastikan pasangan sudah mendaftarkan pair ID 💞", "warning");
-          }
-        }
-      } catch (error) {
-        if (!cancelled) {
-          console.error("Error fetching partner ID:", error);
-          setError("Gagal memuat data partner");
-          if (retryCount >= maxRetries) {
-            showToast("Gagal memuat data partner. Coba refresh halaman.", "error");
-          }
-        }
-      }
-    };
-
-    fetchPartnerId();
-    return () => { cancelled = true; };
-  }, [token, userId]);
-
-  return { partnerId, pairId, error };
-}
-
-export function useLocations(token: string) {
-  const [locations, setLocations] = useState<{ id: string; userId: string; place: string; note?: string; createdAt: string }[]>([]);
   const { enqueue, flush } = useRetryQueue();
 
   const fetchLocations = useCallback(async () => {
     try {
       const data = await callDb("getLocations", token);
-      setLocations(data);
+      setLocations(data.map((l: any) => ({
+        id: l.id,
+        userId: l.userId,
+        place: l.place,
+        note: l.note || undefined,
+        lat: l.lat,
+        lng: l.lng,
+        accuracy: l.accuracy,
+        updatedAt: l.updatedAt ? new Date(l.updatedAt) : undefined,
+      })));
     } catch (error) {
       enqueue({ action: "getLocations", token });
       console.error("Error fetching locations:", error);
+    } finally {
+      setLoading(false);
     }
   }, [token, enqueue]);
 
   usePolling(fetchLocations, 30000, true);
   useRealtimeRefetch("ldr_locations", fetchLocations, true);
 
-  const addLocation = useCallback(async (place: string, note?: string) => {
+  const updateLocation = useCallback(async (data: {
+    place?: string;
+    note?: string;
+    lat?: number;
+    lng?: number;
+    accuracy?: number;
+  }) => {
     try {
-      await callDb("addLocation", token, { place, note });
-      showToast("Lokasi dibagikan 📍", "success");
+      await callDb("addLocation", token, {
+        place: data.place || "Lokasi saat ini",
+        note: data.note,
+        lat: data.lat,
+        lng: data.lng,
+        accuracy: data.accuracy,
+      });
       fetchLocations();
     } catch (error) {
-      showToast("Gagal membagikan lokasi", "error");
-      console.error("Error adding location:", error);
+      showToast("Gagal update lokasi", "error");
+      console.error("Error updating location:", error);
     }
   }, [token, fetchLocations]);
 
-  const markAsRead = useCallback(async () => {
-    if (!token) return;
+  return { locations, loading, updateLocation, flushOffline: flush };
+}
+
+// ─── Notifications ────────────────────────────────────────────
+export function useNotifications(token: string) {
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchNotifications = useCallback(async () => {
     try {
-      await fetch("/api/db", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "markNotificationsAsRead", token }),
-      });
+      const data = await callDb("getNotifications", token);
+      setNotifications(data);
     } catch (error) {
-      console.error("Error marking notifications as read:", error);
+      console.error("Error fetching notifications:", error);
+    } finally {
+      setLoading(false);
     }
   }, [token]);
 
-  return { locations, addLocation, refetch: fetchLocations, markAsRead, flushOffline: flush };
-}
+  usePolling(fetchNotifications, 30000, true);
+  useRealtimeRefetch("notifications", fetchNotifications, true);
 
-export function useDailyReset() {
-  const [todayKey, setTodayKey] = useState(() => {
-    const d = new Date();
-    return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
-  });
+  const markRead = useCallback(async () => {
+    try {
+      await callDb("markNotificationsAsRead", token);
+      fetchNotifications();
+    } catch (error) {
+      console.error("Error marking notifications:", error);
+    }
+  }, [token, fetchNotifications]);
 
-  useEffect(() => {
-    const check = () => {
-      const d = new Date();
-      const key = `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
-      setTodayKey((prev) => {
-        if (prev !== key) {
-          return key;
-        }
-        return prev;
-      });
-    };
-    check();
-    const interval = setInterval(check, 30000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const isNewDay = useCallback(() => {
-    const d = new Date();
-    const key = `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
-    return todayKey !== key;
-  }, [todayKey]);
-
-  return { todayKey, isNewDay };
+  return { notifications, loading, markRead };
 }

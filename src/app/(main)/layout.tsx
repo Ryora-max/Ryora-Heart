@@ -5,7 +5,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { useAuthStore } from "@/stores";
 import { APP_CONFIG, ROOMS } from "@/config";
 import { cn } from "@/lib/utils";
-import { Menu, LogOut, Home, BookOpen } from "lucide-react";
+import { Menu, LogOut, Home } from "lucide-react";
 import CustomCursor from "@/components/ui/CustomCursor";
 import { NotificationButton } from "@/components/ui/NotificationButton";
 import { BottomNav } from "@/components/ui/BottomNav";
@@ -13,7 +13,6 @@ import { Toaster } from "@/components/ui/Toaster";
 import { getSupabaseBrowser } from "@/lib/supabase/client";
 import { OfflineIndicator } from "@/components/ui/OfflineIndicator";
 import { useOnlineStatus } from "@/hooks/useOnlineStatus";
-import { GuideModal } from "@/components/ui/GuideModal";
 import { usePresence, usePartnerId } from "@/hooks/useDatabase";
 
 export default function MainLayout({
@@ -26,7 +25,6 @@ export default function MainLayout({
   const { user, token, isAuthenticated, logout, setUser, setToken } = useAuthStore();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [verifying, setVerifying] = useState(true);
-  const [isGuideOpen, setIsGuideOpen] = useState(false);
   const online = useOnlineStatus();
   const [pendingCount, setPendingCount] = useState(0);
 
@@ -43,7 +41,7 @@ export default function MainLayout({
 
   const partnerPresence = presence.find((p) => p.userId === partnerId);
   const [isPartnerOnline, setIsPartnerOnline] = useState(false);
-  const lastSeenRef = useRef<string | undefined>(undefined);
+  const lastSeenRef = useRef<Date | undefined>(undefined);
 
   useEffect(() => {
     lastSeenRef.current = partnerPresence?.lastSeen;
@@ -212,19 +210,6 @@ export default function MainLayout({
                   {room.name}
                 </button>
               ))}
-
-              <button
-                onClick={() => { setIsGuideOpen(true); setSidebarOpen(false); }}
-                className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all touch-target touch-press mt-2 border"
-                style={{
-                  background: "color-mix(in srgb, var(--peach) 20%, transparent)",
-                  borderColor: "color-mix(in srgb, var(--peach) 40%, transparent)",
-                  color: "var(--peach)",
-                }}
-              >
-                <BookOpen size={18} />
-                Panduan 📘
-              </button>
             </nav>
 
             <div className="mt-auto pt-4 border-t" style={{ borderColor: "var(--border)" }}>
@@ -259,16 +244,13 @@ export default function MainLayout({
                <h1 className="text-gradient-primary text-base font-bold">🏠 RYORA</h1>
                <span className={cn("w-2 h-2 rounded-full", isPartnerOnline ? "bg-emerald-500" : "bg-text-muted")} />
              </div>
-             <button onClick={() => setIsGuideOpen(true)} className="touch-target rounded-xl flex items-center justify-center text-text-primary active:scale-95 transition-transform" style={{ background: "var(--primary-soft)" }} aria-label="Open guide">
-               <BookOpen size={18} />
-             </button>
+             <NotificationButton />
            </div>
            {children}
         </main>
       </div>
       <BottomNav />
       <Toaster />
-      <GuideModal isOpen={isGuideOpen} onClose={() => setIsGuideOpen(false)} />
       {!online && <OfflineIndicator pendingCount={pendingCount} onDismiss={() => setPendingCount(0)} />}
     </>
   );
