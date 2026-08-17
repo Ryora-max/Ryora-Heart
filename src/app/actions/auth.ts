@@ -1,14 +1,11 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use server";
 
-import { v4 as uuidv4 } from "uuid";
-import bcrypt from "bcryptjs";
-import { query, getOne, generateId } from "@/lib/db/postgres";
-import { initializeDatabase } from "@/lib/db/init";
+import { getSupabaseServer } from "@/lib/supabase/server";
 
-initializeDatabase();
-
-const SESSION_DURATION = 7 * 24 * 60 * 60 * 1000;
+// Note: login(), logout(), getSession() dihapus — auth sekarang dihandle oleh Supabase Auth
+// Lihat: src/lib/supabase/serverClient.ts (getSupabaseUserProfile)
+// Lihat: src/app/(auth)/login/page.tsx (signInWithPassword)
+// Lihat: src/app/(main)/layout.tsx (verify via supabase.auth.getSession)
 
 export interface User {
   id: string;
@@ -20,132 +17,73 @@ export interface User {
   pair_id?: string;
 }
 
-export interface Session {
-  user: User;
-  token: string;
-}
-
-export async function login(username: string, password: string): Promise<Session | null> {
-  try {
-    const result = await getOne("SELECT * FROM users WHERE username = $1", [username]);
-    if (!result) return null;
-
-    const stored = result.password_hash || result.password;
-
-    let valid = false;
-    if (stored && /^\$2[aby]\$\d{2}\$/.test(stored)) {
-      valid = await bcrypt.compare(password, stored);
-    } else {
-      valid = password === stored;
-    }
-
-    if (!valid) return null;
-
-    const token = uuidv4();
-    const expiresAt = new Date(Date.now() + SESSION_DURATION).toISOString();
-
-    await query(
-      "INSERT INTO sessions (id, user_id, token, expires_at) VALUES ($1, $2, $3, $4)",
-      [generateId(), result.id, token, expiresAt]
-    );
-
-    return {
-      user: {
-        id: result.id,
-        username: result.username,
-        name: result.name,
-        role: result.role,
-        relationship: result.relationship,
-        avatar_url: result.avatar_url || undefined,
-        pair_id: result.pair_id,
-      },
-      token,
-    };
-  } catch (error) {
-    console.error("Login error:", error);
-    return null;
-  }
-}
-
-export async function logout(token: string) {
-  await query("DELETE FROM sessions WHERE token = $1", [token]);
-}
-
-export async function getSession(token: string): Promise<Session | null> {
-  const result = await getOne(`
-    SELECT s.*, u.id as user_id, u.username, u.name, u.role, u.relationship, u.avatar_url, u.pair_id
-    FROM sessions s
-    JOIN users u ON s.user_id = u.id
-    WHERE s.token = $1 AND s.expires_at > $2
-  `, [token, new Date().toISOString()]);
-
-  if (!result) return null;
-
-  return {
-    user: {
-      id: result.user_id,
-      username: result.username,
-      name: result.name,
-      role: result.role,
-      relationship: result.relationship,
-      avatar_url: result.avatar_url || undefined,
-      pair_id: result.pair_id,
-    },
-    token: result.token,
-  };
-}
-
 export async function updateProfile(userId: string, data: { name?: string; relationship?: string; avatar_url?: string }) {
-  const fields: string[] = [];
-  const values: any[] = [];
+  const supabase = getSupabaseServer();
+  const updates: Record<string, unknown> = {};
 
-  if (data.name !== undefined) { fields.push("name = $" + (values.length + 1)); values.push(data.name); }
-  if (data.relationship !== undefined) { fields.push("relationship = $" + (values.length + 1)); values.push(data.relationship); }
-  if (data.avatar_url !== undefined) { fields.push("avatar_url = $" + (values.length + 1)); values.push(data.avatar_url); }
+  if (data.name !== undefined) updates.name = data.name;
+  if (data.relationship !== undefined) updates.relationship = data.relationship;
+  if (data.avatar_url !== undefined) updates.avatar_url = data.avatar_url;
 
-  if (fields.length === 0) return;
+  if (Object.keys(updates).length === 0) return;
 
-  values.push(userId);
-  await query(`UPDATE users SET ${fields.join(", ")} WHERE id = $${values.length}`, values);
+  const { error } = await supabase.from("users").update(updates).eq("id", userId);
+  if (error) throw error;
 }
 
 export async function updateSettings(userId: string, data: { relationshipStartDate?: string; distance?: string; nextMeetupDate?: string; secretPin?: string }) {
-  const user = await getOne("SELECT pair_id FROM users WHERE id = $1", [userId]);
+  const supabase = getSupabaseServer();
+
+  if (data.relationshipStartDate === undefined && data.distance === undefined && data.nextMeetupDate === undefined && data.secretPin === undefined) {
+    return;
+  }
+
+  // Get pair_id for this user
+  const { data: user } = await supabase.from("users").select("pair_id").eq("id", userId).maybeSingle();
   if (!user) return;
 
-  if (data.relationshipStartDate !== undefined || data.distance !== undefined || data.nextMeetupDate !== undefined || data.secretPin !== undefined) {
-    const pairId = user.pair_id;
-    const countResult = await getOne("SELECT COUNT(*) as c FROM user_settings WHERE user_id = $1", [userId]);
-    const count = countResult?.c || 0;
+  const pairId = user.pair_id;
 
-    if (count === 0) {
-      await query(
-        `INSERT INTO user_settings (id, user_id, pair_id, relationship_start_date, distance_km, next_meetup_date, secret_pin)
-         VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-        [generateId(), userId, pairId, data.relationshipStartDate || null, data.distance || null, data.nextMeetupDate || null, data.secretPin || "0101"]
-      );
-    } else {
-      const fields: string[] = [];
-      const values: any[] = [];
-      if (data.relationshipStartDate !== undefined) { fields.push("relationship_start_date = $" + (values.length + 1)); values.push(data.relationshipStartDate); }
-      if (data.distance !== undefined) { fields.push("distance_km = $" + (values.length + 1)); values.push(data.distance); }
-      if (data.nextMeetupDate !== undefined) { fields.push("next_meetup_date = $" + (values.length + 1)); values.push(data.nextMeetupDate); }
-      if (data.secretPin !== undefined) { fields.push("secret_pin = $" + (values.length + 1)); values.push(data.secretPin); }
-      values.push(userId);
-      await query(`UPDATE user_settings SET ${fields.join(", ")} WHERE user_id = $${values.length}`, values);
-    }
+  // Check if settings row exists
+  const { data: existing } = await supabase.from("user_settings").select("id").eq("user_id", userId).maybeSingle();
+
+  const updates: Record<string, unknown> = {};
+  if (data.relationshipStartDate !== undefined) updates.relationship_start_date = data.relationshipStartDate || null;
+  if (data.distance !== undefined) updates.distance_km = data.distance || null;
+  if (data.nextMeetupDate !== undefined) updates.next_meetup_date = data.nextMeetupDate || null;
+  if (data.secretPin !== undefined) updates.secret_pin = data.secretPin;
+
+  if (existing) {
+    const { error } = await supabase.from("user_settings").update(updates).eq("user_id", userId);
+    if (error) throw error;
+  } else {
+    const { error } = await supabase.from("user_settings").insert({
+      id: crypto.randomUUID(),
+      user_id: userId,
+      pair_id: pairId,
+      ...updates,
+    });
+    if (error) throw error;
   }
 }
 
 export async function getUserSettings(userId: string) {
-  const settings = await getOne("SELECT * FROM user_settings WHERE user_id = $1", [userId]);
+  const supabase = getSupabaseServer();
+  const { data: settings, error } = await supabase
+    .from("user_settings")
+    .select("*")
+    .eq("user_id", userId)
+    .maybeSingle();
+  if (error) throw error;
   if (!settings) return null;
+
   const formatDate = (d: string | Date | null) => {
     if (!d) return "";
     const date = new Date(d);
     if (isNaN(date.getTime())) return "";
     return date.toISOString().split("T")[0];
   };
+
   return {
     relationshipStartDate: formatDate(settings.relationship_start_date),
     distance: settings.distance_km || "",

@@ -38,13 +38,13 @@ export default function GardenPage() {
   }, [newTitle, newDesc, newDate, token, createActivity]);
 
   return (
-    <div className="relative min-h-screen bg-gradient-to-br from-green-100 via-emerald-100 to-teal-100 p-3 sm:p-4 md:p-8 overflow-hidden">
+    <div className="relative page-bg p-3 sm:p-4 md:p-8 overflow-hidden">
       <div className="max-w-4xl mx-auto">
         <div className="garden-header animate-fade-in-up text-center mb-8 sm:mb-12">
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold bg-gradient-to-r from-green-500 to-emerald-600 bg-clip-text text-transparent mb-2">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gradient-primary mb-2">
             🌳 Garden
           </h1>
-          <p className="text-green-600/70 text-sm sm:text-base">Your relationship timeline, growing like a plant 🌱</p>
+          <p className="text-body text-sm sm:text-base">Your relationship timeline, growing like a plant 🌱</p>
         </div>
 
         {loading ? (
@@ -53,7 +53,8 @@ export default function GardenPage() {
           <EmptyState icon={Flower2} emoji="🌱" title="No milestones yet" description="Add your first memory!" action={
             <button
               onClick={() => setShowForm(true)}
-              className="mt-4 px-6 py-3 rounded-full bg-gradient-to-r from-green-500 to-emerald-500 text-white font-bold hover:from-green-600 hover:to-emerald-600 transition-all shadow-lg cursor-pointer"
+              className="mt-4 px-6 py-3 rounded-full text-white font-bold transition-all shadow-lg cursor-pointer touch-target touch-press"
+              style={{ background: "linear-gradient(to right, var(--primary), var(--secondary))" }}
             >
               <Plus size={18} className="inline mr-2" /> Add Milestone
             </button>
@@ -86,8 +87,8 @@ export default function GardenPage() {
                       <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-3 bg-green-700 rounded-full" />
                     </div>
                     <div className="mt-2 text-center">
-                      <p className="text-xs sm:text-sm font-semibold text-green-800 line-clamp-1">{milestone.title}</p>
-                      <p className="text-xs text-green-600/70">
+                      <p className="text-xs sm:text-sm font-semibold text-heading line-clamp-1">{milestone.title}</p>
+                      <p className="text-xs text-muted">
                         {new Date(milestone.date).toLocaleDateString("id-ID", { day: "numeric", month: "short" })}
                       </p>
                     </div>
@@ -99,7 +100,8 @@ export default function GardenPage() {
             <div className="mt-8 flex justify-center">
                <button
                  onClick={() => setShowForm(true)}
-                 className="px-6 py-3 rounded-full bg-gradient-to-r from-green-500 to-emerald-500 text-white font-bold hover:from-green-600 hover:to-emerald-600 transition-all shadow-lg cursor-pointer flex items-center gap-2 hover:scale-105 transform min-h-[44px]"
+                 className="px-6 py-3 rounded-full text-white font-bold transition-all shadow-lg cursor-pointer flex items-center gap-2 hover:scale-105 transform touch-target touch-press"
+                 style={{ background: "linear-gradient(to right, var(--primary), var(--secondary))" }}
                >
                 <Plus size={18} /> Add Milestone
               </button>
@@ -110,29 +112,29 @@ export default function GardenPage() {
 
       {selected && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={() => setSelected(null)}>
-          <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-6 border-2 border-green-200 shadow-xl max-w-md w-full animate-scale-in" onClick={(e) => e.stopPropagation()}>
+          <div className="surface-card p-6 max-w-md w-full animate-scale-in" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-bold text-green-900 flex items-center gap-2">
+              <h3 className="text-lg font-bold text-heading flex items-center gap-2">
                 <Leaf className="text-green-500" size={20} /> {selected.title}
               </h3>
-               <button onClick={() => setSelected(null)} className="text-green-400 hover:text-green-600 cursor-pointer p-2 min-h-[44px] min-w-[44px] flex items-center justify-center">
+               <button onClick={() => setSelected(null)} className="text-muted hover:text-primary cursor-pointer p-2 touch-target flex items-center justify-center">
                  <X size={20} />
                </button>
             </div>
-            <p className="text-green-600/70 text-sm mb-2">
+            <p className="text-body text-sm mb-2">
               {new Date(selected.date).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })}
             </p>
-            {selected.description && <p className="text-green-800 text-sm leading-relaxed">{selected.description}</p>}
+            {selected.description && <p className="text-heading text-sm leading-relaxed">{selected.description}</p>}
           </div>
         </div>
       )}
 
       {showForm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={() => setShowForm(false)}>
-          <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-6 border-2 border-green-200 shadow-xl max-w-md w-full animate-scale-in" onClick={(e) => e.stopPropagation()}>
+          <div className="surface-card p-6 max-w-md w-full animate-scale-in" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-bold text-green-900">Add Milestone 🌱</h3>
-              <button onClick={() => setShowForm(false)} className="text-green-400 hover:text-green-600 cursor-pointer p-2 min-h-[44px] min-w-[44px] flex items-center justify-center">
+              <h3 className="text-lg font-bold text-heading">Add Milestone 🌱</h3>
+              <button onClick={() => setShowForm(false)} className="text-muted hover:text-primary cursor-pointer p-2 touch-target flex items-center justify-center">
                 <X size={20} />
               </button>
             </div>
@@ -142,25 +144,26 @@ export default function GardenPage() {
                 value={newTitle}
                 onChange={(e) => setNewTitle(e.target.value)}
                 placeholder="Milestone title..."
-                className="w-full px-4 py-3 rounded-xl border-2 border-green-200 focus:border-green-400 focus:outline-none text-green-900 text-sm"
+                className="input-soft w-full px-4 py-3 rounded-xl text-sm touch-target"
               />
               <input
                 type="date"
                 value={newDate}
                 onChange={(e) => setNewDate(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl border-2 border-green-200 focus:border-green-400 focus:outline-none text-green-900 text-sm"
+                className="input-soft w-full px-4 py-3 rounded-xl text-sm touch-target"
               />
               <textarea
                 value={newDesc}
                 onChange={(e) => setNewDesc(e.target.value)}
                 placeholder="Description (optional)..."
                 rows={3}
-                className="w-full px-4 py-3 rounded-xl border-2 border-green-200 focus:border-green-400 focus:outline-none text-green-900 text-sm resize-none"
+                className="input-soft w-full px-4 py-3 rounded-xl text-sm resize-none touch-target"
               />
               <button
                 onClick={handleCreate}
                 disabled={!newTitle.trim() || !newDate}
-                className="w-full py-3 rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 text-white font-bold hover:from-green-600 hover:to-emerald-600 disabled:opacity-50 transition-all cursor-pointer"
+                className="w-full py-3 rounded-xl text-white font-bold disabled:opacity-50 transition-all cursor-pointer touch-target touch-press"
+                style={{ background: "linear-gradient(to right, var(--primary), var(--secondary))" }}
               >
                 Save Milestone
               </button>

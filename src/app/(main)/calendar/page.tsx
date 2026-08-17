@@ -92,23 +92,23 @@ export default function CalendarPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-100 via-cyan-100 to-teal-100 p-3 sm:p-4 md:p-8">
+    <div className="page-bg p-3 sm:p-4 md:p-8">
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-8">
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-500 to-cyan-600 bg-clip-text text-transparent mb-2">
+          <h1 className="text-gradient-primary text-3xl sm:text-4xl md:text-5xl font-bold mb-2">
             📅 Calendar
           </h1>
-          <p className="text-blue-600/70">Your special dates together</p>
+          <p className="text-body">Your special dates together</p>
         </div>
 
         <LdrBanner tagline="Kalender LDR: merahnya hari ketemu, abu-abunya hari nunggu. 📅💞" />
 
         {showAddEvent && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={() => setShowAddEvent(false)}>
-            <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-6 border-2 border-blue-200 shadow-xl max-w-md w-full animate-scale-in" onClick={(e) => e.stopPropagation()}>
+            <div className="surface-card p-6 max-w-md w-full animate-scale-in" onClick={(e) => e.stopPropagation()}>
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-bold text-blue-900">Add Event 📅</h3>
-                <button onClick={() => setShowAddEvent(false)} className="text-blue-400 hover:text-blue-600 p-2 min-h-[44px] min-w-[44px] flex items-center justify-center"><X size={20} /></button>
+                <h3 className="text-heading text-lg font-bold">Add Event 📅</h3>
+                <button onClick={() => setShowAddEvent(false)} className="text-muted hover:text-primary p-2 touch-target flex items-center justify-center"><X size={20} /></button>
               </div>
               <div className="space-y-3">
                  <input
@@ -116,20 +116,20 @@ export default function CalendarPage() {
                    value={newTitle}
                    onChange={(e) => setNewTitle(e.target.value)}
                    placeholder="Event title..."
-                   className="w-full px-4 py-2 rounded-xl border-2 border-blue-200 focus:border-blue-400 focus:outline-none text-blue-900 text-sm"
+                   className="input-soft w-full px-4 py-2 text-sm"
                  />
                  {addError && <p className="text-red-500 text-xs mt-1">{addError}</p>}
                  <input
                    type="date"
                    value={newDate}
                    onChange={(e) => setNewDate(e.target.value)}
-                   className="w-full px-4 py-2 rounded-xl border-2 border-blue-200 focus:border-blue-400 focus:outline-none text-blue-900 text-sm"
+                   className="input-soft w-full px-4 py-2 text-sm"
                  />
                  {addError && <p className="text-red-500 text-xs mt-1">{addError}</p>}
                   <select
                     value={newType}
                     onChange={(e) => setNewType(e.target.value as EventType)}
-                    className="w-full px-4 py-2 rounded-xl border-2 border-blue-200 focus:border-blue-400 focus:outline-none text-blue-900 text-sm"
+                    className="input-soft w-full px-4 py-2 text-sm"
                   >
                   <option value="vc">Video Call</option>
                   <option value="birthday">Birthday</option>
@@ -141,7 +141,7 @@ export default function CalendarPage() {
                   onChange={(e) => setNewDesc(e.target.value)}
                   placeholder="Description (optional)..."
                   rows={3}
-                  className="w-full px-4 py-2 rounded-xl border-2 border-blue-200 focus:border-blue-400 focus:outline-none text-blue-900 text-sm resize-none"
+                  className="input-soft w-full px-4 py-2 text-sm resize-none"
                 />
                 <button
                   onClick={async () => {
@@ -158,7 +158,8 @@ export default function CalendarPage() {
                     setShowAddEvent(false);
                   }}
                   disabled={!newTitle.trim() || !newDate}
-                  className="w-full py-2.5 rounded-xl bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-bold hover:from-blue-600 hover:to-cyan-600 disabled:opacity-50 transition-all"
+                  className="touch-target touch-press w-full py-2.5 rounded-xl text-white font-bold disabled:opacity-50 transition-all"
+                  style={{ background: "linear-gradient(to right, var(--primary), var(--secondary))" }}
                 >
                   Save Event
                 </button>
@@ -169,10 +170,10 @@ export default function CalendarPage() {
 
         {editingEvent && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={() => setEditingEvent(null)}>
-            <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-6 border-2 border-blue-200 shadow-xl max-w-md w-full animate-scale-in" onClick={(e) => e.stopPropagation()}>
+            <div className="surface-card p-6 max-w-md w-full animate-scale-in" onClick={(e) => e.stopPropagation()}>
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-bold text-blue-900">Edit Event 📅</h3>
-                <button onClick={() => setEditingEvent(null)} className="text-blue-400 hover:text-blue-600 p-2 min-h-[44px] min-w-[44px] flex items-center justify-center"><X size={20} /></button>
+                <h3 className="text-heading text-lg font-bold">Edit Event 📅</h3>
+                <button onClick={() => setEditingEvent(null)} className="text-muted hover:text-primary p-2 touch-target flex items-center justify-center"><X size={20} /></button>
               </div>
               <div className="space-y-3">
                  <input
@@ -180,19 +181,19 @@ export default function CalendarPage() {
                    value={editTitle}
                    onChange={(e) => { setEditTitle(e.target.value); setEditError(""); }}
                    placeholder="Event title..."
-                   className="w-full px-4 py-2 rounded-xl border-2 border-blue-200 focus:border-blue-400 focus:outline-none text-blue-900 text-sm"
+                   className="input-soft w-full px-4 py-2 text-sm"
                  />
                  <input
                    type="date"
                    value={editDate}
                    onChange={(e) => { setEditDate(e.target.value); setEditError(""); }}
-                   className="w-full px-4 py-2 rounded-xl border-2 border-blue-200 focus:border-blue-400 focus:outline-none text-blue-900 text-sm"
+                   className="input-soft w-full px-4 py-2 text-sm"
                  />
                  {editError && <p className="text-red-500 text-xs">{editError}</p>}
                 <select
                   value={editType}
                   onChange={(e) => setEditType(e.target.value as EventType)}
-                  className="w-full px-4 py-2 rounded-xl border-2 border-blue-200 focus:border-blue-400 focus:outline-none text-blue-900 text-sm"
+                  className="input-soft w-full px-4 py-2 text-sm"
                 >
                   <option value="vc">Video Call</option>
                   <option value="birthday">Birthday</option>
@@ -204,19 +205,20 @@ export default function CalendarPage() {
                   onChange={(e) => setEditDesc(e.target.value)}
                   placeholder="Description (optional)..."
                   rows={3}
-                  className="w-full px-4 py-2 rounded-xl border-2 border-blue-200 focus:border-blue-400 focus:outline-none text-blue-900 text-sm resize-none"
+                  className="input-soft w-full px-4 py-2 text-sm resize-none"
                 />
                 <div className="flex gap-2">
                   <button
                     onClick={handleUpdate}
                     disabled={!editTitle.trim() || !editDate}
-                    className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-bold hover:from-blue-600 hover:to-cyan-600 disabled:opacity-50 transition-all"
+                    className="touch-target touch-press flex-1 py-2.5 rounded-xl text-white font-bold disabled:opacity-50 transition-all"
+                    style={{ background: "linear-gradient(to right, var(--primary), var(--secondary))" }}
                   >
                     Update
                   </button>
                   <button
                     onClick={() => setEditingEvent(null)}
-                    className="px-4 py-2.5 rounded-xl border-2 border-blue-200 text-blue-600 font-bold hover:bg-blue-50 transition-all"
+                    className="touch-target touch-press px-4 py-2.5 rounded-xl border-border text-text-secondary font-bold hover:bg-surface-warm transition-all"
                   >
                     Cancel
                   </button>
@@ -228,19 +230,20 @@ export default function CalendarPage() {
 
         {deleteConfirm && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={() => setDeleteConfirm(null)}>
-            <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-6 border-2 border-red-200 shadow-xl max-w-sm w-full animate-scale-in" onClick={(e) => e.stopPropagation()}>
-              <h3 className="text-lg font-bold text-red-900 mb-2">Delete Event? 🗑️</h3>
-              <p className="text-red-600/70 text-sm mb-4">This action cannot be undone.</p>
+            <div className="surface-card p-6 max-w-sm w-full animate-scale-in" onClick={(e) => e.stopPropagation()}>
+              <h3 className="text-heading text-lg font-bold mb-2">Delete Event? 🗑️</h3>
+              <p className="text-body text-sm mb-4">This action cannot be undone.</p>
               <div className="flex gap-2">
                 <button
                   onClick={() => handleDelete(deleteConfirm)}
-                  className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-red-500 to-rose-500 text-white font-bold hover:from-red-600 hover:to-rose-600 transition-all"
+                  className="touch-target touch-press flex-1 py-2.5 rounded-xl text-white font-bold transition-all"
+                  style={{ background: "linear-gradient(to right, #ef4444, #f43f5e)" }}
                 >
                   Yes, Delete
                 </button>
                 <button
                   onClick={() => setDeleteConfirm(null)}
-                  className="px-4 py-2.5 rounded-xl border-2 border-gray-200 text-gray-600 font-bold hover:bg-gray-50 transition-all"
+                  className="touch-target touch-press px-4 py-2.5 rounded-xl border-border text-text-secondary font-bold hover:bg-surface-warm transition-all"
                 >
                   Cancel
                 </button>
@@ -250,18 +253,18 @@ export default function CalendarPage() {
         )}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
-          <div className="lg:col-span-2 bg-white/80 backdrop-blur-sm rounded-2xl p-6 border-2 border-blue-200 shadow-xl">
+          <div className="surface-card lg:col-span-2 p-6">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-blue-900">{monthName}</h2>
+              <h2 className="text-heading text-2xl font-bold">{monthName}</h2>
               <div className="flex gap-2">
                 <MagneticButton>
-                  <button onClick={() => setCurrentDate(new Date(year, month - 1, 1))} className="w-10 h-10 rounded-xl bg-blue-50 hover:bg-blue-100 flex items-center justify-center transition-all min-h-[44px] min-w-[44px]">
-                    <ChevronLeft size={20} className="text-blue-600" />
+                  <button onClick={() => setCurrentDate(new Date(year, month - 1, 1))} className="touch-target w-10 h-10 rounded-xl bg-surface-warm hover:bg-primary-soft flex items-center justify-center transition-all">
+                    <ChevronLeft size={20} className="text-primary" />
                   </button>
                 </MagneticButton>
                 <MagneticButton>
-                  <button onClick={() => setCurrentDate(new Date(year, month + 1, 1))} className="w-10 h-10 rounded-xl bg-blue-50 hover:bg-blue-100 flex items-center justify-center transition-all min-h-[44px] min-w-[44px]">
-                    <ChevronRight size={20} className="text-blue-600" />
+                  <button onClick={() => setCurrentDate(new Date(year, month + 1, 1))} className="touch-target w-10 h-10 rounded-xl bg-surface-warm hover:bg-primary-soft flex items-center justify-center transition-all">
+                    <ChevronRight size={20} className="text-primary" />
                   </button>
                 </MagneticButton>
               </div>
@@ -269,7 +272,7 @@ export default function CalendarPage() {
 
             <div className="grid grid-cols-7 gap-1 mb-2">
               {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
-                <div key={day} className="text-center text-blue-400 text-sm font-medium py-2">{day}</div>
+                <div key={day} className="text-muted text-center text-sm font-medium py-2">{day}</div>
               ))}
             </div>
 
@@ -278,7 +281,7 @@ export default function CalendarPage() {
                 const dayEvents = currentMonth ? getEventsForDate(day) : [];
                 const isToday = currentMonth && day === new Date().getDate() && month === new Date().getMonth() && year === new Date().getFullYear();
                 return (
-                   <div key={i} className={cn("calendar-day animate-scale-in aspect-square flex flex-col items-center justify-center rounded-xl transition-all cursor-pointer active:scale-95", currentMonth ? "text-blue-900" : "text-blue-300", isToday && "bg-blue-200 ring-2 ring-blue-400")} style={{ animationDelay: `${i * 0.02}s` }}>
+                   <div key={i} className={cn("calendar-day animate-scale-in aspect-square flex flex-col items-center justify-center rounded-xl transition-all cursor-pointer active:scale-95", currentMonth ? "text-text-primary" : "text-text-muted", isToday && "bg-primary-soft ring-2 ring-primary")} style={{ animationDelay: `${i * 0.02}s` }}>
                      <span className="text-sm sm:text-base font-medium">{day}</span>
                     {dayEvents.length > 0 && (
                       <div className="flex gap-0.5 mt-1">
@@ -295,10 +298,10 @@ export default function CalendarPage() {
 
           <div>
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-bold text-blue-900">Upcoming Events</h3>
+              <h3 className="text-heading text-xl font-bold">Upcoming Events</h3>
                <MagneticButton>
-                  <button onClick={() => setShowAddEvent(true)} className="w-9 h-9 rounded-lg bg-blue-100 hover:bg-blue-200 flex items-center justify-center transition-all min-h-[44px] min-w-[44px]">
-                   <Plus size={18} className="text-blue-600" />
+                  <button onClick={() => setShowAddEvent(true)} className="touch-target w-9 h-9 rounded-lg bg-primary-soft hover:bg-primary-soft flex items-center justify-center transition-all">
+                   <Plus size={18} className="text-primary" />
                  </button>
                </MagneticButton>
             </div>
@@ -314,23 +317,23 @@ export default function CalendarPage() {
                    {events.map((event, idx) => {
                      const EventIcon = EVENT_TYPES[event.type].icon;
                      return (
-                       <div key={event.id} className="event-card animate-fade-in-left bg-white/80 backdrop-blur-sm p-3 sm:p-4 rounded-xl border-2 border-blue-100 hover:border-blue-300 hover:shadow-lg transition-all" style={{ animationDelay: `${0.3 + idx * 0.1}s` }}>
+                       <div key={event.id} className="event-card animate-fade-in-left surface-card p-3 sm:p-4 rounded-xl" style={{ animationDelay: `${0.3 + idx * 0.1}s` }}>
                         <div className="flex items-start gap-3">
                           <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0", EVENT_TYPES[event.type].color)}>
                             <EventIcon size={18} />
                           </div>
                          <div className="flex-1 min-w-0">
-                           <h4 className="font-medium text-blue-900 truncate">{event.title}</h4>
-                           <p className="text-blue-600/70 text-sm">
+                           <h4 className="text-heading font-medium truncate">{event.title}</h4>
+                           <p className="text-body text-sm">
                              {new Date(event.date).toLocaleDateString("id-ID", { day: "numeric", month: "short" })}
                            </p>
-                           {event.description && <p className="text-blue-500 text-xs mt-1 line-clamp-2">{event.description}</p>}
+                           {event.description && <p className="text-muted text-xs mt-1 line-clamp-2">{event.description}</p>}
                          </div>
                          <div className="flex items-center gap-1 flex-shrink-0">
-                            <button onClick={() => openEdit(event)} className="w-8 h-8 rounded-lg bg-blue-50 hover:bg-blue-100 flex items-center justify-center transition-all text-blue-600 min-h-[44px] min-w-[44px]">
+                            <button onClick={() => openEdit(event)} className="touch-target w-8 h-8 rounded-lg bg-surface-warm hover:bg-primary-soft flex items-center justify-center transition-all text-primary">
                               <Pencil size={14} />
                             </button>
-                            <button onClick={() => setDeleteConfirm(event.id)} className="w-8 h-8 rounded-lg bg-red-50 hover:bg-red-100 flex items-center justify-center transition-all text-red-600 min-h-[44px] min-w-[44px]">
+                            <button onClick={() => setDeleteConfirm(event.id)} className="touch-target w-8 h-8 rounded-lg bg-red-50 hover:bg-red-100 flex items-center justify-center transition-all text-red-600">
                               <Trash2 size={14} />
                             </button>
                          </div>

@@ -24,3 +24,5 @@ export { useTheme } from "./useTheme";
 export { useToast, showToast } from "./useToast";
 export { useOnlineStatus } from "./useOnlineStatus";
 export { useRetryQueue } from "./useRetryQueue";
+export { usePolling } from "./usePolling";
+export { useRealtime, useRealtimeMulti } from "./useRealtime";

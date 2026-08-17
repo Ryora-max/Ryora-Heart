@@ -1,0 +1,27 @@
+{
+  "appId": "com.ryora.app",
+  "appName": "Ryora",
+  "webDir": "out",
+  "server": {
+    "url": "https://ryora-placeholder.vercel.app",
+    "cleartext": true,
+    "initialRoute": "/"
+  },
+  "android": {
+    "allowMixedContent": true,
+    "backgroundColor": "#1a1a2e"
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 2000,
+      "backgroundColor": "#1a1a2e",
+      "androidScaleType": "CENTER_CROP",
+      "showSpinner": false,
+      "androidSplashResourceName": "splash"
+    },
+    "StatusBar": {
+      "style": "DARK",
+      "backgroundColor": "#1a1a2e"
+    }
+  }
+}

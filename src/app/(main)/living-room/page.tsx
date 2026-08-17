@@ -99,38 +99,39 @@ export default function LivingRoomPage() {
   const filteredActivities = todayActivities.filter((a) => a.title.toLowerCase().includes(searchQuery.toLowerCase()));
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-100 via-cyan-100 to-teal-100 p-3 sm:p-4 md:p-8">
+    <div className="page-bg p-3 sm:p-4 md:p-8">
       <div className="max-w-6xl mx-auto">
         <div className="mb-8 text-center">
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-500 to-cyan-600 bg-clip-text text-transparent mb-2">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gradient-primary mb-2">
             🛋️ Living Room
           </h1>
-          <p className="text-blue-600/70">Where you spend quality time together</p>
+          <p className="text-body">Where you spend quality time together</p>
         </div>
 
         <LdrBanner tagline="Living room virtual: kita duduk bersebelahan lewat layar. Saling senggol pixel. 🛋️💞" />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 mb-6">
-          <div className="room-card animate-fade-in-up lg:col-span-2 bg-white/80 backdrop-blur-sm rounded-2xl p-6 border-2 border-blue-200 shadow-xl">
+          <div className="room-card animate-fade-in-up lg:col-span-2 surface-card p-6">
         <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-          <h3 className="text-lg font-bold text-blue-900 flex items-center gap-2">
-            <User size={18} className="text-blue-500" />
+          <h3 className="text-lg font-bold text-heading flex items-center gap-2">
+            <User size={18} className="text-primary" />
             Today&apos;s Activity
           </h3>
           <div className="flex items-center gap-2">
             <div className="relative">
-              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-400" />
+              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search..."
-                className="pl-8 pr-3 py-2 bg-blue-50 border-2 border-blue-200 rounded-lg text-sm focus:border-blue-400 focus:outline-none w-32 md:w-36 min-h-[44px]"
+                className="input-soft pl-8 pr-3 py-2 rounded-lg text-sm w-32 md:w-36 touch-target"
               />
             </div>
             <button
               onClick={() => setShowAddForm(!showAddForm)}
-              className="px-3 py-2.5 rounded-lg bg-blue-500 text-white text-sm font-semibold hover:bg-blue-600 transition-all flex items-center gap-1 cursor-pointer min-h-[44px]"
+              className="px-3 py-2.5 rounded-lg text-white text-sm font-semibold transition-all flex items-center gap-1 cursor-pointer touch-target touch-press"
+              style={{ background: "var(--primary)" }}
             >
                   {showAddForm ? "Cancel" : "+ Add"}
                 </button>
@@ -138,20 +139,20 @@ export default function LivingRoomPage() {
             </div>
 
             {showAddForm && (
-              <div className="mb-4 p-4 rounded-xl bg-blue-50 border-2 border-blue-200 animate-scale-in space-y-3">
-                <h4 className="text-sm font-bold text-blue-900">Add Daily Activity 📅</h4>
+              <div className="mb-4 p-4 rounded-xl animate-scale-in space-y-3" style={{ background: "var(--surface-warm)", border: "1px solid var(--border)" }}>
+                <h4 className="text-sm font-bold text-heading">Add Daily Activity 📅</h4>
                 <div className="flex flex-col sm:flex-row gap-2">
                    <input
                     type="text"
                     value={newActivityTitle}
                     onChange={(e) => setNewActivityTitle(e.target.value)}
                     placeholder="E.g., Virtual dinner date, Watch movie..."
-                    className="flex-1 px-3 py-2.5 bg-white border-2 border-blue-200 rounded-xl text-sm focus:border-blue-400 focus:outline-none text-blue-900 min-h-[44px]"
+                    className="input-soft flex-1 px-3 py-2.5 rounded-xl text-sm touch-target"
                   />
                   <select
                     value={newActivityType}
                     onChange={(e) => setNewActivityType(e.target.value as "schedule" | "reminder" | "milestone")}
-                    className="px-3 py-2.5 bg-white border-2 border-blue-200 rounded-xl text-sm focus:border-blue-400 focus:outline-none text-blue-900 min-h-[44px]"
+                    className="input-soft px-3 py-2.5 rounded-xl text-sm touch-target"
                   >
                     <option value="schedule">Schedule</option>
                     <option value="reminder">Reminder</option>
@@ -160,7 +161,8 @@ export default function LivingRoomPage() {
                    <button
                     onClick={handleAddActivity}
                     disabled={!newActivityTitle.trim()}
-                    className="px-4 py-2.5 bg-blue-500 hover:bg-blue-600 disabled:opacity-50 text-white font-bold rounded-xl text-sm transition-all cursor-pointer min-h-[44px]"
+                    className="px-4 py-2.5 disabled:opacity-50 text-white font-bold rounded-xl text-sm transition-all cursor-pointer touch-target touch-press"
+                    style={{ background: "var(--primary)" }}
                   >
                     Save
                   </button>
@@ -179,11 +181,12 @@ export default function LivingRoomPage() {
                 {filteredActivities.map((activity) => (
                    <div
                       key={activity.id}
-                      className="flex items-center gap-3 p-3 sm:p-4 rounded-xl bg-blue-50/50 hover:bg-blue-50 transition-all group active:scale-[0.98]"
+                      className="flex items-center gap-3 p-3 sm:p-4 rounded-xl transition-all group active:scale-[0.98]"
+                      style={{ background: "var(--surface-warm)" }}
                     >
                     <div
                       onClick={() => handleToggleActivity(activity.id, !activity.completed)}
-                      className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all group-hover:scale-110 cursor-pointer flex-shrink-0 ${activity.completed ? "border-green-400 bg-green-400/20" : "border-blue-300"}`}
+                      className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all group-hover:scale-110 cursor-pointer flex-shrink-0 ${activity.completed ? "border-green-400 bg-green-400/20" : "border-border"}`}
                     >
                       {activity.completed && <CheckCircle2 size={12} className="text-green-500" />}
                     </div>
@@ -197,16 +200,16 @@ export default function LivingRoomPage() {
                             onBlur={() => handleSaveEdit(activity.id)}
                             onKeyDown={(e) => { if (e.key === "Enter") handleSaveEdit(activity.id); if (e.key === "Escape") { setEditingId(null); setEditTitle(""); }}}
                             autoFocus
-                            className="flex-1 px-2 py-1.5 bg-white border-2 border-blue-300 rounded-lg text-sm focus:border-blue-400 focus:outline-none text-blue-900 min-h-[44px]"
+                            className="input-soft flex-1 px-2 py-1.5 rounded-lg text-sm touch-target"
                           />
-                          <button onClick={() => handleSaveEdit(activity.id)} className="px-2 py-1.5 bg-blue-500 text-white text-xs font-bold rounded-lg cursor-pointer min-h-[44px]">Save</button>
-                          <button onClick={() => { setEditingId(null); setEditTitle(""); }} className="px-2 py-1.5 bg-gray-200 text-gray-700 text-xs font-bold rounded-lg cursor-pointer min-h-[44px]">Cancel</button>
+                          <button onClick={() => handleSaveEdit(activity.id)} className="px-2 py-1.5 text-white text-xs font-bold rounded-lg cursor-pointer touch-target touch-press" style={{ background: "var(--primary)" }}>Save</button>
+                          <button onClick={() => { setEditingId(null); setEditTitle(""); }} className="px-2 py-1.5 text-body text-xs font-bold rounded-lg cursor-pointer touch-target touch-press" style={{ background: "var(--surface-warm)", border: "1px solid var(--border)" }}>Cancel</button>
                         </div>
                        ) : (
                          <div className="flex items-center justify-between gap-2">
-                           <p className={`text-sm transition-all truncate ${activity.completed ? "text-blue-600/50 line-through" : "text-blue-900 font-medium"}`}>{activity.title}</p>
+                           <p className={`text-sm transition-all truncate ${activity.completed ? "text-muted line-through" : "text-heading font-medium"}`}>{activity.title}</p>
                            <div className="flex items-center gap-1 flex-shrink-0 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
-                             <button onClick={(e) => { e.stopPropagation(); handleStartEdit(activity.id, activity.title); }} className="p-1.5 rounded-lg hover:bg-blue-100 text-blue-400 hover:text-blue-600 cursor-pointer active:scale-95 transition-transform" title="Edit">
+                             <button onClick={(e) => { e.stopPropagation(); handleStartEdit(activity.id, activity.title); }} className="p-1.5 rounded-lg text-muted hover:text-primary cursor-pointer active:scale-95 transition-transform" title="Edit">
                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
                              </button>
                              <button onClick={(e) => { e.stopPropagation(); handleDeleteActivity(activity.id); }} className="p-1.5 rounded-lg hover:bg-red-50 text-red-400 hover:text-red-600 cursor-pointer active:scale-95 transition-transform" title="Delete">
@@ -216,7 +219,7 @@ export default function LivingRoomPage() {
                          </div>
                        )}
                     </div>
-                    <span className="text-xs text-blue-400 flex-shrink-0">
+                    <span className="text-xs text-muted flex-shrink-0">
                       {new Date(activity.date).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}
                     </span>
                   </div>
@@ -226,8 +229,8 @@ export default function LivingRoomPage() {
 
           </div>
 
-          <div className="room-card bg-white/80 backdrop-blur-sm rounded-2xl p-6 border-2 border-pink-200 shadow-xl">
-            <h3 className="text-lg font-bold text-pink-900 mb-4 text-center">How are you feeling?</h3>
+          <div className="room-card surface-card p-6">
+            <h3 className="text-lg font-bold text-heading mb-4 text-center">How are you feeling?</h3>
             {selectedMood ? (
               <div className="space-y-4 text-center">
                 <div className="text-5xl animate-bounce">{MOOD_OPTIONS.find((m) => m.value === selectedMood)?.icon}</div>
@@ -236,12 +239,12 @@ export default function LivingRoomPage() {
                   onChange={(e) => setMoodNote(e.target.value)}
                   placeholder="Add a note..."
                   rows={3}
-                  className="w-full px-4 py-2.5 rounded-xl border-2 border-pink-200 focus:border-pink-400 focus:outline-none text-pink-900 placeholder-pink-300 resize-none text-sm min-h-[44px]"
+                  className="input-soft w-full px-4 py-2.5 rounded-xl resize-none text-sm touch-target"
                 />
                 <div className="flex gap-2">
-                  <button onClick={() => setSelectedMood(null)} className="flex-1 py-2 rounded-xl border-2 border-pink-200 text-pink-600 hover:bg-pink-50 transition-all text-sm min-h-[44px]">Cancel</button>
+                  <button onClick={() => setSelectedMood(null)} className="flex-1 py-2 rounded-xl text-body transition-all text-sm touch-target touch-press" style={{ border: "1px solid var(--border)", background: "var(--surface-warm)" }}>Cancel</button>
                   <MagneticButton>
-                    <button onClick={handleMoodSubmit} className="flex-1 py-2 rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 text-white font-bold hover:from-pink-600 hover:to-rose-600 transition-all text-sm min-h-[44px]">Save</button>
+                    <button onClick={handleMoodSubmit} className="flex-1 py-2 rounded-xl text-white font-bold transition-all text-sm touch-target touch-press" style={{ background: "linear-gradient(to right, var(--primary), var(--secondary))" }}>Save</button>
                   </MagneticButton>
                 </div>
               </div>
@@ -251,11 +254,11 @@ export default function LivingRoomPage() {
                    <MagneticButton key={mood.value}>
                      <button
                        onClick={() => setSelectedMood(mood.value)}
-                       className="room-card animate-fade-in-up flex flex-col items-center gap-1 p-3 rounded-xl bg-gradient-to-br from-pink-50 to-rose-50 hover:from-pink-100 hover:to-rose-100 border-2 border-pink-200 hover:border-pink-300 transition-all hover:scale-105"
-                       style={{ animationDelay: `${idx * 0.1}s` }}
+                       className="room-card animate-fade-in-up flex flex-col items-center gap-1 p-3 rounded-xl transition-all hover:scale-105 touch-target touch-press"
+                       style={{ animationDelay: `${idx * 0.1}s`, background: "var(--surface-warm)", border: "1px solid var(--border)" }}
                     >
                       <span className="text-2xl">{mood.icon}</span>
-                      <span className="text-xs text-pink-700 font-medium">{mood.label}</span>
+                      <span className="text-xs text-body font-medium">{mood.label}</span>
                     </button>
                   </MagneticButton>
                 ))}
@@ -282,8 +285,8 @@ export default function LivingRoomPage() {
           )}
         </div>
 
-                 <div className="room-card animate-fade-in-up bg-white/80 backdrop-blur-sm rounded-2xl p-4 sm:p-6 border-2 border-purple-200 shadow-xl" style={{ animationDelay: "0.2s" }}>
-          <h3 className="text-lg font-bold text-purple-900 mb-4">Recent Moods 💭</h3>
+                 <div className="room-card animate-fade-in-up surface-card p-4 sm:p-6" style={{ animationDelay: "0.2s" }}>
+          <h3 className="text-lg font-bold text-heading mb-4">Recent Moods 💭</h3>
           {moodsLoading ? (
             <div className="space-y-2">
               {Array.from({ length: 3 }).map((_, i) => <ListItemSkeleton key={i} />)}
@@ -295,10 +298,10 @@ export default function LivingRoomPage() {
               {moods.slice(0, 10).map((mood) => {
                 const moodOption = MOOD_OPTIONS.find((m) => m.value === mood.mood);
                 return (
-                  <div key={mood.id} className="flex-shrink-0 bg-gradient-to-br from-pink-50 to-purple-50 p-4 rounded-xl border-2 border-pink-100 text-center min-w-[120px] hover:scale-105 transition-transform cursor-pointer">
+                  <div key={mood.id} className="flex-shrink-0 p-4 rounded-xl text-center min-w-[120px] hover:scale-105 transition-transform cursor-pointer" style={{ background: "var(--surface-warm)", border: "1px solid var(--border)" }}>
                     <div className="text-3xl mb-2">{moodOption?.icon}</div>
-                    <p className="text-xs text-purple-700 font-medium capitalize">{mood.mood}</p>
-                    {mood.note && <p className="text-xs text-purple-500 mt-1 truncate">{mood.note}</p>}
+                    <p className="text-xs text-body font-medium capitalize">{mood.mood}</p>
+                    {mood.note && <p className="text-xs text-muted mt-1 truncate">{mood.note}</p>}
                   </div>
                 );
               })}

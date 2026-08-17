@@ -1,427 +1,713 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use server";
 
-import { query, getOne, getAll, generateId } from "@/lib/db/postgres";
-import { initializeDatabase } from "@/lib/db/init";
+import { getSupabaseServer } from "@/lib/supabase/server";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
-initializeDatabase();
+// Note: initializeDatabase() dari lib/db/init.ts TIDAK dipanggil lagi di sini.
+// Table creation sekarang dihandle via Supabase SQL migrations.
+// lib/db/init.ts masih dipanggil di actions/auth.ts untuk backward compatibility.
+
+// ─── Helpers ──────────────────────────────────────────────────────────────
+
+function mapMood(r: any) {
+  return {
+    id: r.id,
+    userId: r.user_id,
+    mood: r.mood,
+    note: r.note || undefined,
+    createdAt: r.created_at,
+  };
+}
+
+function mapActivity(r: any) {
+  return {
+    id: r.id,
+    pair_id: r.pair_id,
+    title: r.title,
+    description: r.description || undefined,
+    type: r.type,
+    date: r.date,
+    completed: r.completed,
+    createdBy: r.created_by,
+  };
+}
+
+function mapGallery(r: any) {
+  return {
+    id: r.id,
+    url: r.url,
+    caption: r.caption || undefined,
+    createdAt: r.created_at,
+    createdBy: r.created_by,
+  };
+}
+
+function mapCalendarEvent(r: any) {
+  return {
+    id: r.id,
+    title: r.title,
+    date: r.date,
+    type: r.type,
+    description: r.description || undefined,
+  };
+}
+
+function mapLetter(r: any) {
+  return {
+    id: r.id,
+    title: r.title,
+    content: r.content,
+    type: r.type,
+    openDate: r.open_date || undefined,
+    createdAt: r.created_at,
+    createdBy: r.created_by,
+  };
+}
+
+function mapNotification(r: any) {
+  return {
+    id: r.id,
+    message: r.message,
+    type: r.type,
+    read: r.read,
+    createdAt: r.created_at,
+  };
+}
+
+function mapHug(r: any) {
+  return {
+    id: r.id,
+    senderId: r.sender_id,
+    receiverId: r.receiver_id,
+    message: r.message,
+    emoji: r.emoji,
+    createdAt: r.created_at,
+  };
+}
+
+function mapLoveMeter(r: any) {
+  return {
+    userId: r.user_id,
+    percentage: r.percentage,
+    createdAt: r.created_at,
+  };
+}
+
+function mapLocation(r: any) {
+  return {
+    id: r.id,
+    userId: r.user_id,
+    place: r.place,
+    note: r.note || undefined,
+    createdAt: r.created_at,
+  };
+}
+
+function mapStatusUpdate(r: any) {
+  return {
+    id: r.id,
+    userId: r.user_id,
+    message: r.message,
+    emoji: r.emoji,
+    createdAt: r.created_at,
+  };
+}
+
+function mapPresence(r: any) {
+  return {
+    user_id: r.user_id,
+    status: r.status,
+    last_seen: r.last_seen,
+  };
+}
+
+function genId(): string {
+  return crypto.randomUUID();
+}
+
+// ─── Partner / Notifications ──────────────────────────────────────────────
 
 export async function getPartnerId(userId: string, pairId: string): Promise<string | null> {
-  const result = await getOne("SELECT id FROM users WHERE pair_id = $1 AND id != $2 LIMIT 1", [pairId, userId]);
-  return result?.id || null;
+  const supabase = getSupabaseServer();
+  const { data } = await supabase
+    .from("users")
+    .select("id")
+    .eq("pair_id", pairId)
+    .neq("id", userId)
+    .limit(1)
+    .maybeSingle();
+  return data?.id || null;
 }
 
-async function notifyPartner(userId: string, pairId: string, message: string, type: string) {
+async function notifyPartner(supabase: SupabaseClient, userId: string, pairId: string, message: string, type: string) {
   const partnerId = await getPartnerId(userId, pairId);
   if (!partnerId) return;
-  const notificationId = generateId();
-  await query(
-    `INSERT INTO notifications (id, user_id, pair_id, message, type, read, created_at)
-     VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-    [notificationId, partnerId, pairId, message, type, false, new Date().toISOString()]
-  );
+  await supabase.from("notifications").insert({
+    id: genId(),
+    user_id: partnerId,
+    pair_id: pairId,
+    message,
+    type,
+    read: false,
+    created_at: new Date().toISOString(),
+  });
 }
 
+// ─── Moods ────────────────────────────────────────────────────────────────
+
 export async function getMoods(pairId: string) {
-  const result = await getAll(`
-    SELECT id, user_id as "userId", mood, note, created_at as "createdAt"
-    FROM moods
-    WHERE pair_id = $1
-    ORDER BY created_at DESC
-    LIMIT 50
-  `, [pairId]);
-  return result;
+  const supabase = getSupabaseServer();
+  const { data, error } = await supabase
+    .from("moods")
+    .select("*")
+    .eq("pair_id", pairId)
+    .order("created_at", { ascending: false })
+    .limit(50);
+  if (error) throw error;
+  return (data || []).map(mapMood);
 }
 
 export async function addMood(userId: string, pairId: string, mood: string, note?: string) {
-  const id = generateId();
+  const supabase = getSupabaseServer();
   const now = new Date().toISOString();
+  const id = genId();
 
-  await query(
-    `INSERT INTO moods (id, user_id, pair_id, mood, note, created_at)
-     VALUES ($1, $2, $3, $4, $5, $6)`,
-    [id, userId, pairId, mood, note || null, now]
-  );
+  const { error } = await supabase.from("moods").insert({
+    id,
+    user_id: userId,
+    pair_id: pairId,
+    mood,
+    note: note || null,
+    created_at: now,
+  });
+  if (error) throw error;
 
-  await notifyPartner(userId, pairId, `New mood added: ${mood}`, "mood");
+  await notifyPartner(supabase, userId, pairId, `New mood added: ${mood}`, "mood");
 
   return { id, userId, mood, note, createdAt: now };
 }
 
+// ─── Activities ───────────────────────────────────────────────────────────
+
 export async function getActivities(pairId: string) {
-  const result = await getAll(`
-    SELECT id, pair_id, title, description, type, date, completed, created_by as "createdBy"
-    FROM activities
-    WHERE pair_id = $1
-    ORDER BY date DESC
-    LIMIT 50
-  `, [pairId]);
-  return result;
+  const supabase = getSupabaseServer();
+  const { data, error } = await supabase
+    .from("activities")
+    .select("*")
+    .eq("pair_id", pairId)
+    .order("date", { ascending: false })
+    .limit(50);
+  if (error) throw error;
+  return (data || []).map(mapActivity);
 }
 
 export async function createActivity(userId: string, pairId: string, title: string, type: string, date: string, description?: string) {
-  const id = generateId();
+  const supabase = getSupabaseServer();
+  const id = genId();
 
-  await query(
-    `INSERT INTO activities (id, pair_id, title, description, type, date, completed, created_by)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
-    [id, pairId, title, description || null, type, date, false, userId]
-  );
+  const { error } = await supabase.from("activities").insert({
+    id,
+    pair_id: pairId,
+    title,
+    description: description || null,
+    type,
+    date,
+    completed: false,
+    created_by: userId,
+  });
+  if (error) throw error;
 
-  await notifyPartner(userId, pairId, `New activity created: ${title}`, "activity");
+  await notifyPartner(supabase, userId, pairId, `New activity created: ${title}`, "activity");
 
   return { id, pair_id: pairId, title, description, type, date, completed: false, createdBy: userId };
 }
 
 export async function toggleActivity(userId: string, pairId: string, activityId: string, completed: boolean) {
-  await query(
-    "UPDATE activities SET completed = $1 WHERE id = $2 AND pair_id = $3",
-    [completed, activityId, pairId]
-  );
+  const supabase = getSupabaseServer();
+  const { error } = await supabase
+    .from("activities")
+    .update({ completed })
+    .eq("id", activityId)
+    .eq("pair_id", pairId);
+  if (error) throw error;
 
-  const activity = await getOne("SELECT * FROM activities WHERE id = $1", [activityId]);
+  const { data: activity } = await supabase.from("activities").select("*").eq("id", activityId).maybeSingle();
   if (activity) {
-    await notifyPartner(userId, pairId, `${activity.title} marked as ${completed ? "completed" : "incomplete"}`, "activity");
+    await notifyPartner(supabase, userId, pairId, `${activity.title} marked as ${completed ? "completed" : "incomplete"}`, "activity");
   }
 
   return { success: true };
 }
 
 export async function updateActivity(userId: string, pairId: string, activityId: string, title?: string, description?: string) {
-  const updates: string[] = [];
-  const values: any[] = [];
-  let idx = 1;
+  const supabase = getSupabaseServer();
+  const updates: Record<string, unknown> = {};
+  if (title !== undefined) updates.title = title;
+  if (description !== undefined) updates.description = description || null;
 
-  if (title !== undefined) { updates.push(`title = $${idx++}`); values.push(title); }
-  if (description !== undefined) { updates.push(`description = $${idx++}`); values.push(description || null); }
+  if (Object.keys(updates).length === 0) return { success: true };
 
-  if (updates.length === 0) return { success: true };
+  const { error } = await supabase.from("activities").update(updates).eq("id", activityId).eq("pair_id", pairId);
+  if (error) throw error;
 
-  values.push(activityId, pairId);
-  await query(`UPDATE activities SET ${updates.join(", ")} WHERE id = $${idx++} AND pair_id = $${idx}`, values);
-
-  const activity = await getOne("SELECT * FROM activities WHERE id = $1", [activityId]);
-  if (activity && title) {
-    await notifyPartner(userId, pairId, `Activity updated: ${title}`, "activity");
+  if (title) {
+    await notifyPartner(supabase, userId, pairId, `Activity updated: ${title}`, "activity");
   }
 
   return { success: true };
 }
 
 export async function deleteActivity(userId: string, pairId: string, activityId: string) {
-  const activity = await getOne("SELECT * FROM activities WHERE id = $1", [activityId]);
-  await query("DELETE FROM activities WHERE id = $1 AND pair_id = $2", [activityId, pairId]);
+  const supabase = getSupabaseServer();
+  const { data: activity } = await supabase.from("activities").select("*").eq("id", activityId).maybeSingle();
+
+  const { error } = await supabase.from("activities").delete().eq("id", activityId).eq("pair_id", pairId);
+  if (error) throw error;
+
   if (activity) {
-    await notifyPartner(userId, pairId, `Activity deleted: ${activity.title}`, "activity");
+    await notifyPartner(supabase, userId, pairId, `Activity deleted: ${activity.title}`, "activity");
   }
+
   return { success: true };
 }
 
+// ─── Gallery ──────────────────────────────────────────────────────────────
+
 export async function getGallery(pairId: string) {
-  const result = await getAll(`
-    SELECT id, url, caption, created_at as "createdAt", created_by as "createdBy"
-    FROM gallery
-    WHERE pair_id = $1
-    ORDER BY created_at DESC
-  `, [pairId]);
-  return result;
+  const supabase = getSupabaseServer();
+  const { data, error } = await supabase
+    .from("gallery")
+    .select("*")
+    .eq("pair_id", pairId)
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return (data || []).map(mapGallery);
 }
 
 export async function addPhoto(userId: string, pairId: string, url: string, caption?: string) {
-  const id = generateId();
+  const supabase = getSupabaseServer();
+  const id = genId();
   const now = new Date().toISOString();
 
-  await query(
-    `INSERT INTO gallery (id, pair_id, url, caption, created_at, created_by)
-     VALUES ($1, $2, $3, $4, $5, $6)`,
-    [id, pairId, url, caption || null, now, userId]
-  );
+  const { error } = await supabase.from("gallery").insert({
+    id,
+    pair_id: pairId,
+    url,
+    caption: caption || null,
+    created_at: now,
+    created_by: userId,
+  });
+  if (error) throw error;
 
-  await notifyPartner(userId, pairId, "New photo added to gallery", "gallery");
+  await notifyPartner(supabase, userId, pairId, "New photo added to gallery", "gallery");
 
   return { id, url, caption, createdAt: now, createdBy: userId };
 }
 
 export async function deletePhoto(userId: string, pairId: string, photoId: string) {
-  await query("DELETE FROM gallery WHERE id = $1 AND pair_id = $2", [photoId, pairId]);
+  const supabase = getSupabaseServer();
+  const { data: photo } = await supabase.from("gallery").select("url").eq("id", photoId).eq("pair_id", pairId).maybeSingle();
+
+  const { error } = await supabase.from("gallery").delete().eq("id", photoId).eq("pair_id", pairId);
+  if (error) throw error;
+
+  if (photo?.url && photo.url.includes("/gallery/")) {
+    try {
+      const { deleteFromStorage } = await import("@/lib/supabase/upload");
+      await deleteFromStorage(photo.url);
+    } catch {
+      /* ignore — cleanup non-kritis */
+    }
+  }
+
   return { success: true };
 }
 
+// ─── Calendar Events ──────────────────────────────────────────────────────
+
 export async function getCalendarEvents(pairId: string) {
-  const result = await getAll(`
-    SELECT id, title, date, type, description
-    FROM calendar_events
-    WHERE pair_id = $1
-    ORDER BY date ASC
-  `, [pairId]);
-  return result;
+  const supabase = getSupabaseServer();
+  const { data, error } = await supabase
+    .from("calendar_events")
+    .select("*")
+    .eq("pair_id", pairId)
+    .order("date", { ascending: true });
+  if (error) throw error;
+  return (data || []).map(mapCalendarEvent);
 }
 
 export async function addCalendarEvent(userId: string, pairId: string, title: string, date: string, type: string, description?: string) {
-  const id = generateId();
+  const supabase = getSupabaseServer();
+  const id = genId();
   const now = new Date().toISOString();
 
-  await query(
-    `INSERT INTO calendar_events (id, pair_id, title, date, type, description, created_at)
-     VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-    [id, pairId, title, date, type, description || null, now]
-  );
+  const { error } = await supabase.from("calendar_events").insert({
+    id,
+    pair_id: pairId,
+    title,
+    date,
+    type,
+    description: description || null,
+    created_at: now,
+  });
+  if (error) throw error;
 
-  await notifyPartner(userId, pairId, `New event: ${title}`, "calendar");
+  await notifyPartner(supabase, userId, pairId, `New event: ${title}`, "calendar");
 
   return { id, title, date, type, description };
 }
 
 export async function updateCalendarEvent(userId: string, pairId: string, eventId: string, data: { title?: string; date?: string; type?: string; description?: string }) {
-  const event = await getOne("SELECT * FROM calendar_events WHERE id = $1 AND pair_id = $2", [eventId, pairId]);
+  const supabase = getSupabaseServer();
+  const { data: event } = await supabase.from("calendar_events").select("*").eq("id", eventId).eq("pair_id", pairId).maybeSingle();
   if (!event) return null;
 
-  const fields: string[] = [];
-  const values: any[] = [];
+  const updates: Record<string, unknown> = {};
+  if (data.title !== undefined) updates.title = data.title;
+  if (data.date !== undefined) updates.date = data.date;
+  if (data.type !== undefined) updates.type = data.type;
+  if (data.description !== undefined) updates.description = data.description;
 
-  if (data.title !== undefined) { fields.push("title = $" + (values.length + 1)); values.push(data.title); }
-  if (data.date !== undefined) { fields.push("date = $" + (values.length + 1)); values.push(data.date); }
-  if (data.type !== undefined) { fields.push("type = $" + (values.length + 1)); values.push(data.type); }
-  if (data.description !== undefined) { fields.push("description = $" + (values.length + 1)); values.push(data.description); }
+  if (Object.keys(updates).length > 0) {
+    const { error } = await supabase.from("calendar_events").update(updates).eq("id", eventId);
+    if (error) throw error;
+  }
 
-  if (fields.length === 0) return event;
+  await notifyPartner(supabase, userId, pairId, `Event updated: ${data.title || event.title}`, "calendar");
 
-  values.push(eventId);
-  await query(`UPDATE calendar_events SET ${fields.join(", ")} WHERE id = $${values.length}`, values);
-
-  await notifyPartner(userId, pairId, `Event updated: ${data.title || event.title}`, "calendar");
-
-  return await getOne("SELECT * FROM calendar_events WHERE id = $1", [eventId]);
+  const { data: updated } = await supabase.from("calendar_events").select("*").eq("id", eventId).maybeSingle();
+  return updated ? mapCalendarEvent(updated) : null;
 }
 
 export async function deleteCalendarEvent(userId: string, pairId: string, eventId: string) {
-  const event = await getOne("SELECT * FROM calendar_events WHERE id = $1 AND pair_id = $2", [eventId, pairId]);
+  const supabase = getSupabaseServer();
+  const { data: event } = await supabase.from("calendar_events").select("*").eq("id", eventId).eq("pair_id", pairId).maybeSingle();
   if (!event) return false;
 
-  await query("DELETE FROM calendar_events WHERE id = $1 AND pair_id = $2", [eventId, pairId]);
+  const { error } = await supabase.from("calendar_events").delete().eq("id", eventId).eq("pair_id", pairId);
+  if (error) throw error;
 
-  await notifyPartner(userId, pairId, `Event deleted: ${event.title}`, "calendar");
+  await notifyPartner(supabase, userId, pairId, `Event deleted: ${event.title}`, "calendar");
 
   return true;
 }
 
+// ─── Letters ──────────────────────────────────────────────────────────────
+
 export async function getLetters(pairId: string) {
-  const result = await getAll(`
-    SELECT id, title, content, type, open_date as "openDate", created_at as "createdAt", created_by as "createdBy"
-    FROM letters
-    WHERE pair_id = $1
-    ORDER BY created_at DESC
-  `, [pairId]);
-  return result;
+  const supabase = getSupabaseServer();
+  const { data, error } = await supabase
+    .from("letters")
+    .select("*")
+    .eq("pair_id", pairId)
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return (data || []).map(mapLetter);
 }
 
 export async function createLetter(userId: string, pairId: string, letter: { title: string; content: string; type: string; openDate?: string }) {
-  const id = generateId();
+  const supabase = getSupabaseServer();
+  const id = genId();
   const now = new Date().toISOString();
 
-  await query(
-    `INSERT INTO letters (id, pair_id, title, content, type, open_date, created_at, created_by)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
-    [id, pairId, letter.title, letter.content, letter.type, letter.openDate || null, now, userId]
-  );
+  const { error } = await supabase.from("letters").insert({
+    id,
+    pair_id: pairId,
+    title: letter.title,
+    content: letter.content,
+    type: letter.type,
+    open_date: letter.openDate || null,
+    created_at: now,
+    created_by: userId,
+  });
+  if (error) throw error;
 
-  await notifyPartner(userId, pairId, `New letter: ${letter.title}`, "letter");
+  await notifyPartner(supabase, userId, pairId, `New letter: ${letter.title}`, "letter");
 
   return { id, title: letter.title, content: letter.content, type: letter.type, openDate: letter.openDate, createdAt: now, createdBy: userId };
 }
 
+export async function deleteLetter(userId: string, pairId: string, letterId: string) {
+  const supabase = getSupabaseServer();
+  const { error } = await supabase.from("letters").delete().eq("id", letterId).eq("pair_id", pairId);
+  if (error) throw error;
+  return { success: true };
+}
+
+// ─── Notifications ────────────────────────────────────────────────────────
+
 export async function getNotifications(userId: string) {
-  const result = await getAll(`
-    SELECT id, message, type, read, created_at as "createdAt"
-    FROM notifications
-    WHERE user_id = $1
-    ORDER BY created_at DESC
-    LIMIT 20
-  `, [userId]);
-  return result;
+  const supabase = getSupabaseServer();
+  const { data, error } = await supabase
+    .from("notifications")
+    .select("*")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false })
+    .limit(20);
+  if (error) throw error;
+  return (data || []).map(mapNotification);
 }
 
 export async function markNotificationsAsRead(userId: string) {
-  await query("UPDATE notifications SET read = true WHERE user_id = $1 AND read = false", [userId]);
+  const supabase = getSupabaseServer();
+  const { error } = await supabase.from("notifications").update({ read: true }).eq("user_id", userId).eq("read", false);
+  if (error) throw error;
   return { success: true };
 }
 
-export async function deleteLetter(userId: string, pairId: string, letterId: string) {
-  await query("DELETE FROM letters WHERE id = $1 AND pair_id = $2", [letterId, pairId]);
-  return { success: true };
-}
+// ─── Presence ─────────────────────────────────────────────────────────────
 
 export async function updatePresence(userId: string, pairId: string, status: string) {
-  const existing = await getOne("SELECT id FROM ldr_presence WHERE user_id = $1", [userId]);
+  const supabase = getSupabaseServer();
+  const now = new Date().toISOString();
+
+  const { data: existing } = await supabase.from("ldr_presence").select("id").eq("user_id", userId).maybeSingle();
+
   if (existing) {
-    await query("UPDATE ldr_presence SET status = $1, last_seen = $2 WHERE user_id = $3", [status, new Date().toISOString(), userId]);
+    const { error } = await supabase.from("ldr_presence").update({ status, last_seen: now }).eq("user_id", userId);
+    if (error) throw error;
   } else {
-    await query("INSERT INTO ldr_presence (id, user_id, pair_id, status, last_seen) VALUES ($1, $2, $3, $4, $5)", [generateId(), userId, pairId, status, new Date().toISOString()]);
+    const { error } = await supabase.from("ldr_presence").insert({
+      id: genId(),
+      user_id: userId,
+      pair_id: pairId,
+      status,
+      last_seen: now,
+    });
+    if (error) throw error;
   }
   return { success: true };
 }
 
 export async function getPresence(pairId: string) {
-  const result = await getAll(`
-    SELECT user_id, status, last_seen FROM ldr_presence WHERE pair_id = $1
-  `, [pairId]);
-  return result;
+  const supabase = getSupabaseServer();
+  const { data, error } = await supabase
+    .from("ldr_presence")
+    .select("user_id, status, last_seen")
+    .eq("pair_id", pairId);
+  if (error) throw error;
+  return (data || []).map(mapPresence);
 }
 
-export async function addStatusUpdate(userId: string, pairId: string, message: string, emoji?: string) {
-  const id = generateId();
-  const now = new Date().toISOString();
-  await query(
-    `INSERT INTO ldr_status_updates (id, user_id, pair_id, message, emoji, created_at)
-     VALUES ($1, $2, $3, $4, $5, $6)`,
-    [id, userId, pairId, message, emoji || "💬", now]
-  );
+// ─── Status Updates ───────────────────────────────────────────────────────
 
-  await notifyPartner(userId, pairId, `Status update: ${message}`, "status");
+export async function addStatusUpdate(userId: string, pairId: string, message: string, emoji?: string) {
+  const supabase = getSupabaseServer();
+  const id = genId();
+  const now = new Date().toISOString();
+
+  const { error } = await supabase.from("ldr_status_updates").insert({
+    id,
+    user_id: userId,
+    pair_id: pairId,
+    message,
+    emoji: emoji || "💬",
+    created_at: now,
+  });
+  if (error) throw error;
+
+  await notifyPartner(supabase, userId, pairId, `Status update: ${message}`, "status");
 
   return { id, message, emoji: emoji || "💬", createdAt: now };
 }
 
 export async function getStatusUpdates(pairId: string) {
-  const result = await getAll(`
-    SELECT id, user_id, message, emoji, created_at as "createdAt"
-    FROM ldr_status_updates
-    WHERE pair_id = $1
-    ORDER BY created_at DESC
-    LIMIT 50
-  `, [pairId]);
-  return result;
+  const supabase = getSupabaseServer();
+  const { data, error } = await supabase
+    .from("ldr_status_updates")
+    .select("*")
+    .eq("pair_id", pairId)
+    .order("created_at", { ascending: false })
+    .limit(50);
+  if (error) throw error;
+  return (data || []).map(mapStatusUpdate);
 }
 
+// ─── Hugs ─────────────────────────────────────────────────────────────────
+
 export async function sendHug(userId: string, pairId: string, receiverId: string, message?: string) {
-  const id = generateId();
+  const supabase = getSupabaseServer();
+  const id = genId();
   const now = new Date().toISOString();
   const hugMessage = message || "Sent a virtual hug 🤗";
 
-  await query(
-    `INSERT INTO ldr_hugs (id, sender_id, receiver_id, pair_id, message, emoji, created_at)
-     VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-    [id, userId, receiverId, pairId, hugMessage, "🤗", now]
-  );
+  const { error } = await supabase.from("ldr_hugs").insert({
+    id,
+    sender_id: userId,
+    receiver_id: receiverId,
+    pair_id: pairId,
+    message: hugMessage,
+    emoji: "🤗",
+    created_at: now,
+  });
+  if (error) throw error;
 
-  const notificationId = generateId();
-  await query(
-    `INSERT INTO notifications (id, user_id, pair_id, message, type, read, created_at)
-     VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-    [notificationId, receiverId, pairId, `Virtual hug from your partner: ${hugMessage}`, "hug", false, now]
-  );
+  // Insert notification for receiver
+  await supabase.from("notifications").insert({
+    id: genId(),
+    user_id: receiverId,
+    pair_id: pairId,
+    message: `Virtual hug from your partner: ${hugMessage}`,
+    type: "hug",
+    read: false,
+    created_at: now,
+  });
 
   return { id, message: hugMessage, emoji: "🤗", createdAt: now };
 }
 
 export async function getHugs(pairId: string) {
-  const result = await getAll(`
-    SELECT id, sender_id, receiver_id, message, emoji, created_at as "createdAt"
-    FROM ldr_hugs
-    WHERE pair_id = $1
-    ORDER BY created_at DESC
-    LIMIT 20
-  `, [pairId]);
-  return result;
+  const supabase = getSupabaseServer();
+  const { data, error } = await supabase
+    .from("ldr_hugs")
+    .select("*")
+    .eq("pair_id", pairId)
+    .order("created_at", { ascending: false })
+    .limit(20);
+  if (error) throw error;
+  return (data || []).map(mapHug);
 }
 
-export async function updateLoveMeter(userId: string, pairId: string, percentage: number) {
-  const id = generateId();
-  const now = new Date().toISOString();
-  await query(
-    `INSERT INTO ldr_love_meter (id, user_id, pair_id, percentage, created_at)
-     VALUES ($1, $2, $3, $4, $5)`,
-    [id, userId, pairId, percentage, now]
-  );
+// ─── Love Meter ───────────────────────────────────────────────────────────
 
-  await notifyPartner(userId, pairId, `Love meter updated: ${percentage}%`, "love_meter");
+export async function updateLoveMeter(userId: string, pairId: string, percentage: number) {
+  const supabase = getSupabaseServer();
+  const id = genId();
+  const now = new Date().toISOString();
+
+  const { error } = await supabase.from("ldr_love_meter").insert({
+    id,
+    user_id: userId,
+    pair_id: pairId,
+    percentage,
+    created_at: now,
+  });
+  if (error) throw error;
+
+  await notifyPartner(supabase, userId, pairId, `Love meter updated: ${percentage}%`, "love_meter");
 
   return { id, percentage, createdAt: now };
 }
 
 export async function getLoveMeter(pairId: string) {
-  const result = await getAll(`
-    SELECT user_id, percentage, created_at as "createdAt"
-    FROM ldr_love_meter
-    WHERE pair_id = $1
-    ORDER BY created_at DESC
-    LIMIT 10
-  `, [pairId]);
-  return result;
+  const supabase = getSupabaseServer();
+  const { data, error } = await supabase
+    .from("ldr_love_meter")
+    .select("*")
+    .eq("pair_id", pairId)
+    .order("created_at", { ascending: false })
+    .limit(10);
+  if (error) throw error;
+  return (data || []).map(mapLoveMeter);
 }
 
+// ─── Locations ────────────────────────────────────────────────────────────
+
 export async function addLocation(userId: string, pairId: string, place: string, note?: string) {
-  const id = generateId();
+  const supabase = getSupabaseServer();
+  const id = genId();
   const now = new Date().toISOString();
-  await query(
-    `INSERT INTO ldr_locations (id, user_id, pair_id, place, note, created_at)
-     VALUES ($1, $2, $3, $4, $5, $6)`,
-    [id, userId, pairId, place, note || null, now]
-  );
-  await notifyPartner(userId, pairId, `Location update: ${place}`, "location");
+
+  const { error } = await supabase.from("ldr_locations").insert({
+    id,
+    user_id: userId,
+    pair_id: pairId,
+    place,
+    note: note || null,
+    created_at: now,
+  });
+  if (error) throw error;
+
+  await notifyPartner(supabase, userId, pairId, `Location update: ${place}`, "location");
+
   return { id, userId, place, note, createdAt: now };
 }
 
 export async function getLocations(pairId: string) {
-  const result = await getAll(`
-    SELECT id, user_id, place, note, created_at as "createdAt"
-    FROM ldr_locations
-    WHERE pair_id = $1
-    ORDER BY created_at DESC
-    LIMIT 20
-  `, [pairId]);
-  return result;
+  const supabase = getSupabaseServer();
+  const { data, error } = await supabase
+    .from("ldr_locations")
+    .select("*")
+    .eq("pair_id", pairId)
+    .order("created_at", { ascending: false })
+    .limit(20);
+  if (error) throw error;
+  return (data || []).map(mapLocation);
 }
 
+// ─── User Extras ──────────────────────────────────────────────────────────
+
 export async function getUserExtra(userId: string, key: string) {
-  const result = await getOne("SELECT value FROM user_extras WHERE user_id = $1 AND key = $2", [userId, key]);
-  return result?.value || null;
+  const supabase = getSupabaseServer();
+  const { data, error } = await supabase
+    .from("user_extras")
+    .select("value")
+    .eq("user_id", userId)
+    .eq("key", key)
+    .maybeSingle();
+  if (error) throw error;
+  return data?.value || null;
 }
 
 export async function setUserExtra(userId: string, pairId: string, key: string, value: string) {
-  const existing = await getOne("SELECT id FROM user_extras WHERE user_id = $1 AND key = $2", [userId, key]);
+  const supabase = getSupabaseServer();
+  const now = new Date().toISOString();
+
+  const { data: existing } = await supabase
+    .from("user_extras")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("key", key)
+    .maybeSingle();
+
   if (existing) {
-    await query("UPDATE user_extras SET value = $1, updated_at = $2 WHERE id = $3", [value, new Date().toISOString(), existing.id]);
+    const { error } = await supabase.from("user_extras").update({ value, updated_at: now }).eq("id", existing.id);
+    if (error) throw error;
   } else {
-    const id = generateId();
-    await query("INSERT INTO user_extras (id, user_id, pair_id, key, value, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7)", [id, userId, pairId, key, value, new Date().toISOString(), new Date().toISOString()]);
+    const { error } = await supabase.from("user_extras").insert({
+      id: genId(),
+      user_id: userId,
+      pair_id: pairId,
+      key,
+      value,
+      created_at: now,
+      updated_at: now,
+    });
+    if (error) throw error;
   }
   return { success: true };
 }
 
+// ─── Achievements ─────────────────────────────────────────────────────────
+
 export async function getAchievements(pairId: string) {
-  const result = await getOne(`
-    SELECT COUNT(*) as gallery_count FROM gallery WHERE pair_id = $1
-  `, [pairId]);
-  const galleryCount = result?.gallery_count || 0;
+  const supabase = getSupabaseServer();
 
-  const lettersResult = await getOne(`
-    SELECT COUNT(*) as letter_count FROM letters WHERE pair_id = $1 AND type IN ('love_letter', 'open_when')
-  `, [pairId]);
-  const letterCount = lettersResult?.letter_count || 0;
+  const [{ count: galleryCount }, { count: letterCount }, { count: vcCount }, { count: milestoneCount }] = await Promise.all([
+    supabase.from("gallery").select("*", { count: "exact", head: true }).eq("pair_id", pairId),
+    supabase.from("letters").select("*", { count: "exact", head: true }).eq("pair_id", pairId).in("type", ["love_letter", "open_when"]),
+    supabase.from("calendar_events").select("*", { count: "exact", head: true }).eq("pair_id", pairId).eq("type", "vc"),
+    supabase.from("activities").select("*", { count: "exact", head: true }).eq("pair_id", pairId).eq("type", "milestone"),
+  ]);
 
-  const eventsResult = await getOne(`
-    SELECT COUNT(*) as event_count FROM calendar_events WHERE pair_id = $1 AND type = 'vc'
-  `, [pairId]);
-  const vcCount = eventsResult?.event_count || 0;
+  const { data: settings } = await supabase
+    .from("user_settings")
+    .select("relationship_start_date, next_meetup_date")
+    .eq("pair_id", pairId)
+    .limit(1)
+    .maybeSingle();
 
-  const settings = await getOne("SELECT relationship_start_date, next_meetup_date FROM user_settings WHERE pair_id = $1 LIMIT 1", [pairId]);
   const startDate = settings?.relationship_start_date ? new Date(settings.relationship_start_date) : new Date("2023-01-01");
   const daysTogether = Math.floor((Date.now() - startDate.getTime()) / (1000 * 60 * 60 * 24));
-
   const meetupPassed = settings?.next_meetup_date ? new Date(settings.next_meetup_date) < new Date() : false;
 
-  const milestones = await getOne(`
-    SELECT COUNT(*) as count FROM activities WHERE pair_id = $1 AND type = 'milestone'
-  `, [pairId]);
-  const milestoneCount = milestones?.count || 0;
-
   return {
-    galleryCount,
-    letterCount,
-    vcCount,
+    galleryCount: galleryCount || 0,
+    letterCount: letterCount || 0,
+    vcCount: vcCount || 0,
     daysTogether,
     meetupPassed,
-    milestoneCount,
+    milestoneCount: milestoneCount || 0,
   };
 }

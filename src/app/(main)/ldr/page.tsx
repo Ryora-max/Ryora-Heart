@@ -264,7 +264,7 @@ export default function LdrPage() {
   };
 
   return (
-    <div className="relative min-h-screen bg-gradient-to-br from-rose-100 via-pink-100 to-fuchsia-100 p-3 sm:p-4 md:p-8 overflow-hidden">
+    <div className="relative page-bg p-3 sm:p-4 md:p-8 overflow-hidden">
       <div className="pointer-events-none absolute inset-0">
         {hearts.map((h) => (
           <span key={h.id} className="absolute bottom-10 text-3xl animate-float-up" style={{ left: `${h.left}%` }}>
@@ -285,9 +285,9 @@ export default function LdrPage() {
               });
             }
           }}
-          className="relative p-3 bg-white/90 backdrop-blur-sm rounded-full border-2 border-pink-200 shadow-lg hover:shadow-xl transition-all min-h-[44px] min-w-[44px] flex items-center justify-center"
+          className="relative p-3 surface-glass rounded-full shadow-lg hover:shadow-xl transition-all touch-target flex items-center justify-center"
         >
-          <Bell className="text-pink-500" size={22} />
+          <Bell className="text-primary" size={22} />
           {unreadCount > 0 && (
             <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center animate-bounce">
               {unreadCount}
@@ -298,32 +298,32 @@ export default function LdrPage() {
         {showNotifPanel && (
           <div className="fixed inset-0 z-40" onClick={() => setShowNotifPanel(false)} />
         )}
-        <div className={`absolute right-0 mt-2 w-80 sm:w-96 bg-white/95 backdrop-blur-sm rounded-2xl border-2 border-pink-200 shadow-2xl max-h-[80vh] overflow-hidden animate-scale-soft ${showNotifPanel ? "" : "hidden"}`}>
-            <div className="p-4 border-b border-pink-100 flex items-center justify-between">
-              <h3 className="font-bold text-pink-700 flex items-center gap-2">
+        <div className={`absolute right-0 mt-2 w-80 sm:w-96 surface-glass rounded-2xl shadow-2xl max-h-[80vh] overflow-hidden animate-scale-soft ${showNotifPanel ? "" : "hidden"}`}>
+            <div className="p-4 border-b border-border flex items-center justify-between">
+              <h3 className="font-bold text-heading flex items-center gap-2">
                 <Bell size={18} /> Notifikasi
               </h3>
-              <button onClick={() => setShowNotifPanel(false)} className="text-pink-400 hover:text-pink-600 p-2 min-h-[44px] min-w-[44px] flex items-center justify-center">
+              <button onClick={() => setShowNotifPanel(false)} className="text-text-muted hover:text-text-secondary p-2 touch-target flex items-center justify-center">
                 <X size={18} />
               </button>
             </div>
             <div className="max-h-72 overflow-y-auto">
               {notifications.length === 0 ? (
-                <p className="text-pink-600/70 text-center py-6 text-sm">Belum ada notifikasi 💤</p>
+                <p className="text-body text-center py-6 text-sm">Belum ada notifikasi 💤</p>
               ) : (
                 notifications.slice(0, 15).map((n) => (
-                  <div key={n.id} className={`p-3 border-b border-pink-50 hover:bg-pink-50 transition-all ${!n.read ? "bg-pink-50/50" : ""}`}>
+                  <div key={n.id} className={`p-3 border-b border-border transition-all ${!n.read ? "" : ""}`} style={{ background: !n.read ? "var(--surface-warm)" : undefined }}>
                     <div className="flex items-start gap-2">
                       <span className="text-lg">{getNotifIcon(n.type)}</span>
                       <div className="flex-1">
-                        <p className={`text-sm ${!n.read ? "font-semibold text-pink-800" : "text-pink-600"}`}>
+                        <p className={`text-sm ${!n.read ? "font-semibold text-heading" : "text-body"}`}>
                           {n.message}
                         </p>
-                        <p className="text-pink-400/70 text-xs mt-0.5">
+                        <p className="text-text-muted text-xs mt-0.5">
                           {new Date(n.createdAt).toLocaleString("id-ID", { hour: "2-digit", minute: "2-digit", day: "numeric", month: "short" })}
                         </p>
                       </div>
-                      {!n.read && <div className="w-2 h-2 bg-pink-500 rounded-full mt-1 flex-shrink-0" />}
+                      {!n.read && <div className="w-2 h-2 bg-primary rounded-full mt-1 flex-shrink-0" />}
                     </div>
                   </div>
                 ))
@@ -334,76 +334,78 @@ export default function LdrPage() {
 
        <div className="relative z-10 max-w-6xl mx-auto px-1 sm:px-4">
         <div className="ldr-header animate-fade-in-up text-center mb-10">
-          <h1 className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-pink-500 to-fuchsia-600 bg-clip-text text-transparent mb-2">
+          <h1 className="text-4xl md:text-6xl font-bold text-gradient-primary mb-2">
             💞 LDR Zone
           </h1>
-          <p className="text-pink-600/70 text-lg">Pacaran jarak jauh: lucu, absurd, tapi kita bertahan. 🫶</p>
+          <p className="text-body text-lg">Pacaran jarak jauh: lucu, absurd, tapi kita bertahan. 🫶</p>
         </div>
 
         <div className="animate-fade-in-up grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 mb-8" style={{ animationDelay: "0.1s" }}>
-          <div className="group bg-white/80 backdrop-blur-sm p-5 rounded-2xl border-2 border-pink-200 shadow-lg hover:shadow-xl hover:border-pink-300 transition-all">
+          <div className="group surface-card rounded-2xl p-5">
             <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-pink-400 to-rose-500 flex items-center justify-center text-white">
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white" style={{ background: "linear-gradient(to bottom right, var(--primary), var(--secondary))" }}>
                 <MapPin size={20} />
               </div>
               <div>
-                <p className="text-pink-500 text-xs font-semibold uppercase tracking-wider">Jarak Kita</p>
-                <p className="text-2xl font-bold text-pink-700">~{distanceKm.toLocaleString()} km</p>
+                <p className="text-primary text-xs font-semibold uppercase tracking-wider">Jarak Kita</p>
+                <p className="text-2xl font-bold text-heading">~{distanceKm.toLocaleString()} km</p>
               </div>
             </div>
-            <p className="text-pink-400/70 text-xs">atau {distanceKm.toLocaleString()} tangis rindu</p>
+            <p className="text-text-muted text-xs">atau {distanceKm.toLocaleString()} tangis rindu</p>
           </div>
-          <div className="group bg-white/80 backdrop-blur-sm p-5 rounded-2xl border-2 border-fuchsia-200 shadow-lg hover:shadow-xl hover:border-fuchsia-300 transition-all">
+          <div className="group surface-card rounded-2xl p-5">
             <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-fuchsia-400 to-purple-500 flex items-center justify-center text-white">
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white" style={{ background: "linear-gradient(to bottom right, var(--secondary), var(--lavender))" }}>
                 <Clock size={20} />
               </div>
               <div>
-                <p className="text-fuchsia-500 text-xs font-semibold uppercase tracking-wider">Menuju Ketemu</p>
-                <p className="text-2xl font-bold text-fuchsia-700">{nextMeet.days}h {nextMeet.hours}j</p>
+                <p className="text-secondary text-xs font-semibold uppercase tracking-wider">Menuju Ketemu</p>
+                <p className="text-2xl font-bold text-heading">{nextMeet.days}h {nextMeet.hours}j</p>
               </div>
             </div>
-            <p className="text-fuchsia-400/70 text-xs">hitung mundur peluk virtual</p>
+            <p className="text-text-muted text-xs">hitung mundur peluk virtual</p>
           </div>
-          <div className="group bg-white/80 backdrop-blur-sm p-5 rounded-2xl border-2 border-rose-200 shadow-lg hover:shadow-xl hover:border-rose-300 transition-all">
+          <div className="group surface-card rounded-2xl p-5">
             <div className="flex items-center gap-3 mb-2">
-              <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-white ${isPartnerOnline ? "bg-gradient-to-br from-green-400 to-emerald-500" : "bg-gradient-to-br from-gray-400 to-slate-500"}`}>
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-white ${isPartnerOnline ? "" : "bg-text-muted"}`} style={isPartnerOnline ? { background: "linear-gradient(to bottom right, #4ade80, #10b981)" } : undefined}>
                 {isPartnerOnline ? <Sparkles size={20} /> : <Plane size={20} />}
               </div>
               <div>
-                <p className="text-rose-500 text-xs font-semibold uppercase tracking-wider">Status Partner</p>
-                <p className="text-2xl font-bold text-rose-700">{isPartnerOnline ? "Online 💕" : "Offline 💤"}</p>
+                <p className="text-primary text-xs font-semibold uppercase tracking-wider">Status Partner</p>
+                <p className="text-2xl font-bold text-heading">{isPartnerOnline ? "Online 💕" : "Offline 💤"}</p>
               </div>
             </div>
-            <p className="text-rose-400/70 text-xs">
+            <p className="text-text-muted text-xs">
               {isPartnerOnline ? "Partner lagi aktif" : partnerPresence ? `Terakhir online ${getLastSeenText(partnerPresence.lastSeen)}` : "Belum ada data"}
             </p>
           </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          <div className="animate-fade-in-up bg-white/80 backdrop-blur-sm p-6 rounded-3xl border-2 border-pink-200 shadow-xl" style={{ animationDelay: "0.15s" }}>
+          <div className="animate-fade-in-up surface-card rounded-3xl p-6" style={{ animationDelay: "0.15s" }}>
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-pink-700 flex items-center gap-2">
+              <h2 className="text-xl font-bold text-heading flex items-center gap-2">
                 <Sparkles size={20} /> Mood Binatang LDR
               </h2>
               <button
             onClick={() => setAnimal(ANIMALS[Math.floor(Math.random() * ANIMALS.length)])}
-            className="px-4 py-2.5 rounded-full bg-pink-500 text-white text-sm font-semibold hover:bg-pink-600 transition-all shadow-md cursor-pointer hover:scale-105 transform min-h-[44px]"
+            className="px-4 py-2.5 rounded-full text-white text-sm font-semibold transition-all shadow-md cursor-pointer hover:scale-105 transform touch-target touch-press"
+            style={{ background: "var(--primary)" }}
           >
                 Acak 🎲
               </button>
             </div>
-            <p className="text-2xl text-center py-8 text-pink-600 font-medium animate-pulse">{animal}</p>
+            <p className="text-2xl text-center py-8 text-body font-medium animate-pulse">{animal}</p>
           </div>
 
-          <div className="animate-fade-in-up bg-gradient-to-br from-pink-400 to-fuchsia-500 p-6 rounded-2xl shadow-xl text-center" style={{ animationDelay: "0.2s" }}>
+          <div className="animate-fade-in-up p-6 rounded-2xl shadow-xl text-center" style={{ animationDelay: "0.2s", background: "linear-gradient(to bottom right, var(--primary), var(--secondary))" }}>
             <h2 className="text-xl font-bold text-white mb-4">💌 Quote Receh LDR</h2>
             <p className="text-4xl mb-4">{LDR_QUOTES[quoteIdx].emoji}</p>
             <p className="text-white text-lg md:text-xl font-medium leading-relaxed mb-6">{LDR_QUOTES[quoteIdx].text}</p>
             <button
             onClick={() => setQuoteIdx((i) => (i + 1) % LDR_QUOTES.length)}
-            className="px-6 py-2.5 rounded-full bg-white/90 text-fuchsia-600 font-semibold hover:bg-white transition-all shadow-md cursor-pointer hover:scale-105 transform min-h-[44px]"
+            className="px-6 py-2.5 rounded-full text-secondary font-semibold transition-all shadow-md cursor-pointer hover:scale-105 transform touch-target touch-press"
+            style={{ background: "var(--surface)" }}
           >
               Quote Lain ➡️
             </button>
@@ -411,41 +413,42 @@ export default function LdrPage() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          <div className="animate-fade-in-up bg-white/80 backdrop-blur-sm p-6 rounded-3xl border-2 border-pink-200 shadow-xl flex flex-col justify-between" style={{ animationDelay: "0.25s" }}>
+          <div className="animate-fade-in-up surface-card rounded-3xl p-6 flex flex-col justify-between" style={{ animationDelay: "0.25s" }}>
             <div>
-              <h2 className="text-xl font-bold text-center text-pink-700 mb-2 flex items-center justify-center gap-2">
-                <Heart className="text-pink-500 fill-pink-500" size={22} /> Love Meter Hari Ini
+              <h2 className="text-xl font-bold text-center text-heading mb-2 flex items-center justify-center gap-2">
+                <Heart className="text-primary fill-primary" size={22} /> Love Meter Hari Ini
               </h2>
-              <p className="text-xs text-center text-pink-400 mb-4">Geser slider atau atur persen cinta kamu hari ini</p>
-              
+              <p className="text-xs text-center text-text-muted mb-4">Geser slider atau atur persen cinta kamu hari ini</p>
+
               <div className="text-center mb-5">
-                <p className="text-5xl font-extrabold bg-gradient-to-r from-pink-500 via-rose-500 to-red-500 bg-clip-text text-transparent mb-2">
+                <p className="text-5xl font-extrabold text-gradient-primary mb-2">
                   {activeLovePercentage}%
                 </p>
-                <div className="w-full h-5 bg-pink-100 rounded-full overflow-hidden mb-3 shadow-inner p-0.5 border border-pink-200">
+                <div className="w-full h-5 bg-surface-warm rounded-full overflow-hidden mb-3 shadow-inner p-0.5 border border-border">
                   <div
-                    className="h-full bg-gradient-to-r from-pink-400 via-rose-500 to-red-500 rounded-full transition-all duration-300 shadow-md"
-                    style={{ width: `${activeLovePercentage}%` }}
+                    className="h-full rounded-full transition-all duration-300 shadow-md"
+                    style={{ width: `${activeLovePercentage}%`, background: "linear-gradient(to right, var(--primary), var(--secondary))" }}
                   />
                 </div>
 
                 <div className="space-y-3">
                   <div className="flex items-center gap-3">
-                    <Sliders size={18} className="text-pink-400" />
+                    <Sliders size={18} className="text-text-muted" />
                     <input
                       type="range"
                       min="0"
                       max="100"
                       value={activeLovePercentage}
                       onChange={(e) => setLoveSliderVal(Number(e.target.value))}
-                      className="w-full accent-pink-500 h-2 bg-pink-100 rounded-lg cursor-pointer"
+                      className="w-full h-2 bg-surface-warm rounded-lg cursor-pointer"
+                      style={{ accentColor: "var(--primary)" }}
                     />
                   </div>
 
                   <div className="flex gap-2 justify-center flex-wrap">
-                    <button onClick={() => setLoveSliderVal(Math.max(0, activeLovePercentage - 10))} className="px-3 py-1.5 rounded-xl bg-pink-100 text-pink-700 font-semibold hover:bg-pink-200 text-xs transition-all cursor-pointer">-10% 😜</button>
-                    <button onClick={() => setLoveSliderVal(Math.min(100, activeLovePercentage + 10))} className="px-3 py-1.5 rounded-xl bg-pink-100 text-pink-700 font-semibold hover:bg-pink-200 text-xs transition-all cursor-pointer">+10% 💕</button>
-                    <button onClick={() => { setLoveSliderVal(100); spawnHearts(10); }} className="px-3 py-1.5 rounded-xl bg-rose-100 text-rose-700 font-semibold hover:bg-rose-200 text-xs transition-all cursor-pointer flex items-center gap-1"><Flame size={14} /> MAX 100%</button>
+                    <button onClick={() => setLoveSliderVal(Math.max(0, activeLovePercentage - 10))} className="px-3 py-1.5 rounded-xl font-semibold text-xs transition-all cursor-pointer touch-target touch-press" style={{ background: "var(--surface-warm)", color: "var(--text-secondary)" }}>-10% 😜</button>
+                    <button onClick={() => setLoveSliderVal(Math.min(100, activeLovePercentage + 10))} className="px-3 py-1.5 rounded-xl font-semibold text-xs transition-all cursor-pointer touch-target touch-press" style={{ background: "var(--surface-warm)", color: "var(--text-secondary)" }}>+10% 💕</button>
+                    <button onClick={() => { setLoveSliderVal(100); spawnHearts(10); }} className="px-3 py-1.5 rounded-xl font-semibold text-xs transition-all cursor-pointer flex items-center gap-1 touch-target touch-press" style={{ background: "var(--surface-warm)", color: "var(--text-secondary)" }}><Flame size={14} /> MAX 100%</button>
                   </div>
                 </div>
               </div>
@@ -454,13 +457,14 @@ export default function LdrPage() {
             <button
               onClick={handleSaveLoveMeter}
               disabled={isSavingLoveMeter}
-              className="w-full py-3 rounded-2xl bg-gradient-to-r from-pink-500 to-rose-500 text-white font-bold text-sm hover:from-pink-600 hover:to-rose-600 shadow-lg hover:shadow-xl transition-all cursor-pointer flex items-center justify-center gap-2 transform hover:scale-[1.02] active:scale-[0.98] min-h-[46px]"
+              className="w-full py-3 rounded-2xl text-white font-bold text-sm shadow-lg hover:shadow-xl transition-all cursor-pointer flex items-center justify-center gap-2 transform hover:scale-[1.02] active:scale-[0.98] touch-target touch-press"
+              style={{ background: "linear-gradient(to right, var(--primary), var(--secondary))" }}
             >
               <Save size={18} /> {isSavingLoveMeter ? "Saving..." : "Simpan Love Meter 💗"}
             </button>
           </div>
 
-          <div className="animate-fade-in-up bg-gradient-to-br from-fuchsia-400 via-pink-500 to-rose-500 p-6 rounded-3xl shadow-xl text-white flex flex-col justify-between" style={{ animationDelay: "0.3s" }}>
+          <div className="animate-fade-in-up p-6 rounded-3xl shadow-xl text-white flex flex-col justify-between" style={{ animationDelay: "0.3s", background: "linear-gradient(to bottom right, var(--secondary), var(--primary))" }}>
             <div>
               <h2 className="text-xl font-bold text-center mb-1 flex items-center justify-center gap-2">
                 <HeartHandshake size={24} /> Peluk Virtual 🤗
@@ -473,7 +477,8 @@ export default function LdrPage() {
                     <button
                       key={preset}
                       onClick={() => { setHugPreset(preset); setHugCustomNote(""); }}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer border ${hugPreset === preset && !hugCustomNote ? "bg-white text-fuchsia-600 border-white shadow-md" : "bg-white/10 text-white border-white/20 hover:bg-white/20"}`}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer border touch-target touch-press ${hugPreset === preset && !hugCustomNote ? "text-secondary border-transparent shadow-md" : "bg-white/10 text-white border-white/20 hover:bg-white/20"}`}
+                      style={hugPreset === preset && !hugCustomNote ? { background: "var(--surface)" } : undefined}
                     >
                       {preset}
                     </button>
@@ -490,7 +495,8 @@ export default function LdrPage() {
 
                 <button
                   onClick={handleSendHug}
-                  className="w-full py-3 rounded-2xl bg-white text-fuchsia-600 font-bold text-sm hover:bg-white/90 shadow-lg hover:shadow-xl transition-all cursor-pointer flex items-center justify-center gap-2 transform hover:scale-[1.02] active:scale-[0.98] min-h-[46px]"
+                  className="w-full py-3 rounded-2xl text-secondary font-bold text-sm shadow-lg hover:shadow-xl transition-all cursor-pointer flex items-center justify-center gap-2 transform hover:scale-[1.02] active:scale-[0.98] touch-target touch-press"
+                  style={{ background: "var(--surface)" }}
                 >
                   <HeartHandshake size={20} /> Kirim Peluk Virtual 🤗
                 </button>
@@ -521,18 +527,19 @@ export default function LdrPage() {
           </div>
         </div>
 
-        <div className="animate-fade-in-up bg-white/80 backdrop-blur-sm p-6 rounded-3xl border-2 border-pink-200 shadow-xl mb-8" style={{ animationDelay: "0.35s" }}>
-          <h2 className="text-xl font-bold text-center text-pink-700 mb-2">✉️ Generator Surat Rindu</h2>
-          <p className="text-xs text-center text-pink-400 mb-4">Buat surat romantis acak dan simpan langsung ke Bedroom</p>
+        <div className="animate-fade-in-up surface-card rounded-3xl p-6 mb-8" style={{ animationDelay: "0.35s" }}>
+          <h2 className="text-xl font-bold text-center text-heading mb-2">✉️ Generator Surat Rindu</h2>
+          <p className="text-xs text-center text-text-muted mb-4">Buat surat romantis acak dan simpan langsung ke Bedroom</p>
           <div className="text-center">
             <LetterGenerator onGenerate={setLetter} spawnHearts={spawnHearts} />
             {letter && (
-              <div className="mt-4 p-4 rounded-2xl bg-pink-50 border-2 border-pink-200 animate-pop space-y-3">
-                <p className="text-pink-800 text-base leading-relaxed font-medium">{letter}</p>
+              <div className="mt-4 p-4 rounded-2xl animate-pop space-y-3" style={{ background: "var(--surface-warm)", border: "1px solid var(--border)" }}>
+                <p className="text-heading text-base leading-relaxed font-medium">{letter}</p>
                 <button
                   onClick={handleSaveLetterToBedroom}
                   disabled={isSavingLetter}
-                  className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-pink-500 to-fuchsia-500 text-white font-bold text-xs hover:from-pink-600 hover:to-fuchsia-600 shadow-md transition-all cursor-pointer inline-flex items-center gap-2"
+                  className="px-5 py-2.5 rounded-xl text-white font-bold text-xs shadow-md transition-all cursor-pointer inline-flex items-center gap-2 touch-target touch-press"
+                  style={{ background: "linear-gradient(to right, var(--primary), var(--secondary))" }}
                 >
                   <Save size={16} /> {isSavingLetter ? "Saving..." : "Simpan ke Bedroom 💌"}
                 </button>
@@ -541,8 +548,8 @@ export default function LdrPage() {
           </div>
         </div>
 
-        <div className="animate-fade-in-up bg-white/80 backdrop-blur-sm p-6 rounded-3xl border-2 border-pink-200 shadow-xl mb-8" style={{ animationDelay: "0.4s" }}>
-          <h2 className="text-xl font-bold text-center text-pink-700 mb-4">💬 Status & Update</h2>
+        <div className="animate-fade-in-up surface-card rounded-3xl p-6 mb-8" style={{ animationDelay: "0.4s" }}>
+          <h2 className="text-xl font-bold text-center text-heading mb-4">💬 Status & Update</h2>
             <div className="flex flex-wrap gap-2 mb-4">
               <div className="flex-1 min-w-0">
                 <input
@@ -550,7 +557,7 @@ export default function LdrPage() {
                   value={statusText}
                   onChange={(e) => { setStatusText(e.target.value); setStatusError(""); }}
                   placeholder="Apa yang kamu lakukan sekarang?"
-                  className="w-full px-4 py-3 rounded-xl border-2 border-pink-200 focus:border-pink-400 focus:outline-none text-pink-900 text-sm min-h-[44px]"
+                  className="w-full px-4 py-3 rounded-xl input-soft text-sm touch-target"
                   onKeyDown={(e) => e.key === "Enter" && handleStatusUpdate()}
                 />
                 {statusError && <p className="text-red-500 text-xs mt-1">{statusError}</p>}
@@ -558,7 +565,7 @@ export default function LdrPage() {
               <select
               value={statusEmoji}
               onChange={(e) => setStatusEmoji(e.target.value)}
-              className="px-3 py-2.5 rounded-xl border-2 border-pink-200 focus:border-pink-400 focus:outline-none text-pink-900 text-sm min-h-[44px]"
+              className="px-3 py-2.5 rounded-xl input-soft text-sm touch-target"
             >
               {STATUS_EMOJIS.map((e) => (
                 <option key={e} value={e}>{e}</option>
@@ -567,38 +574,39 @@ export default function LdrPage() {
             <button
               onClick={handleStatusUpdate}
               disabled={!statusText.trim()}
-              className="px-6 py-2.5 rounded-xl bg-pink-500 text-white font-bold hover:bg-pink-600 disabled:opacity-50 transition-all hover:scale-105 transform min-h-[44px] text-sm"
+              className="px-6 py-2.5 rounded-xl text-white font-bold disabled:opacity-50 transition-all hover:scale-105 transform touch-target touch-press text-sm"
+              style={{ background: "var(--primary)" }}
             >
               Kirim
             </button>
           </div>
           <div className="space-y-2 max-h-60 overflow-y-auto">
             {updates.length === 0 ? (
-              <p className="text-pink-600/70 text-center py-4">Belum ada update... Ayo kasih tau partner lagi ngapain! 💬</p>
+              <p className="text-body text-center py-4">Belum ada update... Ayo kasih tau partner lagi ngapain! 💬</p>
             ) : (
               updates.map((u: StatusUpdate) => (
-                <div key={u.id} className="bg-pink-50 rounded-xl p-3 border-2 border-pink-100 hover:border-pink-200 transition-all">
+                <div key={u.id} className="rounded-xl p-3 transition-all" style={{ background: "var(--surface-warm)", border: "1px solid var(--border)" }}>
                   <div className="flex items-center gap-2 mb-1">
                     <span className="text-lg">{u.emoji}</span>
-                    <span className="text-pink-700 font-semibold text-sm">
+                    <span className="text-heading font-semibold text-sm">
                       {u.userId === user?.id ? "Kamu" : "Partner"}
                     </span>
-                    <span className="text-pink-400/70 text-xs ml-auto">
+                    <span className="text-text-muted text-xs ml-auto">
                       {new Date(u.createdAt).toLocaleString("id-ID", { hour: "2-digit", minute: "2-digit" })}
                     </span>
                   </div>
-                  <p className="text-pink-800 text-sm">{u.message}</p>
+                  <p className="text-heading text-sm">{u.message}</p>
                 </div>
               ))
             )}
           </div>
         </div>
 
-        <div className="animate-fade-in-up bg-white/80 backdrop-blur-sm p-6 rounded-3xl border-2 border-pink-200 shadow-xl mb-8" style={{ animationDelay: "0.42s" }}>
-          <h2 className="text-xl font-bold text-center text-pink-700 mb-4 flex items-center gap-2">
+        <div className="animate-fade-in-up surface-card rounded-3xl p-6 mb-8" style={{ animationDelay: "0.42s" }}>
+          <h2 className="text-xl font-bold text-center text-heading mb-4 flex items-center gap-2">
             <Navigation size={20} /> Lokasi Saat Ini
           </h2>
-          <p className="text-pink-600/70 text-sm text-center mb-4">Beri tau partner kamu lagi di mana 💕</p>
+          <p className="text-body text-sm text-center mb-4">Beri tau partner kamu lagi di mana 💕</p>
           <div className="flex flex-wrap gap-2 mb-4">
             <div className="flex-1 min-w-0">
               <input
@@ -606,7 +614,7 @@ export default function LdrPage() {
                 value={currentPlace}
                 onChange={(e) => { setCurrentPlace(e.target.value); setLocationError(""); }}
                 placeholder="Contoh: Kantor, Rumah, Kafe..."
-                className="w-full px-4 py-2.5 rounded-xl border-2 border-pink-200 focus:border-pink-400 focus:outline-none text-pink-900 text-sm min-h-[44px]"
+                className="w-full px-4 py-2.5 rounded-xl input-soft text-sm touch-target"
                 onKeyDown={(e) => e.key === "Enter" && handleShareLocation()}
               />
               {locationError && <p className="text-red-500 text-xs mt-1">{locationError}</p>}
@@ -616,28 +624,29 @@ export default function LdrPage() {
               value={placeNote}
               onChange={(e) => setPlaceNote(e.target.value)}
               placeholder="Catatan (opsional)"
-              className="flex-1 min-w-[160px] px-4 py-2.5 rounded-xl border-2 border-pink-200 focus:border-pink-400 focus:outline-none text-pink-900 text-sm min-h-[44px]"
+              className="flex-1 min-w-[160px] px-4 py-2.5 rounded-xl input-soft text-sm touch-target"
             />
             <button
               onClick={handleShareLocation}
               disabled={!currentPlace.trim()}
-              className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 text-white font-bold hover:from-pink-600 hover:to-rose-600 disabled:opacity-50 transition-all hover:scale-105 transform min-h-[44px] text-sm"
+              className="px-5 py-2.5 rounded-xl text-white font-bold disabled:opacity-50 transition-all hover:scale-105 transform touch-target touch-press text-sm"
+              style={{ background: "linear-gradient(to right, var(--primary), var(--secondary))" }}
             >
               Share
             </button>
           </div>
           <div className="space-y-2 max-h-48 overflow-y-auto">
             {locations.length === 0 ? (
-              <p className="text-pink-600/70 text-center py-3 text-sm">Belum ada lokasi yang dibagikan 📍</p>
+              <p className="text-body text-center py-3 text-sm">Belum ada lokasi yang dibagikan 📍</p>
             ) : (
               locations.slice(0, 10).map((loc) => (
-                <div key={loc.id} className="bg-pink-50 rounded-xl p-3 border-2 border-pink-100 flex items-center gap-3">
+                <div key={loc.id} className="rounded-xl p-3 flex items-center gap-3" style={{ background: "var(--surface-warm)", border: "1px solid var(--border)" }}>
                   <span className="text-xl">📍</span>
                   <div className="flex-1">
-                    <p className="text-pink-800 text-sm font-medium">{loc.place}</p>
-                    {loc.note && <p className="text-pink-500 text-xs">{loc.note}</p>}
+                    <p className="text-heading text-sm font-medium">{loc.place}</p>
+                    {loc.note && <p className="text-primary text-xs">{loc.note}</p>}
                   </div>
-                  <span className="text-pink-400/70 text-xs">
+                  <span className="text-text-muted text-xs">
                     {new Date(loc.createdAt).toLocaleString("id-ID", { hour: "2-digit", minute: "2-digit", day: "numeric", month: "short" })}
                   </span>
                 </div>
@@ -647,20 +656,20 @@ export default function LdrPage() {
         </div>
 
         <div className="animate-fade-in-up mb-8" style={{ animationDelay: "0.45s" }}>
-          <h2 className="text-2xl font-bold text-center text-fuchsia-700 mb-6">📋 Hal Receh yang Kita Lakuin</h2>
+          <h2 className="text-2xl font-bold text-center text-heading mb-6">📋 Hal Receh yang Kita Lakuin</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
             {LDR_THINGS.map((thing, i) => {
               const Icon = thing.icon;
               return (
-                <div key={i} className="group bg-white/80 backdrop-blur-sm p-5 rounded-2xl border-2 border-pink-200 shadow-lg hover:shadow-xl hover:border-pink-300 hover:scale-[1.02] transition-all cursor-default">
+                <div key={i} className="group surface-card rounded-2xl p-5 hover:scale-[1.02] transition-all cursor-default">
                   <div className="flex items-center gap-3 mb-2">
-                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-pink-100 to-rose-100 flex items-center justify-center text-pink-500 group-hover:from-pink-200 group-hover:to-rose-200 transition-all">
+                    <div className="w-10 h-10 rounded-xl bg-surface-warm flex items-center justify-center text-primary transition-all">
                       <Icon size={20} />
                     </div>
                     <span className="text-2xl">{thing.emoji}</span>
-                    <h3 className="font-bold text-pink-800 text-sm">{thing.title}</h3>
+                    <h3 className="font-bold text-heading text-sm">{thing.title}</h3>
                   </div>
-                  <p className="text-pink-600/80 text-xs leading-relaxed">{thing.desc}</p>
+                  <p className="text-body text-xs leading-relaxed">{thing.desc}</p>
                 </div>
               );
             })}
@@ -668,19 +677,19 @@ export default function LdrPage() {
         </div>
 
         <div className="animate-fade-in-up mb-8" style={{ animationDelay: "0.5s" }}>
-          <h2 className="text-2xl font-bold text-center text-fuchsia-700 mb-6">🤔 Pertanyaan Absurd Khas LDR</h2>
+          <h2 className="text-2xl font-bold text-center text-heading mb-6">🤔 Pertanyaan Absurd Khas LDR</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
             {SILLY_QUESTIONS.map((q, i) => (
-              <div key={i} className="bg-white/70 backdrop-blur-sm p-4 rounded-2xl border-2 border-fuchsia-200 shadow-md hover:shadow-lg hover:border-fuchsia-300 transition-all flex items-start gap-3">
-                <span className="text-fuchsia-400 font-bold text-lg flex-shrink-0">{i + 1}.</span>
-                <p className="text-fuchsia-700 text-sm">{q}</p>
+              <div key={i} className="surface-card rounded-2xl p-4 transition-all flex items-start gap-3">
+                <span className="text-text-muted font-bold text-lg flex-shrink-0">{i + 1}.</span>
+                <p className="text-heading text-sm">{q}</p>
               </div>
             ))}
           </div>
         </div>
 
         <div className="animate-fade-in-up text-center py-8" style={{ animationDelay: "0.55s" }}>
-          <p className="text-pink-600/70 text-lg">
+          <p className="text-body text-lg">
             Jarak cuma angka. Kangen itu bukti kalau hati tetep di tempat yang sama. 💗
           </p>
         </div>
@@ -705,7 +714,7 @@ function LetterGenerator({ onGenerate, spawnHearts }: { onGenerate: (text: strin
   };
 
   return (
-    <button onClick={generateLetter} className="px-5 py-2.5 sm:px-6 sm:py-3 rounded-full bg-gradient-to-r from-pink-500 to-rose-500 text-white font-bold hover:from-pink-600 hover:to-rose-600 transition-all shadow-lg cursor-pointer flex items-center gap-2 mx-auto hover:scale-105 transform min-h-[44px] text-sm sm:text-base">
+    <button onClick={generateLetter} className="px-5 py-2.5 sm:px-6 sm:py-3 rounded-full text-white font-bold transition-all shadow-lg cursor-pointer flex items-center gap-2 mx-auto hover:scale-105 transform touch-target touch-press text-sm sm:text-base" style={{ background: "linear-gradient(to right, var(--primary), var(--secondary))" }}>
       <Send size={18} /> Buat Surat 💌
     </button>
   );

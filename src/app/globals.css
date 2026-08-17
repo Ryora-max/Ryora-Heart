@@ -122,6 +122,12 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   line-height: 1.6;
+  /* Mobile UX: hilangkan blue tap flash + prevent text size adjust */
+  -webkit-tap-highlight-color: transparent;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  /* Prevent overscroll bounce (conflict dengan PWA gesture) */
+  overscroll-behavior-y: none;
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -176,6 +182,25 @@ h1, h2, h3, h4, h5, h6 {
 @keyframes slide-up-soft {
   from { opacity: 0; transform: translateY(20px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes loading-bar-fill {
+  from { width: 0%; }
+  to { width: 100%; }
+}
+
+@keyframes loader-fade-out {
+  from { opacity: 1; }
+  to { opacity: 0; visibility: hidden; }
+}
+
+.loading-bar {
+  animation: loading-bar-fill 2s ease-out forwards;
+}
+
+/* CSS-only fallback: hide loader after 3s even if JS breaks */
+.loader-splash {
+  animation: loader-fade-out 0.5s ease-out 3s forwards;
 }
 
 .animate-fade-in-soft {
@@ -247,6 +272,113 @@ input:focus, textarea:focus, select:focus, button:focus-visible {
   padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
   padding-left: max(0.75rem, env(safe-area-inset-left));
   padding-right: max(0.75rem, env(safe-area-inset-right));
+}
+
+.safe-area-top {
+  padding-top: max(0.75rem, env(safe-area-inset-top));
+}
+
+.safe-area-bottom {
+  padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+}
+
+/* === Theme-aware utility classes ===
+   Pakai ini bukan bg-white/text-gray-800 supaya dark/aurora mode jalan.
+   Tailwind @theme inline sudah map --color-* jadi bg-surface, text-text-primary, dll.
+   Tapi class di bawah ini untuk pattern berulang supaya konsisten. */
+
+/* Page background — pakai di root page wrapper */
+.page-bg {
+  background: var(--background);
+  color: var(--text-primary);
+  min-height: 100vh;
+}
+
+/* Card surface (glass effect) */
+.surface-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 1.25rem;
+  box-shadow: 0 2px 12px var(--shadow);
+  transition: all 0.25s ease;
+}
+
+.surface-card:hover {
+  box-shadow: 0 8px 24px var(--shadow-hover);
+}
+
+/* Glass variant — semi-transparent surface */
+.surface-glass {
+  background: color-mix(in srgb, var(--surface) 80%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border);
+}
+
+/* Text helpers */
+.text-heading {
+  color: var(--text-primary);
+}
+
+.text-body {
+  color: var(--text-secondary);
+}
+
+.text-muted {
+  color: var(--text-muted);
+}
+
+/* Input field theme-aware */
+.input-soft {
+  background: var(--surface-warm);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  border-radius: 0.75rem;
+  transition: border-color 0.2s ease;
+}
+
+.input-soft::placeholder {
+  color: var(--text-muted);
+}
+
+.input-soft:focus {
+  border-color: var(--primary);
+  outline: none;
+}
+
+/* Gradient text — pakai primary + secondary theme colors */
+.text-gradient-primary {
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+/* Mobile touch target — minimum 44x44px (Apple HIG) */
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Hide scrollbar tapi tetap scrollable */
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Active state untuk touch — feedback visual saat ditekan */
+.touch-press {
+  transition: transform 0.1s ease, opacity 0.1s ease;
+}
+
+.touch-press:active {
+  transform: scale(0.96);
+  opacity: 0.8;
 }
 
 @media (prefers-reduced-motion: reduce) {

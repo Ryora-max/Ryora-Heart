@@ -37,7 +37,7 @@ export function AuroraBackground() {
   }, []);
 
   return (
-    <div className="aurora-bg">
+    <div className="aurora-bg pointer-events-none fixed inset-0 -z-10">
       <div className="aurora-orb-1 absolute top-[10%] left-[15%] w-[600px] h-[400px] rounded-full bg-primary/10 blur-[120px]" />
       <div className="aurora-orb-2 absolute top-[60%] right-[10%] w-[500px] h-[500px] rounded-full bg-secondary/10 blur-[120px]" />
       <div className="aurora-orb-3 absolute top-[30%] left-[50%] w-[400px] h-[300px] rounded-full bg-accent/8 blur-[100px]" />

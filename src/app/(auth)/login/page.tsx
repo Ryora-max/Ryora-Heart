@@ -5,8 +5,14 @@ import { useRouter } from "next/navigation";
 import { APP_CONFIG } from "@/config";
 import { MagneticButton } from "@/components/animations/MagneticButton";
 import { useAuthStore } from "@/stores";
+import { getSupabaseBrowser } from "@/lib/supabase/client";
 
 type Role = "owner" | "partner";
+
+const ROLE_EMAILS: Record<Role, string> = {
+  owner: "ryo@ryora.app",
+  partner: "ara@ryora.app",
+};
 
 export default function LoginPage() {
   const router = useRouter();
@@ -23,24 +29,35 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
+      // 1. Sign in dengan Supabase Auth
+      const supabase = getSupabaseBrowser();
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+        email: ROLE_EMAILS[selectedRole],
+        password,
+      });
+
+      if (authError || !authData.user) {
+        setError("Password salah 😢");
+        setShake(true);
+        setTimeout(() => setShake(false), 500);
+        return;
+      }
+
+      // 2. Ambil user profile dari /api/auth (yang baca Supabase session dari cookie)
       const response = await fetch("/api/auth", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "login",
-          username: selectedRole === "owner" ? "Ryo" : "Ara",
-          password,
-        }),
+        body: JSON.stringify({ action: "verify" }),
       });
 
       const data = await response.json();
 
       if (response.ok && data.user) {
         setUser(data.user);
-        setToken(data.token);
+        setToken(authData.session?.access_token || "");
         router.push("/home");
       } else {
-        setError(data.error || "Password salah 😢");
+        setError("Gagal memuat profile. Coba lagi.");
         setShake(true);
         setTimeout(() => setShake(false), 500);
       }
@@ -52,15 +69,15 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-pink-200 via-purple-100 to-indigo-100">
+    <div className="page-bg flex items-center justify-center p-4 safe-area-inset">
       <div className="login-card animate-scale-soft w-full max-w-md">
-        <div className="bg-white/90 backdrop-blur-xl rounded-3xl p-8 shadow-soft border border-border">
+        <div className="surface-card p-6 sm:p-8">
           <div className="text-center mb-8">
             <div className="text-6xl mb-4 animate-breathe">💝</div>
-            <h1 className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-pink-500 to-purple-600 mb-2">
+            <h1 className="text-gradient-primary text-4xl font-bold mb-2">
               {APP_CONFIG.name}
             </h1>
-            <p className="text-text-secondary text-sm">{APP_CONFIG.subtitle}</p>
+            <p className="text-body text-sm">{APP_CONFIG.subtitle}</p>
           </div>
 
           {!selectedRole ? (
@@ -69,16 +86,20 @@ export default function LoginPage() {
                 <MagneticButton key={role}>
                 <button
                   onClick={() => setSelectedRole(role)}
-                  className="login-option animate-slide-up-soft w-full p-4 rounded-2xl bg-pink-50 hover:bg-pink-100 border-2 border-pink-100 hover:border-pink-200 transition-all cursor-pointer group"
-                  style={{ animationDelay: `${0.3 + idx * 0.1}s` }}
+                  className="login-option animate-slide-up-soft touch-press w-full p-4 rounded-2xl border-2 transition-all cursor-pointer group touch-target"
+                  style={{
+                    animationDelay: `${0.3 + idx * 0.1}s`,
+                    background: "var(--surface-warm)",
+                    borderColor: "var(--border)",
+                  }}
                   >
                     <div className="flex items-center gap-4">
                       <div className="text-4xl group-hover:scale-110 transition-transform">
                         {role === "owner" ? "🤴" : "👸"}
                       </div>
                       <div className="text-left">
-                        <h3 className="font-bold text-text-primary">{APP_CONFIG.users[role].name}</h3>
-                        <p className="text-xs text-text-secondary">@{APP_CONFIG.users[role].username}</p>
+                        <h3 className="font-bold text-heading">{APP_CONFIG.users[role].name}</h3>
+                        <p className="text-xs text-body">@{APP_CONFIG.users[role].username}</p>
                       </div>
                     </div>
                   </button>
@@ -87,15 +108,15 @@ export default function LoginPage() {
             </div>
           ) : (
             <div className={`space-y-4 ${shake ? "animate-shake" : ""}`}>
-              <button onClick={() => { setSelectedRole(null); setPassword(""); setError(""); }} className="text-text-secondary hover:text-text-primary text-sm flex items-center gap-1 transition-colors">
+              <button onClick={() => { setSelectedRole(null); setPassword(""); setError(""); }} className="touch-target text-body hover:text-primary text-sm flex items-center gap-1 transition-colors">
                 ← Back
               </button>
 
-              <div className="flex items-center gap-3 p-3 rounded-xl bg-pink-50 border border-pink-100">
+              <div className="flex items-center gap-3 p-3 rounded-xl border" style={{ background: "var(--surface-warm)", borderColor: "var(--border)" }}>
                 <div className="text-3xl">{selectedRole === "owner" ? "🤴" : "👸"}</div>
                 <div>
-                  <h3 className="font-bold text-text-primary">{APP_CONFIG.users[selectedRole].name}</h3>
-                  <p className="text-xs text-text-secondary">@{APP_CONFIG.users[selectedRole].username}</p>
+                  <h3 className="font-bold text-heading">{APP_CONFIG.users[selectedRole].name}</h3>
+                  <p className="text-xs text-body">@{APP_CONFIG.users[selectedRole].username}</p>
                 </div>
               </div>
 
@@ -104,7 +125,7 @@ export default function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleLogin()}
-                className="w-full px-4 py-3 rounded-xl border-2 border-pink-200 focus:border-pink-400 focus:outline-none text-center text-lg tracking-wider text-text-primary placeholder-pink-300 bg-white"
+                className="input-soft w-full px-4 py-3 text-center text-lg tracking-wider"
                 placeholder="Enter password 💝"
                 autoFocus
               />
@@ -115,7 +136,8 @@ export default function LoginPage() {
                 <button
                   onClick={handleLogin}
                   disabled={!password || loading}
-                  className="w-full py-3 rounded-xl bg-gradient-to-r from-pink-400 to-purple-400 text-white font-bold hover:from-pink-500 hover:to-purple-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-soft hover:shadow-soft-hover"
+                  className="touch-target touch-press w-full py-3 rounded-xl text-white font-bold disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-soft hover:shadow-soft-hover"
+                  style={{ background: "linear-gradient(to right, var(--primary), var(--secondary))" }}
                 >
                   {loading ? "Loading..." : "Login 💕"}
                 </button>

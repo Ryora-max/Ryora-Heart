@@ -135,7 +135,7 @@ export default function BedroomPage() {
   ];
 
   return (
-    <div className={`relative min-h-screen p-3 sm:p-4 md:p-8 transition-all duration-500 ${nightMode ? "bg-gradient-to-br from-slate-900 via-indigo-950 to-purple-950" : "bg-gradient-to-br from-pink-100 via-purple-100 to-indigo-100"}`}>
+    <div className={`relative min-h-screen p-3 sm:p-4 md:p-8 transition-all duration-500 ${nightMode ? "bg-gradient-to-br from-slate-900 via-indigo-950 to-purple-950" : "page-bg"}`}>
       {nightMode && (
         <div className="fixed inset-0 pointer-events-none overflow-hidden">
           {stars.map((star, i) => (
@@ -157,15 +157,16 @@ export default function BedroomPage() {
 
       <div className="max-w-6xl mx-auto relative z-10">
         <div className="mb-8 text-center">
-          <h1 className={`text-3xl sm:text-4xl md:text-5xl font-bold bg-clip-text text-transparent mb-2 ${nightMode ? "bg-gradient-to-r from-indigo-300 to-purple-300" : "bg-gradient-to-r from-pink-500 to-purple-600"}`}>
+          <h1 className={`text-3xl sm:text-4xl md:text-5xl font-bold bg-clip-text text-transparent mb-2 ${nightMode ? "bg-gradient-to-r from-indigo-300 to-purple-300" : "text-gradient-primary"}`}>
             🛏️ Bedroom
           </h1>
-          <p className={`text-sm sm:text-base ${nightMode ? "text-indigo-300/70" : "text-purple-600/70"}`}>
+          <p className={`text-sm sm:text-base ${nightMode ? "text-indigo-300/70" : "text-body"}`}>
             {nightMode ? "Night mode: quiet talks and sweet dreams 🌙" : "Your private intimate space"}
           </p>
           <button
             onClick={() => setNightMode(!nightMode)}
-            className={`mt-3 px-4 py-2 rounded-full text-sm font-semibold transition-all cursor-pointer flex items-center gap-2 mx-auto min-h-[44px] ${nightMode ? "bg-indigo-800 text-indigo-200 hover:bg-indigo-700" : "bg-purple-200 text-purple-700 hover:bg-purple-300"}`}
+            className={`mt-3 px-4 py-2 rounded-full text-sm font-semibold transition-all cursor-pointer flex items-center gap-2 mx-auto touch-target touch-press ${nightMode ? "bg-indigo-800 text-indigo-200 hover:bg-indigo-700" : "text-body"}`}
+            style={nightMode ? undefined : { background: "var(--surface-warm)", border: "1px solid var(--border)" }}
           >
             {nightMode ? <Sun size={16} /> : <Moon size={16} />}
             {nightMode ? "Day Mode" : "Night Mode"}
@@ -182,10 +183,10 @@ export default function BedroomPage() {
                 setActiveTab(tab.key);
                 setShowForm(false);
               }}
-              className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2.5 sm:py-3 rounded-full text-xs sm:text-sm font-medium transition-all whitespace-nowrap cursor-pointer min-h-[44px] active:scale-95 ${
+              className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2.5 sm:py-3 rounded-full text-xs sm:text-sm font-medium transition-all whitespace-nowrap cursor-pointer touch-target touch-press ${
                 activeTab === tab.key
                   ? `bg-gradient-to-r ${tab.gradient} text-white shadow-lg scale-105`
-                  : nightMode ? "bg-indigo-900/50 text-indigo-200 hover:bg-indigo-800/50" : "bg-white/50 text-purple-700 hover:bg-white/80"
+                  : nightMode ? "bg-indigo-900/50 text-indigo-200 hover:bg-indigo-800/50" : "surface-glass text-body"
               }`}
             >
               <span>{tab.icon}</span>
@@ -194,23 +195,24 @@ export default function BedroomPage() {
           ))}
         </div>
 
-        <div className={`${nightMode ? "bg-indigo-900/30 border-indigo-700/50" : "bg-white/80 backdrop-blur-sm border-pink-200"} rounded-2xl p-4 sm:p-6 border-2 shadow-xl mb-6`}>
+        <div className={`${nightMode ? "bg-indigo-900/30 border-indigo-700/50" : "surface-card"} rounded-2xl p-4 sm:p-6 border-2 shadow-xl mb-6`}>
           <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-            <h3 className={`text-lg sm:text-xl font-bold ${nightMode ? "text-indigo-200" : "text-purple-900"}`}>{tabs.find((t) => t.key === activeTab)?.label}</h3>
+            <h3 className={`text-lg sm:text-xl font-bold ${nightMode ? "text-indigo-200" : "text-heading"}`}>{tabs.find((t) => t.key === activeTab)?.label}</h3>
             <div className="flex items-center gap-2">
               <div className="relative">
-                <Search size={16} className={`absolute left-3 top-1/2 -translate-y-1/2 ${nightMode ? "text-indigo-400" : "text-purple-400"}`} />
+                <Search size={16} className={`absolute left-3 top-1/2 -translate-y-1/2 ${nightMode ? "text-indigo-400" : "text-muted"}`} />
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search..."
-                  className={`pl-9 pr-4 py-2 rounded-xl text-sm focus:outline-none w-32 md:w-40 min-h-[44px] ${nightMode ? "bg-indigo-900/50 border-2 border-indigo-700 text-indigo-100 placeholder-indigo-400 focus:border-indigo-500" : "bg-pink-50 border-2 border-pink-200 text-purple-900 placeholder-purple-300 focus:border-purple-400"}`}
+                  className={`pl-9 pr-4 py-2 rounded-xl text-sm focus:outline-none w-32 md:w-40 touch-target ${nightMode ? "bg-indigo-900/50 border-2 border-indigo-700 text-indigo-100 placeholder-indigo-400 focus:border-indigo-500" : "input-soft"}`}
                 />
               </div>
               <button
                 onClick={() => setShowForm(!showForm)}
-                className={`px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1 cursor-pointer min-h-[44px] ${nightMode ? "bg-indigo-700 text-indigo-100 hover:bg-indigo-600" : "bg-gradient-to-r from-pink-500 to-purple-600 text-white hover:from-pink-600 hover:to-purple-700"}`}
+                className={`px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1 cursor-pointer touch-target touch-press ${nightMode ? "bg-indigo-700 text-indigo-100 hover:bg-indigo-600" : "text-white"}`}
+                style={nightMode ? undefined : { background: "linear-gradient(to right, var(--primary), var(--secondary))" }}
               >
                 {showForm ? "Cancel" : "Tulis Surat Baru 💌"}
               </button>
@@ -218,12 +220,12 @@ export default function BedroomPage() {
           </div>
 
           {showForm && (
-            <div className={`${nightMode ? "bg-indigo-900/50 border-indigo-700" : "bg-white/80 border-pink-200"} backdrop-blur-sm rounded-2xl p-4 sm:p-6 mb-6 border-2 animate-fade-in-up`}>
+            <div className={`${nightMode ? "bg-indigo-900/50 border-indigo-700" : "surface-glass border-border"} backdrop-blur-sm rounded-2xl p-4 sm:p-6 mb-6 border-2 animate-fade-in-up`}>
               <div className="flex items-center justify-between mb-4">
-                <h3 className={`text-lg font-bold ${nightMode ? "text-indigo-200" : "text-purple-900"}`}>
+                <h3 className={`text-lg font-bold ${nightMode ? "text-indigo-200" : "text-heading"}`}>
                   New {tabs.find((t) => t.key === activeTab)?.label.slice(0, -1)}
                 </h3>
-                <button onClick={() => setShowForm(false)} className={`${nightMode ? "text-indigo-400 hover:text-indigo-200" : "text-purple-400 hover:text-purple-600"} cursor-pointer p-2 min-h-[44px] min-w-[44px] flex items-center justify-center`}>
+                <button onClick={() => setShowForm(false)} className={`${nightMode ? "text-indigo-400 hover:text-indigo-200" : "text-muted hover:text-primary"} cursor-pointer p-2 touch-target flex items-center justify-center`}>
                   <X size={20} />
                 </button>
               </div>
@@ -233,16 +235,16 @@ export default function BedroomPage() {
                   value={newTitle}
                   onChange={(e) => setNewTitle(e.target.value)}
                   placeholder="Title 💝"
-                  className={`w-full px-4 py-3 rounded-xl border-2 text-sm min-h-[44px] ${nightMode ? "bg-indigo-900/50 border-indigo-700 text-indigo-100 placeholder-indigo-400 focus:border-indigo-500 focus:outline-none" : "bg-white border-pink-200 text-purple-900 placeholder-purple-300 focus:border-purple-400 focus:outline-none"}`}
+                  className={`w-full px-4 py-3 rounded-xl text-sm touch-target ${nightMode ? "bg-indigo-900/50 border-2 border-indigo-700 text-indigo-100 placeholder-indigo-400 focus:border-indigo-500 focus:outline-none" : "input-soft"}`}
                 />
 
                 {activeTab === "voice" && (
-                  <div className={`flex items-center gap-2 p-3 rounded-xl ${nightMode ? "bg-indigo-900/50 border border-indigo-700" : "bg-blue-50 border border-blue-200"}`}>
-                    <span className={`text-xs font-bold ${nightMode ? "text-indigo-300" : "text-blue-700"}`}>Cute Pitch Mode 🐹:</span>
+                  <div className={`flex items-center gap-2 p-3 rounded-xl ${nightMode ? "bg-indigo-900/50 border border-indigo-700" : ""}`} style={nightMode ? undefined : { background: "var(--surface-warm)", border: "1px solid var(--border)" }}>
+                    <span className={`text-xs font-bold ${nightMode ? "text-indigo-300" : "text-heading"}`}>Cute Pitch Mode 🐹:</span>
                     <select
                       value={voiceType}
                       onChange={(e) => setVoiceType(e.target.value as "normal" | "cute" | "chipmunk" | "deep")}
-                      className={`flex-1 px-3 py-2 rounded-lg text-xs focus:outline-none min-h-[44px] ${nightMode ? "bg-indigo-900 border-indigo-700 text-indigo-100 focus:border-indigo-500" : "bg-white border-blue-200 text-blue-900 focus:border-blue-400"}`}
+                      className={`flex-1 px-3 py-2 rounded-lg text-xs focus:outline-none touch-target ${nightMode ? "bg-indigo-900 border-indigo-700 text-indigo-100 focus:border-indigo-500" : "input-soft"}`}
                     >
                       <option value="cute">Cute 🌸</option>
                       <option value="chipmunk">Chipmunk 🐹</option>
@@ -257,7 +259,7 @@ export default function BedroomPage() {
                   onChange={(e) => setNewContent(e.target.value)}
                   placeholder={activeTab === "voice" ? "Type the message you want to speak... 🎙️" : "Write your heart out..."}
                   rows={4}
-                  className={`w-full px-4 py-3 rounded-xl border-2 resize-none text-sm ${nightMode ? "bg-indigo-900/50 border-indigo-700 text-indigo-100 placeholder-indigo-400 focus:border-indigo-500 focus:outline-none" : "bg-white border-pink-200 text-purple-900 placeholder-purple-300 focus:border-purple-400 focus:outline-none"}`}
+                  className={`w-full px-4 py-3 rounded-xl resize-none text-sm ${nightMode ? "bg-indigo-900/50 border-2 border-indigo-700 text-indigo-100 placeholder-indigo-400 focus:border-indigo-500 focus:outline-none" : "input-soft"}`}
                 />
 
                 <div className="flex gap-2">
@@ -265,7 +267,8 @@ export default function BedroomPage() {
                     <button
                       onClick={handleSubmit}
                       disabled={!newTitle.trim() || !newContent.trim()}
-                      className={`flex-1 py-3 rounded-xl font-bold transition-all cursor-pointer flex items-center justify-center gap-2 min-h-[44px] ${nightMode ? "bg-indigo-600 text-white hover:bg-indigo-500 disabled:opacity-50" : "bg-gradient-to-r from-pink-500 to-purple-600 text-white hover:from-pink-600 hover:to-purple-700 disabled:opacity-50"}`}
+                      className={`flex-1 py-3 rounded-xl font-bold transition-all cursor-pointer flex items-center justify-center gap-2 touch-target touch-press ${nightMode ? "bg-indigo-600 text-white hover:bg-indigo-500 disabled:opacity-50" : "text-white disabled:opacity-50"}`}
+                      style={nightMode ? undefined : { background: "linear-gradient(to right, var(--primary), var(--secondary))" }}
                     >
                       <Send size={18} />
                       Send to Partner
@@ -274,7 +277,7 @@ export default function BedroomPage() {
                   {nightMode && (
                     <button
                       onClick={handleGoodNight}
-                      className="px-4 py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold hover:from-indigo-500 hover:to-purple-500 transition-all cursor-pointer flex items-center gap-2 min-h-[44px]"
+                      className="px-4 py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold hover:from-indigo-500 hover:to-purple-500 transition-all cursor-pointer flex items-center gap-2 touch-target touch-press"
                     >
                       🌙 Good Night
                     </button>
@@ -306,15 +309,15 @@ export default function BedroomPage() {
                 return (
                   <div
                     key={letter.id}
-                    className={`${nightMode ? "bg-indigo-900/50 border-indigo-700" : "bg-gradient-to-br from-pink-50/70 to-purple-50/70 border-pink-100"} p-4 sm:p-5 rounded-2xl border-2 hover:shadow-lg transition-all flex flex-col justify-between`}
-                    style={{ animationDelay: `${idx * 0.08}s` }}
+                    className={`${nightMode ? "bg-indigo-900/50 border-indigo-700" : ""} p-4 sm:p-5 rounded-2xl border-2 hover:shadow-lg transition-all flex flex-col justify-between`}
+                    style={nightMode ? { animationDelay: `${idx * 0.08}s` } : { animationDelay: `${idx * 0.08}s`, background: "var(--surface-warm)", border: "1px solid var(--border)" }}
                   >
                     <div>
                       <div className="flex items-start justify-between mb-2">
-                        <h3 className={`font-bold text-base ${nightMode ? "text-indigo-200" : "text-purple-900"}`}>
+                        <h3 className={`font-bold text-base ${nightMode ? "text-indigo-200" : "text-heading"}`}>
                           {letter.title}
                         </h3>
-                        <span className={`text-xs px-2 py-0.5 rounded-md ${nightMode ? "text-indigo-400 bg-indigo-900/50" : "text-purple-400 bg-white/50"}`}>
+                        <span className={`text-xs px-2 py-0.5 rounded-md ${nightMode ? "text-indigo-400 bg-indigo-900/50" : "text-muted surface-glass"}`}>
                           {new Date(letter.createdAt).toLocaleDateString("id-ID", { day: "numeric", month: "short" })}
                         </span>
                       </div>
@@ -351,7 +354,8 @@ export default function BedroomPage() {
                           <div className="mt-4 flex items-center justify-between">
                             <button
                               onClick={() => handlePlayVoice(letter.id, text, vType)}
-                              className="px-4 py-2 rounded-lg bg-pink-500 hover:bg-pink-600 text-xs font-bold text-white transition-all flex items-center gap-1 cursor-pointer min-h-[44px]"
+                              className="px-4 py-2 rounded-lg text-xs font-bold text-white transition-all flex items-center gap-1 cursor-pointer touch-target touch-press"
+                              style={{ background: "var(--primary)" }}
                             >
                               {playingId === letter.id ? (
                                 <>
@@ -374,17 +378,17 @@ export default function BedroomPage() {
                           </div>
                         </div>
                       ) : (
-                        <p className={`text-sm leading-relaxed my-3 font-normal whitespace-pre-wrap ${nightMode ? "text-indigo-200" : "text-purple-700/80"}`}>
+                        <p className={`text-sm leading-relaxed my-3 font-normal whitespace-pre-wrap ${nightMode ? "text-indigo-200" : "text-body"}`}>
                           {text}
                         </p>
                       )}
                     </div>
 
-                    <div className="mt-3 flex items-center justify-between border-t border-purple-100/50 pt-3">
-                      <span className={`inline-block text-2xs px-2.5 py-0.5 rounded-full bg-gradient-to-r from-pink-400/80 to-purple-400/80 text-white font-medium capitalize`}>
+                    <div className="mt-3 flex items-center justify-between border-t border-border pt-3">
+                      <span className={`inline-block text-2xs px-2.5 py-0.5 rounded-full text-white font-medium capitalize`} style={{ background: "linear-gradient(to right, var(--primary), var(--secondary))" }}>
                         {isVoice ? "voice note" : letter.type.replace("_", " ")}
                       </span>
-                      <span className={`text-3xs ${nightMode ? "text-indigo-400" : "text-purple-400"}`}>
+                      <span className={`text-3xs ${nightMode ? "text-indigo-400" : "text-muted"}`}>
                         From: {letter.createdBy === user?.id ? (user?.name?.split(" ")[0] || "You") : "Partner"}
                       </span>
                     </div>

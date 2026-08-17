@@ -23,7 +23,15 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   }
 
   componentDidCatch(error: Error, errorInfo: { componentStack: string }) {
-    console.error("ErrorBoundary caught an error:", error, errorInfo);
+    console.error("ErrorBoundary caught:", {
+      name: error?.name,
+      message: error?.message,
+      stack: error?.stack,
+      type: typeof error,
+      keys: error ? Object.keys(error) : [],
+      toString: String(error),
+      componentStack: errorInfo.componentStack,
+    });
   }
 
   render() {

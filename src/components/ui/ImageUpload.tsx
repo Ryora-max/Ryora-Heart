@@ -74,7 +74,7 @@ export function ImageUpload({ onUpload }: ImageUploadProps) {
       <input
         ref={fileInputRef}
         type="file"
-        accept="image/*"
+        accept="image/jpeg,image/jpg,image/png,image/webp,image/gif,image/avif,image/heic,image/heif,image/bmp,image/svg+xml,image/*"
         onChange={handleFileChange}
         className="hidden"
       />
@@ -137,6 +137,9 @@ export function ImageUpload({ onUpload }: ImageUploadProps) {
           </>
         )}
       </button>
+      <p className="text-xs text-center text-gray-400 mt-1">
+        JPG, PNG, WebP, GIF, HEIC, AVIF — max 15 MB
+      </p>
     </div>
   );
 }

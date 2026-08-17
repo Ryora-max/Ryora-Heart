@@ -1,10 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import type { MoodEntry, Activity, GalleryItem, CalendarEvent, Letter, Hug, StatusUpdate } from "@/types";
 import { useRetryQueue } from "./useRetryQueue";
 import { showToast } from "./useToast";
+import { usePolling } from "./usePolling";
+import { useRealtime } from "./useRealtime";
 
 async function callDb(action: string, token: string, params?: any) {
   const result = await fetch("/api/db", {
@@ -19,6 +21,33 @@ async function callDb(action: string, token: string, params?: any) {
     throw new Error(error.error || "Database error");
   }
   return result.json();
+}
+
+/**
+ * Hook helper: subscribe ke realtime untuk satu tabel,
+ * trigger refetch callback saat ada perubahan.
+ * Refetch di-debounce supaya tidak multiple fetch saat burst events.
+ */
+function useRealtimeRefetch(table: string, refetch: () => void, enabled: boolean) {
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const refetchRef = useRef(refetch);
+  useEffect(() => {
+    refetchRef.current = refetch;
+  }, [refetch]);
+
+  useRealtime(
+    table,
+    undefined,
+    () => {
+      // Debounce: kalau multiple events datang dalam 300ms, hanya refetch sekali
+      if (timerRef.current) clearTimeout(timerRef.current);
+      timerRef.current = setTimeout(() => {
+        refetchRef.current();
+        timerRef.current = null;
+      }, 300);
+    },
+    enabled
+  );
 }
 
 export function useMoods(token: string) {
@@ -44,13 +73,8 @@ export function useMoods(token: string) {
     }
   }, [token, enqueue]);
 
-  useEffect(() => {
-    if (!token) return;
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    fetchMoods();
-    const interval = setInterval(fetchMoods, 3000);
-    return () => clearInterval(interval);
-  }, [fetchMoods, token]);
+  usePolling(fetchMoods, 30000, true);
+  useRealtimeRefetch("moods", fetchMoods, true);
 
   const addMood = useCallback(async (mood: { mood: MoodEntry["mood"]; note?: string }) => {
     try {
@@ -91,13 +115,8 @@ export function useActivities(token: string) {
     }
   }, [token, enqueue]);
 
-  useEffect(() => {
-    if (!token) return;
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    fetchActivities();
-    const interval = setInterval(fetchActivities, 3000);
-    return () => clearInterval(interval);
-  }, [fetchActivities, token]);
+  usePolling(fetchActivities, 30000, true);
+  useRealtimeRefetch("activities", fetchActivities, true);
 
   const createActivity = useCallback(async (title: string, type: Activity["type"], date: Date, description?: string) => {
     try {
@@ -168,13 +187,8 @@ export function useGallery(token: string) {
     }
   }, [token, enqueue]);
 
-  useEffect(() => {
-    if (!token) return;
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    fetchGallery();
-    const interval = setInterval(fetchGallery, 3000);
-    return () => clearInterval(interval);
-  }, [fetchGallery, token]);
+  usePolling(fetchGallery, 30000, true);
+  useRealtimeRefetch("gallery", fetchGallery, true);
 
   const addPhoto = useCallback(async (url: string, caption?: string) => {
     try {
@@ -224,13 +238,8 @@ export function useCalendarEvents(token: string) {
     }
   }, [token, enqueue]);
 
-  useEffect(() => {
-    if (!token) return;
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    fetchEvents();
-    const interval = setInterval(fetchEvents, 3000);
-    return () => clearInterval(interval);
-  }, [fetchEvents, token]);
+  usePolling(fetchEvents, 30000, true);
+  useRealtimeRefetch("calendar_events", fetchEvents, true);
 
   const addCalendarEvent = useCallback(async (title: string, date: Date, type: CalendarEvent["type"], description?: string) => {
     try {
@@ -295,13 +304,8 @@ export function useLetters(token: string) {
     }
   }, [token, enqueue]);
 
-  useEffect(() => {
-    if (!token) return;
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    fetchLetters();
-    const interval = setInterval(fetchLetters, 3000);
-    return () => clearInterval(interval);
-  }, [fetchLetters, token]);
+  usePolling(fetchLetters, 30000, true);
+  useRealtimeRefetch("letters", fetchLetters, true);
 
   const createLetter = useCallback(async (letter: { title: string; content: string; type: Letter["type"]; openDate?: Date }) => {
     try {
@@ -335,13 +339,8 @@ export function usePresence(token: string) {
     }
   }, [token, enqueue]);
 
-  useEffect(() => {
-    if (!token) return;
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    fetchPresence();
-    const interval = setInterval(fetchPresence, 3000);
-    return () => clearInterval(interval);
-  }, [fetchPresence, token]);
+  usePolling(fetchPresence, 15000, true);
+  useRealtimeRefetch("ldr_presence", fetchPresence, true);
 
   const updatePresence = useCallback(async (status: string) => {
     try {
@@ -369,13 +368,8 @@ export function useStatusUpdates(token: string) {
     }
   }, [token, enqueue]);
 
-  useEffect(() => {
-    if (!token) return;
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    fetchUpdates();
-    const interval = setInterval(fetchUpdates, 3000);
-    return () => clearInterval(interval);
-  }, [fetchUpdates, token]);
+  usePolling(fetchUpdates, 30000, true);
+  useRealtimeRefetch("ldr_status_updates", fetchUpdates, true);
 
   const addUpdate = useCallback(async (message: string, emoji?: string) => {
     try {
@@ -412,13 +406,8 @@ export function useHugs(token: string) {
     }
   }, [token, enqueue]);
 
-  useEffect(() => {
-    if (!token) return;
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    fetchHugs();
-    const interval = setInterval(fetchHugs, 3000);
-    return () => clearInterval(interval);
-  }, [fetchHugs, token]);
+  usePolling(fetchHugs, 30000, true);
+  useRealtimeRefetch("ldr_hugs", fetchHugs, true);
 
   const sendHug = useCallback(async (receiverId: string, message?: string) => {
     try {
@@ -452,13 +441,8 @@ export function useLoveMeter(token: string) {
     }
   }, [token, enqueue]);
 
-  useEffect(() => {
-    if (!token) return;
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    fetchHistory();
-    const interval = setInterval(fetchHistory, 3000);
-    return () => clearInterval(interval);
-  }, [fetchHistory, token]);
+  usePolling(fetchHistory, 30000, true);
+  useRealtimeRefetch("ldr_love_meter", fetchHistory, true);
 
   const update = useCallback(async (percentage: number) => {
     try {
@@ -490,13 +474,8 @@ export function useNotifications(token: string) {
     }
   }, [token, enqueue]);
 
-  useEffect(() => {
-    if (!token) return;
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    fetchNotifications();
-    const interval = setInterval(fetchNotifications, 3000);
-    return () => clearInterval(interval);
-  }, [fetchNotifications, token]);
+  usePolling(fetchNotifications, 30000, true);
+  useRealtimeRefetch("notifications", fetchNotifications, true);
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
@@ -517,10 +496,11 @@ export function usePartnerId(token: string, userId?: string) {
     const fetchPartnerId = async () => {
       try {
         setError(null);
+        // Verify session via Supabase cookies (token di body diabaikan)
         const sessionRes = await fetch("/api/auth", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action: "verify", token }),
+          body: JSON.stringify({ action: "verify" }),
         });
         if (!sessionRes.ok) {
           if (retryCount < maxRetries) {
@@ -538,7 +518,7 @@ export function usePartnerId(token: string, userId?: string) {
         const res = await fetch("/api/db", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action: "getPartnerId", token, userId: currentUserId, pairId: currentPairId }),
+          body: JSON.stringify({ action: "getPartnerId", userId: currentUserId, pairId: currentPairId }),
         });
         if (!res.ok) {
           if (retryCount < maxRetries) {
@@ -587,13 +567,8 @@ export function useLocations(token: string) {
     }
   }, [token, enqueue]);
 
-  useEffect(() => {
-    if (!token) return;
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    fetchLocations();
-    const interval = setInterval(fetchLocations, 3000);
-    return () => clearInterval(interval);
-  }, [fetchLocations, token]);
+  usePolling(fetchLocations, 30000, true);
+  useRealtimeRefetch("ldr_locations", fetchLocations, true);
 
   const addLocation = useCallback(async (place: string, note?: string) => {
     try {

@@ -102,36 +102,36 @@ export default function AchievementsPage() {
   const totalCount = ALL_ACHIEVEMENTS.length;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-amber-100 via-yellow-100 to-orange-100 p-4 md:p-8">
+    <div className="page-bg p-4 md:p-8">
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-12">
-          <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-amber-500 to-orange-600 bg-clip-text text-transparent mb-2">
+          <h1 className="text-4xl md:text-5xl font-bold text-gradient-primary mb-2">
             🏆 Achievements
           </h1>
-          <p className="text-amber-600/70">Your love milestones and badges</p>
+          <p className="text-body">Your love milestones and badges</p>
         </div>
 
         <LdrBanner tagline="Achievement LDR: bertahan rindu tanpa pegang tangan. Level legend. 🏆💞" />
 
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 mb-8 border-2 border-amber-200 shadow-xl">
+        <div className="surface-card rounded-2xl p-6 mb-8">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h3 className="text-xl font-bold text-amber-900">Progress</h3>
-              <p className="text-amber-600/70 text-sm">{unlockedCount} of {totalCount} unlocked</p>
+              <h3 className="text-xl font-bold text-heading">Progress</h3>
+              <p className="text-body text-sm">{unlockedCount} of {totalCount} unlocked</p>
             </div>
-            <div className="text-3xl font-bold bg-gradient-to-r from-amber-500 to-orange-600 bg-clip-text text-transparent">
+            <div className="text-3xl font-bold text-gradient-primary">
               {Math.round((unlockedCount / totalCount) * 100)}%
             </div>
           </div>
-          <div className="w-full h-3 bg-amber-100 rounded-full overflow-hidden">
-            <div className="h-full bg-gradient-to-r from-amber-400 to-orange-500 rounded-full transition-all duration-1000" style={{ width: `${(unlockedCount / totalCount) * 100}%` }} />
+          <div className="w-full h-3 bg-surface-warm rounded-full overflow-hidden">
+            <div className="h-full rounded-full transition-all duration-1000" style={{ width: `${(unlockedCount / totalCount) * 100}%`, background: "linear-gradient(to right, var(--primary), var(--secondary))" }} />
           </div>
         </div>
 
         {loading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="bg-white/80 backdrop-blur-sm p-5 rounded-2xl border-2 border-amber-200 shadow-lg animate-pulse" />
+              <div key={i} className="surface-card rounded-2xl p-5 animate-pulse" />
             ))}
           </div>
         ) : (
@@ -144,16 +144,16 @@ export default function AchievementsPage() {
                 <MagneticButton key={achievement.id}>
                   <div
                     className={cn(
-                      "achievement-card bg-white/80 backdrop-blur-sm p-5 rounded-2xl border-2 shadow-lg transition-all",
-                      isUnlocked ? "border-amber-200 hover:border-amber-300 cursor-pointer hover:scale-105" : "opacity-60 border-gray-200"
+                      "achievement-card surface-card rounded-2xl p-5 transition-all",
+                      isUnlocked ? "cursor-pointer hover:scale-105" : "opacity-60"
                     )}
                     style={{ animationDelay: `${i * 0.08}s` }}
                   >
                     <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${achievement.color} flex items-center justify-center text-3xl mb-3 shadow-md`}>
                       {achievement.icon}
                     </div>
-                    <h3 className="font-bold text-gray-800 mb-1">{achievement.title}</h3>
-                    <p className="text-gray-600 text-sm mb-3">{achievement.description}</p>
+                    <h3 className="font-bold text-heading mb-1">{achievement.title}</h3>
+                    <p className="text-body text-sm mb-3">{achievement.description}</p>
                     {isUnlocked ? (
                       <div className="flex items-center gap-1 text-green-600 text-sm font-medium">
                         <Star size={14} fill="currentColor" />
@@ -161,12 +161,12 @@ export default function AchievementsPage() {
                       </div>
                     ) : (
                       <div>
-                        <div className="flex items-center justify-between text-xs text-gray-500 mb-1">
+                        <div className="flex items-center justify-between text-xs text-text-muted mb-1">
                           <span>Progress</span>
                           <span>{current}/{required}</span>
                         </div>
-                        <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                          <div className="h-full bg-gray-300 rounded-full" style={{ width: `${Math.min(100, (current / required) * 100)}%` }} />
+                        <div className="w-full h-1.5 bg-surface-warm rounded-full overflow-hidden">
+                          <div className="h-full bg-primary-soft rounded-full" style={{ width: `${Math.min(100, (current / required) * 100)}%` }} />
                         </div>
                       </div>
                     )}

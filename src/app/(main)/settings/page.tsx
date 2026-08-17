@@ -130,57 +130,56 @@ export default function SettingsPage() {
   };
 
   const handleLogout = async () => {
-    if (token) {
-      await fetch("/api/auth", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "logout", token }),
-      });
-    }
+    try {
+      const { getSupabaseBrowser } = await import("@/lib/supabase/client");
+      const supabase = getSupabaseBrowser();
+      await supabase.auth.signOut();
+    } catch {}
     logout();
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-100 via-slate-100 to-zinc-100 p-4 md:p-8">
+    <div className="page-bg p-4 md:p-8">
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-8">
-          <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-gray-600 to-slate-600 bg-clip-text text-transparent mb-2">
+          <h1 className="text-gradient-primary text-4xl md:text-5xl font-bold mb-2">
             ⚙️ Settings
           </h1>
-          <p className="text-gray-600/70">Manage your preferences</p>
+          <p className="text-body">Manage your preferences</p>
         </div>
 
         <LdrBanner tagline="Setting LDR: notifikasi prioritas = chat doi. 🔔💞" />
 
-         <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 sm:p-6 mb-6 border-2 border-gray-200 shadow-xl">
-           <h3 className="text-xl font-bold text-gray-900 mb-4">Profile</h3>
+         <div className="surface-card p-4 sm:p-6 mb-6">
+           <h3 className="text-heading text-xl font-bold mb-4">Profile</h3>
            <div className="flex flex-col items-start gap-4">
              <ProfilePictureUpload currentUrl={avatarUrl} onUpload={setAvatarUrl} />
              <div className="flex-1 space-y-4 w-full">
                <div>
-                 <label className="text-gray-600 text-sm block mb-2">Name</label>
+                 <label className="text-body text-sm block mb-2">Name</label>
                  <input
                    type="text"
                    value={name}
                    onChange={(e) => { setName(e.target.value); setNameError(""); }}
-                   className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-gray-400 focus:outline-none text-gray-900"
+                   className="input-soft w-full px-4 py-3"
                  />
                 {nameError && <p className="text-red-500 text-xs mt-1">{nameError}</p>}
               </div>
               <div>
-                <label className="text-gray-600 text-sm block mb-2">Relationship</label>
+                <label className="text-body text-sm block mb-2">Relationship</label>
                 <input
                   type="text"
                   value={relationship}
                   onChange={(e) => { setRelationship(e.target.value); setRelationshipError(""); }}
-                  className="w-full px-4 py-2 rounded-xl border-2 border-gray-200 focus:border-gray-400 focus:outline-none text-gray-900"
+                  className="input-soft w-full px-4 py-2"
                 />
                 {relationshipError && <p className="text-red-500 text-xs mt-1">{relationshipError}</p>}
               </div>
                 <button
                   onClick={handleSave}
                   disabled={saving}
-                  className="w-full py-2 rounded-xl bg-gradient-to-r from-gray-500 to-slate-600 text-white font-bold hover:from-gray-600 hover:to-slate-700 transition-all shadow-lg hover:shadow-xl disabled:opacity-50"
+                  className="touch-target touch-press w-full py-2 rounded-xl text-white font-bold transition-all shadow-lg hover:shadow-xl disabled:opacity-50"
+                  style={{ background: "linear-gradient(to right, var(--primary), var(--secondary))" }}
                 >
                   {saving ? "Saving..." : "Save Changes"}
                 </button>
@@ -188,14 +187,14 @@ export default function SettingsPage() {
                   <p className="text-red-500 text-xs mt-2 text-center">{saveError}</p>
                 )}
                 {saveSuccess && (
-                  <p className="text-green-600 text-xs mt-2 text-center">{saveSuccess}</p>
+                  <p className="text-accent text-xs mt-2 text-center">{saveSuccess}</p>
                 )}
             </div>
           </div>
         </div>
 
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 mb-6 border-2 border-gray-200 shadow-xl">
-          <h3 className="text-xl font-bold text-gray-900 mb-4">Appearance</h3>
+        <div className="surface-card p-6 mb-6">
+          <h3 className="text-heading text-xl font-bold mb-4">Appearance</h3>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {[
               { value: "dark", label: "Dark", icon: <Moon size={18} /> },
@@ -205,56 +204,61 @@ export default function SettingsPage() {
                 <button
                   key={t.value}
                   onClick={() => changeTheme(t.value as Theme)}
-                  className={`settings-item animate-fade-in-left p-4 rounded-xl border-2 transition-all cursor-pointer flex items-center gap-3 min-h-[44px] ${theme === t.value ? "border-gray-400 bg-gray-100" : "border-gray-200 hover:border-gray-300"}`}
-                  style={{ animationDelay: `${i * 0.1}s` }}
+                  className={`settings-item animate-fade-in-left touch-target touch-press p-4 rounded-xl border-2 transition-all cursor-pointer flex items-center gap-3 ${theme === t.value ? "" : "hover:opacity-80"}`}
+                  style={{
+                    animationDelay: `${i * 0.1}s`,
+                    background: theme === t.value ? "var(--primary-soft)" : "var(--surface-warm)",
+                    borderColor: theme === t.value ? "var(--primary)" : "var(--border)",
+                    color: theme === t.value ? "var(--primary)" : "var(--text-secondary)",
+                  }}
                >
-                <div className={theme === t.value ? "text-gray-700" : "text-gray-400"}>{t.icon}</div>
-                <span className="text-gray-800 font-medium">{t.label}</span>
+                <div>{t.icon}</div>
+                <span className="font-medium" style={{ color: theme === t.value ? "var(--primary)" : "var(--text-primary)" }}>{t.label}</span>
               </button>
             ))}
           </div>
         </div>
 
-         <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 sm:p-6 mb-6 border-2 border-gray-200 shadow-xl">
-           <h3 className="text-xl font-bold text-gray-900 mb-4">Relationship</h3>
+         <div className="surface-card p-4 sm:p-6 mb-6">
+           <h3 className="text-heading text-xl font-bold mb-4">Relationship</h3>
            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
              <div>
-               <label className="text-gray-600 text-sm block mb-2">Relationship Start Date</label>
+               <label className="text-body text-sm block mb-2">Relationship Start Date</label>
                <input
                  type="date"
                  value={settings.relationshipStartDate}
                  onChange={(e) => updateSetting("relationshipStartDate", e.target.value)}
-                 className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-gray-400 focus:outline-none text-gray-900 text-sm"
+                 className="input-soft w-full px-4 py-3 text-sm"
                />
              </div>
              <div>
-               <label className="text-gray-600 text-sm block mb-2">Distance (KM)</label>
+               <label className="text-body text-sm block mb-2">Distance (KM)</label>
                <input
                  type="number"
                  value={settings.distance}
                  onChange={(e) => updateSetting("distance", e.target.value)}
                  placeholder="e.g. 1200"
-                 className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-gray-400 focus:outline-none text-gray-900 text-sm"
+                 className="input-soft w-full px-4 py-3 text-sm"
                />
              </div>
              <div>
-               <label className="text-gray-600 text-sm block mb-2">Next Meetup Date</label>
+               <label className="text-body text-sm block mb-2">Next Meetup Date</label>
                <input
                  type="date"
                  value={settings.nextMeetupDate}
                  onChange={(e) => updateSetting("nextMeetupDate", e.target.value)}
-                 className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-gray-400 focus:outline-none text-gray-900 text-sm"
+                 className="input-soft w-full px-4 py-3 text-sm"
                />
              </div>
              <div>
-               <label className="text-gray-600 text-sm block mb-2">Secret Box PIN</label>
+               <label className="text-body text-sm block mb-2">Secret Box PIN</label>
                <input
                  type="password"
                  maxLength={4}
                  value={settings.secretPin}
                  onChange={(e) => updateSetting("secretPin", e.target.value.replace(/\D/g, "").slice(0, 4))}
                  placeholder="****"
-                 className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-gray-400 focus:outline-none text-gray-900 text-sm tracking-widest"
+                 className="input-soft w-full px-4 py-3 text-sm tracking-widest"
                />
              </div>
            </div>
@@ -266,31 +270,32 @@ export default function SettingsPage() {
             { icon: <Shield size={20} />, label: "Privacy & Security", description: "Control your data" },
             { icon: <Database size={20} />, label: "Data Management", description: "Export or clear data" },
           ].map((item, i) => (
-            <div key={i} className="settings-item animate-fade-in-left bg-white/80 backdrop-blur-sm p-4 rounded-xl border-2 border-gray-200 flex items-center gap-4 transition-all" style={{ animationDelay: `${0.3 + i * 0.1}s` }}>
-              <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center text-gray-600">{item.icon}</div>
+            <div key={i} className="settings-item animate-fade-in-left surface-card p-4 flex items-center gap-4 transition-all" style={{ animationDelay: `${0.3 + i * 0.1}s` }}>
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: "var(--surface-warm)", color: "var(--text-secondary)" }}>{item.icon}</div>
               <div className="flex-1">
-                <span className="text-gray-800 font-medium block">{item.label}</span>
-                <span className="text-gray-500 text-sm">{item.description}</span>
+                <span className="text-heading font-medium block">{item.label}</span>
+                <span className="text-body text-sm">{item.description}</span>
               </div>
-              <span className="text-gray-400">→</span>
+              <span className="text-muted">→</span>
             </div>
           ))}
         </div>
 
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 mb-6 border-2 border-amber-200 shadow-xl">
+        <div className="surface-card p-6 mb-6" style={{ borderColor: "color-mix(in srgb, var(--peach) 40%, var(--border))" }}>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center text-amber-600">
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: "color-mix(in srgb, var(--peach) 20%, transparent)", color: "var(--peach)" }}>
                 <Bell size={20} />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-gray-900">Buku Panduan Penggunaan 📘</h3>
-                <p className="text-xs text-gray-500">Panduan lengkap notifikasi, status online & fitur LDR</p>
+                <h3 className="text-heading text-lg font-bold">Buku Panduan Penggunaan 📘</h3>
+                <p className="text-muted text-xs">Panduan lengkap notifikasi, status online & fitur LDR</p>
               </div>
             </div>
             <button
               onClick={() => setIsGuideOpen(true)}
-              className="px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold transition-all shadow-md cursor-pointer min-h-[44px]"
+              className="touch-target touch-press px-4 py-2.5 rounded-xl text-white text-xs font-bold transition-all shadow-md cursor-pointer"
+              style={{ background: "var(--peach)" }}
             >
               Buka Panduan
             </button>
@@ -299,7 +304,10 @@ export default function SettingsPage() {
 
         <button
           onClick={handleLogout}
-          className="w-full py-3 rounded-xl border-2 border-red-200 text-red-500 hover:bg-red-50 transition-all cursor-pointer flex items-center justify-center gap-2 font-medium min-h-[44px]"
+          className="touch-target touch-press w-full py-3 rounded-xl border-2 text-red-500 transition-all cursor-pointer flex items-center justify-center gap-2 font-medium"
+          style={{ borderColor: "color-mix(in srgb, #ef4444 30%, transparent)", background: "color-mix(in srgb, #ef4444 5%, transparent)" }}
+          onMouseEnter={(e) => { e.currentTarget.style.background = "color-mix(in srgb, #ef4444 10%, transparent)"; }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = "color-mix(in srgb, #ef4444 5%, transparent)"; }}
         >
           <LogOut size={18} />
           Logout
@@ -308,7 +316,7 @@ export default function SettingsPage() {
         <GuideModal isOpen={isGuideOpen} onClose={() => setIsGuideOpen(false)} />
 
         <div className="mt-8 text-center">
-          <p className="text-gray-400 text-sm">{APP_CONFIG.name} • {APP_CONFIG.subtitle}</p>
+          <p className="text-muted text-sm">{APP_CONFIG.name} • {APP_CONFIG.subtitle}</p>
         </div>
       </div>
     </div>

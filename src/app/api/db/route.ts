@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSession } from "@/app/actions/auth";
+import { getSupabaseUserProfile } from "@/lib/supabase/serverClient";
 import {
   getMoods,
   addMood,
@@ -40,15 +40,16 @@ import { updateProfile, updateSettings, getUserSettings } from "@/app/actions/au
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { action, token, ...params } = body;
+    const { action, ...params } = body;
 
-    const session = await getSession(token);
-    if (!session) {
+    // Auth via Supabase cookie session (token di body diabaikan — vestigial)
+    const user = await getSupabaseUserProfile();
+    if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const userId = session.user.id;
-    const pairId = session.user.pair_id || "";
+    const userId = user.id;
+    const pairId = user.pair_id || "";
 
     switch (action) {
       case "getMoods":

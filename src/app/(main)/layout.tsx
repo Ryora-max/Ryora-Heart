@@ -8,7 +8,9 @@ import { cn } from "@/lib/utils";
 import { Menu, LogOut, Home, BookOpen } from "lucide-react";
 import CustomCursor from "@/components/ui/CustomCursor";
 import { NotificationButton } from "@/components/ui/NotificationButton";
+import { BottomNav } from "@/components/ui/BottomNav";
 import { Toaster } from "@/components/ui/Toaster";
+import { getSupabaseBrowser } from "@/lib/supabase/client";
 import { OfflineIndicator } from "@/components/ui/OfflineIndicator";
 import { useOnlineStatus } from "@/hooks/useOnlineStatus";
 import { GuideModal } from "@/components/ui/GuideModal";
@@ -77,44 +79,26 @@ export default function MainLayout({
         return;
       }
 
-      let effectiveToken = token;
-
-      if (!effectiveToken && typeof window !== "undefined") {
-        try {
-          const stored = localStorage.getItem("ryora-auth");
-          if (stored) {
-            const parsed = JSON.parse(stored);
-            effectiveToken = parsed.token || null;
-          }
-        } catch {
-          // ignore
-        }
-      }
-
-      if (!effectiveToken) {
-        const cookies = document.cookie.split(";").reduce((acc, c) => {
-          const [k, v] = c.trim().split("=");
-          acc[k] = v;
-          return acc;
-        }, {} as Record<string, string>);
-        effectiveToken = cookies["ryora-session"] || null;
-      }
-
-      if (!effectiveToken) {
-        setVerifying(false);
-        return;
-      }
-
       try {
+        // Cek Supabase session dari cookies (browser client)
+        const supabase = getSupabaseBrowser();
+        const { data: { session } } = await supabase.auth.getSession();
+
+        if (!session) {
+          setVerifying(false);
+          return;
+        }
+
+        // Ambil user profile dari /api/auth (baca Supabase session dari cookie)
         const response = await fetch("/api/auth", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action: "verify", token: effectiveToken }),
+          body: JSON.stringify({ action: "verify" }),
         });
         const data = await response.json();
         if (response.ok && data.user) {
           setUser(data.user);
-          setToken(effectiveToken);
+          setToken(session.access_token);
         } else {
           logout();
         }
@@ -135,22 +119,16 @@ export default function MainLayout({
   }, [verifying, isAuthenticated, router]);
 
   const handleLogout = useCallback(async () => {
-    if (token) {
-      try {
-        await fetch("/api/auth", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action: "logout", token }),
-          cache: "no-store",
-        });
-      } catch {}
-    }
+    try {
+      const supabase = getSupabaseBrowser();
+      await supabase.auth.signOut();
+    } catch {}
     logout();
     if (typeof document !== "undefined") {
       document.cookie = "ryora-session=; Max-Age=0; path=/;";
     }
     router.push("/");
-  }, [logout, router, token]);
+  }, [logout, router]);
 
   const navigateTo = useCallback((href: string) => {
     router.push(href);
@@ -170,8 +148,8 @@ export default function MainLayout({
 
   if (verifying) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="w-8 h-8 border-4 border-pink-400 border-t-transparent rounded-full animate-spin" />
+      <div className="page-bg flex items-center justify-center min-h-screen">
+        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -190,31 +168,32 @@ export default function MainLayout({
             sidebarOpen ? "translate-x-0" : "-translate-x-full"
           )}
         >
-          <div className="h-full bg-gradient-to-b from-pink-200/95 to-purple-200/95 backdrop-blur-xl p-4 md:p-6 flex flex-col shadow-soft border-r border-white/40">
+          <div className="surface-glass h-full p-4 md:p-6 flex flex-col shadow-soft border-r" style={{ borderColor: "var(--border)" }}>
             <div className="mb-6">
               <div className="flex items-center justify-between mb-1">
-                <h2 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-pink-500 to-purple-600">🏠 RYORA</h2>
+                <h2 className="text-gradient-primary text-2xl font-bold">🏠 RYORA</h2>
                 <span
                   className={cn(
-                    "px-2.5 py-1 rounded-full text-[11px] font-semibold border",
+                    "px-2.5 py-1 rounded-full text-[11px] font-semibold border touch-target",
                     isPartnerOnline
                       ? "bg-emerald-100 text-emerald-700 border-emerald-200"
-                      : "bg-white/60 text-text-secondary border-white/40"
+                      : "bg-surface-warm text-text-secondary"
                   )}
+                  style={!isPartnerOnline ? { borderColor: "var(--border)" } : {}}
                 >
-                  <span className={cn("w-1.5 h-1.5 rounded-full inline-block mr-1", isPartnerOnline ? "bg-emerald-500" : "bg-gray-400")} />
+                  <span className={cn("w-1.5 h-1.5 rounded-full inline-block mr-1", isPartnerOnline ? "bg-emerald-500" : "bg-text-muted")} />
                   {isPartnerOnline ? "Online 💕" : "Offline 💤"}
                 </span>
               </div>
-              <p className="text-text-secondary text-xs font-medium">{APP_CONFIG.name}</p>
+              <p className="text-body text-xs font-medium">{APP_CONFIG.name}</p>
             </div>
 
-            <nav className="flex-1 space-y-1.5 overflow-y-auto">
+            <nav className="flex-1 space-y-1.5 overflow-y-auto no-scrollbar">
               <button
                 onClick={() => navigateTo("/home")}
                 className={cn(
-                  "w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all min-h-[44px]",
-                  pathname === "/home" ? "bg-white/80 text-pink-700 shadow-soft font-semibold" : "text-text-primary hover:bg-white/60"
+                  "w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all touch-target touch-press",
+                  pathname === "/home" ? "bg-primary-soft text-primary shadow-soft font-semibold" : "text-text-primary hover:bg-surface-warm"
                 )}
               >
                 <Home size={18} />
@@ -225,8 +204,8 @@ export default function MainLayout({
                   key={room.href}
                   onClick={() => navigateTo(room.href)}
                   className={cn(
-                    "w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all min-h-[44px]",
-                    pathname === room.href ? "bg-white/80 text-pink-700 shadow-soft font-semibold" : "text-text-primary hover:bg-white/60"
+                    "w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all touch-target touch-press",
+                    pathname === room.href ? "bg-primary-soft text-primary shadow-soft font-semibold" : "text-text-primary hover:bg-surface-warm"
                   )}
                 >
                   <span className="text-lg">{room.emoji}</span>
@@ -236,16 +215,21 @@ export default function MainLayout({
 
               <button
                 onClick={() => { setIsGuideOpen(true); setSidebarOpen(false); }}
-                className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-amber-700 bg-amber-100/80 hover:bg-amber-200/80 transition-all min-h-[44px] mt-2 border border-amber-200/60"
+                className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all touch-target touch-press mt-2 border"
+                style={{
+                  background: "color-mix(in srgb, var(--peach) 20%, transparent)",
+                  borderColor: "color-mix(in srgb, var(--peach) 40%, transparent)",
+                  color: "var(--peach)",
+                }}
               >
-                <BookOpen size={18} className="text-amber-600" />
+                <BookOpen size={18} />
                 Panduan 📘
               </button>
             </nav>
 
-            <div className="mt-auto pt-4 border-t border-white/40">
+            <div className="mt-auto pt-4 border-t" style={{ borderColor: "var(--border)" }}>
               <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 rounded-full bg-white/80 flex items-center justify-center text-lg flex-shrink-0 shadow-soft">
+                <div className="w-10 h-10 rounded-full bg-surface flex items-center justify-center text-lg flex-shrink-0 shadow-soft">
                   {user.role === "owner" ? "🤴" : "👸"}
                 </div>
                 <div className="flex-1 min-w-0">
@@ -256,7 +240,8 @@ export default function MainLayout({
               </div>
               <button
                 onClick={handleLogout}
-                className="w-full flex items-center gap-2 px-3 py-2 rounded-xl bg-white/60 hover:bg-white/80 text-text-primary text-sm transition-all min-h-[44px] shadow-soft"
+                className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-text-primary text-sm transition-all touch-target touch-press shadow-soft"
+                style={{ background: "var(--surface-warm)" }}
               >
                 <LogOut size={16} />
                 Logout
@@ -265,22 +250,23 @@ export default function MainLayout({
           </div>
         </aside>
 
-        <main className="flex-1 min-h-screen">
-          <div className="md:hidden sticky top-0 z-40 flex items-center justify-between p-3 safe-area-inset bg-white/80 backdrop-blur-md border-b border-border">
-             <button onClick={() => setSidebarOpen(true)} className="w-10 h-10 rounded-xl bg-primary-soft/50 flex items-center justify-center min-h-[44px] min-w-[44px] active:scale-95 transition-transform">
+        <main className="flex-1 min-h-screen pb-16 md:pb-0">
+          <div className="md:hidden sticky top-0 z-40 flex items-center justify-between p-3 safe-area-top surface-glass border-b" style={{ borderColor: "var(--border)" }}>
+             <button onClick={() => setSidebarOpen(true)} className="touch-target rounded-xl flex items-center justify-center active:scale-95 transition-transform" style={{ background: "var(--primary-soft)" }} aria-label="Open menu">
                <Menu size={20} className="text-text-primary" />
              </button>
              <div className="flex items-center gap-2">
-               <h1 className="text-base font-bold bg-clip-text text-transparent bg-gradient-to-r from-pink-500 to-purple-600">🏠 RYORA</h1>
-               <span className={cn("w-2 h-2 rounded-full", isPartnerOnline ? "bg-emerald-500" : "bg-gray-300")} />
+               <h1 className="text-gradient-primary text-base font-bold">🏠 RYORA</h1>
+               <span className={cn("w-2 h-2 rounded-full", isPartnerOnline ? "bg-emerald-500" : "bg-text-muted")} />
              </div>
-             <button onClick={() => setIsGuideOpen(true)} className="w-10 h-10 rounded-xl bg-primary-soft/50 flex items-center justify-center min-h-[44px] min-w-[44px] text-text-primary active:scale-95 transition-transform">
+             <button onClick={() => setIsGuideOpen(true)} className="touch-target rounded-xl flex items-center justify-center text-text-primary active:scale-95 transition-transform" style={{ background: "var(--primary-soft)" }} aria-label="Open guide">
                <BookOpen size={18} />
              </button>
            </div>
            {children}
         </main>
       </div>
+      <BottomNav />
       <Toaster />
       <GuideModal isOpen={isGuideOpen} onClose={() => setIsGuideOpen(false)} />
       {!online && <OfflineIndicator pendingCount={pendingCount} onDismiss={() => setPendingCount(0)} />}

@@ -11,7 +11,7 @@ export default function Loader() {
     const timer = setTimeout(() => {
       setLoading(false);
       document.body.style.overflow = "";
-    }, 5000);
+    }, 2500);
 
     return () => {
       clearTimeout(timer);
@@ -23,7 +23,7 @@ export default function Loader() {
 
   return (
     <div
-      className="fixed inset-0 z-[9999] flex items-center justify-center bg-gradient-to-br from-pink-400 via-purple-400 to-indigo-400"
+      className="loader-splash fixed inset-0 z-[9999] flex items-center justify-center bg-gradient-to-br from-pink-400 via-purple-400 to-indigo-400"
       suppressHydrationWarning
     >
       <div className="text-center">
