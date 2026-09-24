@@ -1,10 +1,22 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { APP_CONFIG } from "@/config";
 import { useAuthStore } from "@/stores";
 import { useActivities, usePartnerId } from "@/hooks/useDatabase";
+import { playHeartPopSound, playChimeSound } from "@/lib/soundEffects";
 import type { Activity, MoodType } from "@/types";
+
+const QUICK_PRESETS: { title: string; mood: MoodType; emoji: string }[] = [
+  { title: "Lagi Coding / Ngerjain Proyek", mood: "busy", emoji: "💻" },
+  { title: "Lagi Belajar & Nugas", mood: "busy", emoji: "📚" },
+  { title: "Makan Enak / Ngemil", mood: "happy", emoji: "🍜" },
+  { title: "Sedang di Jalan / OTW", mood: "excited", emoji: "🛵" },
+  { title: "Dengerin Musik Santai", mood: "calm", emoji: "🎧" },
+  { title: "Siap-siap Bobo Pulas", mood: "sleepy", emoji: "😴" },
+  { title: "Lagi Kangen Banget", mood: "miss", emoji: "🥺" },
+  { title: "Santai Ngopi Hangat", mood: "love", emoji: "☕" },
+];
 
 const MOOD_OPTIONS: { value: MoodType; emoji: string; label: string }[] = [
   { value: "happy", emoji: "😊", label: "Happy" },
@@ -28,8 +40,8 @@ const MOOD_EMOJI: Record<MoodType, string> = {
   sleepy: "😴",
 };
 
-function formatDuration(start: Date, end?: Date): string {
-  const endMs = end ? new Date(end).getTime() : Date.now();
+function formatDuration(start: Date, end?: Date, now?: number): string {
+  const endMs = end ? new Date(end).getTime() : (now ?? 0);
   const diffMs = endMs - new Date(start).getTime();
   if (diffMs < 0) return "baru saja";
   const totalMinutes = Math.floor(diffMs / 60000);
@@ -56,6 +68,18 @@ export default function LivePage() {
   const [title, setTitle] = useState("");
   const [mood, setMood] = useState<MoodType>("happy");
   const [isLive, setIsLive] = useState(false);
+
+  // "now" via state (Date.now() di render melanggar purity) — refresh tiap 30s
+  const [now, setNow] = useState<number | null>(null);
+  useEffect(() => {
+    const tick = () => setNow(Date.now());
+    const t0 = setTimeout(tick, 0);
+    const interval = setInterval(tick, 30000);
+    return () => {
+      clearTimeout(t0);
+      clearInterval(interval);
+    };
+  }, []);
 
   const ownerName = APP_CONFIG.users.owner.name;
   const partnerName = APP_CONFIG.users.partner.name;
@@ -107,6 +131,16 @@ export default function LivePage() {
     await stopActivity(id);
   };
 
+  const handleQuickPreset = async (preset: { title: string; mood: MoodType; emoji: string }) => {
+    playChimeSound();
+    playHeartPopSound();
+    await createActivity({
+      title: `${preset.title} ${preset.emoji}`,
+      mood: preset.mood,
+      isLive: true,
+    });
+  };
+
   const handleDelete = async (id: string) => {
     await deleteActivity(id);
   };
@@ -129,29 +163,66 @@ export default function LivePage() {
           {/* Owner card (left) */}
           <LiveCard
             name={ownerName.split(" ")[0]}
+            isOwnerCard
             liveActivity={ownerLive}
+            now={now}
           />
           {/* Partner card (right) */}
           <LiveCard
             name={partnerName.split(" ")[0]}
+            isOwnerCard={false}
             liveActivity={partnerLive}
+            now={now}
           />
         </div>
 
-        {/* Add new activity form */}
+        {/* Quick 1-Tap Activity Presets */}
+        <div className="surface-card mb-6 p-4 sm:p-5 animate-fade-in-up" style={{ animationDelay: "0.15s" }}>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-heading text-sm sm:text-base font-extrabold flex items-center gap-1.5">
+              <span>⚡ Status Cepat 1-Tap</span>
+              <span className="text-xs font-normal text-rose-500">Langsung Live Realtime</span>
+            </h2>
+            <span className="text-xs text-text-secondary">Klik &amp; otomatis aktif</span>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            {QUICK_PRESETS.map((preset) => (
+              <button
+                key={preset.title}
+                onClick={() => handleQuickPreset(preset)}
+                className="touch-press p-2.5 rounded-xl border border-amber-200/60 dark:border-amber-900/60 bg-surface-warm hover:bg-rose-50 dark:hover:bg-rose-950/40 text-left transition-all flex items-center gap-2 cursor-pointer shadow-sm group hover:scale-[1.02]"
+              >
+                <span className="text-2xl group-hover:scale-110 transition-transform flex-shrink-0">
+                  {preset.emoji}
+                </span>
+                <div className="min-w-0">
+                  <p className="text-heading text-xs font-bold truncate">{preset.title}</p>
+                  <p className="text-text-muted text-[10px]">Set live</p>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Add new custom activity form */}
         <div
           className="surface-card mb-8 p-5 animate-fade-in-up"
           style={{ animationDelay: "0.2s" }}
         >
-          <h2 className="text-heading text-lg font-bold mb-4">Tambah Activity</h2>
+          <h2 className="text-heading text-lg font-bold mb-4">Tulis Aktivitas Kustom</h2>
 
           <input
+            id="live-activity-title"
+            name="activity-title"
             type="text"
+            autoComplete="off"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
             placeholder="Lagi ngapain nih? ✨"
             className="input-soft w-full px-4 py-3 mb-4"
+            aria-label="Judul aktivitas kustom"
           />
 
           <p className="text-body text-xs mb-2">Pilih mood</p>
@@ -282,7 +353,7 @@ export default function LivePage() {
                       <p className="text-body text-xs mt-0.5">
                         {creatorName} •{" "}
                         {activity.startTime
-                          ? formatDuration(activity.startTime, activity.endTime)
+                          ? formatDuration(activity.startTime, activity.endTime, now ?? undefined)
                           : formatTime(activity.date)}
                         {activity.isLive && " • live"}
                       </p>
@@ -345,48 +416,60 @@ export default function LivePage() {
 
 function LiveCard({
   name,
+  isOwnerCard,
   liveActivity,
+  now,
 }: {
   name: string;
+  isOwnerCard: boolean;
   liveActivity?: Activity;
+  now: number | null;
 }) {
+  const isLive = Boolean(liveActivity?.isLive);
+
   return (
     <div
-      className="surface-card rounded-2xl p-4 flex flex-col items-center text-center"
-      style={{ minHeight: 140 }}
+      className={`rounded-2xl p-4 flex flex-col items-center text-center transition-all duration-300 relative overflow-hidden ${
+        isLive
+          ? "bg-gradient-to-b from-rose-50/90 to-amber-50/90 dark:from-rose-950/40 dark:to-amber-950/40 border-2 border-rose-300 dark:border-rose-700 shadow-md scale-[1.02]"
+          : "surface-card border border-border"
+      }`}
+      style={{ minHeight: 155 }}
     >
+      {/* Top Header with Avatar Badge */}
       <div className="flex items-center gap-1.5 mb-2">
-        {liveActivity?.isLive && (
-          <span
-            className="inline-block h-2 w-2 rounded-full"
-            style={{
-              background: "#ef4444",
-              animation: "pulse 1.5s infinite",
-            }}
-          />
+        <span className="text-base">{isOwnerCard ? "🤴" : "👸"}</span>
+        <p className="text-heading text-sm font-black">{name}</p>
+        {isLive && (
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500 text-white shadow-sm">
+            <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
+            LIVE
+          </span>
         )}
-        <p className="text-heading text-sm font-bold">{name}</p>
       </div>
 
       {liveActivity ? (
         <>
-          <div className="text-3xl mb-2">
+          <div className="text-3xl mb-1.5 transform hover:scale-110 transition-transform">
             {liveActivity.mood ? MOOD_EMOJI[liveActivity.mood] : "📍"}
           </div>
-          <p className="text-heading text-sm font-medium mb-1 line-clamp-2">
+          <p className="text-heading text-xs sm:text-sm font-bold mb-1 line-clamp-2 leading-tight">
             {liveActivity.title}
           </p>
-          <p className="text-body text-xs">
-            {liveActivity.startTime
-              ? formatDuration(liveActivity.startTime, liveActivity.endTime)
-              : "baru saja"}
-          </p>
+          <div className="mt-auto pt-1">
+            <span className="inline-block px-2.5 py-0.5 rounded-full bg-black/5 dark:bg-white/10 text-body text-[10px] font-semibold">
+              ⏱️{" "}
+              {liveActivity.startTime
+                ? formatDuration(liveActivity.startTime, liveActivity.endTime, now ?? undefined)
+                : "baru saja"}
+            </span>
+          </div>
         </>
       ) : (
-        <>
-          <div className="text-3xl mb-2 opacity-50">😴</div>
-          <p className="text-body text-xs">Tidak ada aktivitas live</p>
-        </>
+        <div className="my-auto">
+          <div className="text-2xl mb-1 opacity-60">💤</div>
+          <p className="text-body text-xs font-medium">Sedang santai di rumah</p>
+        </div>
       )}
     </div>
   );

@@ -302,7 +302,7 @@ export default function ChatPage() {
   ).length;
 
   return (
-    <div className="page-bg flex flex-col h-screen safe-area-inset">
+    <div className="page-bg flex flex-col flex-1 min-h-0 safe-area-inset">
       {/* Header */}
       <header
         className="flex items-center gap-3 px-4 py-3 border-b surface-glass sticky top-0 z-30"
@@ -486,13 +486,17 @@ export default function ChatPage() {
       >
         <div className="flex items-center gap-2">
           <input
+            id="chat-input"
+            name="message"
             type="text"
+            autoComplete="off"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder={`Tulis pesan untuk ${partnerName}…`}
             className="input-soft flex-1 px-4 py-3 text-sm"
             disabled={!partnerId}
+            aria-label={`Tulis pesan untuk ${partnerName}`}
           />
           <button
             onClick={handleSend}

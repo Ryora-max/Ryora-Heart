@@ -28,7 +28,10 @@ Ryora is a PWA. Key files:
 ### Done (Phase 2c — Auth migration, bridge strategy):
 - `@supabase/ssr` installed — cookie-based auth for SSR/RSC
 - `src/lib/supabase/serverClient.ts` — async `getSupabaseServerClient()` + `getSupabaseUserProfile()` (Next.js 16: `cookies()` is async)
-- `middleware.ts` — checks Supabase session, redirects to `/login` if no session
+- `src/proxy.ts` — checks local `ryora-session` cookie OR Supabase session, redirects to `/login` if neither (Next.js 16: `middleware.ts` convention renamed to `proxy.ts`, must live inside `src/`)
+- `src/lib/localAuth.ts` — local-auth single source of truth (`LOCAL_USERS` user-1/user-2 + pair-1, `LOCAL_SESSION_COOKIE`, session resolvers). Local cookie dicek duluan di proxy, `/api/*`, dan `(main)/layout` — app tetap usable saat Supabase unreachable
+- `src/lib/supabase/fetch.ts` — `supabaseFetch` dipasang ke semua Supabase clients: timeout 8s per request + circuit breaker 30s setelah connectivity failure
+- `/api/db` — read actions (get*) degrade ke empty data saat backend gagal; write actions tetap throw untuk retry queue
 - `/api/auth` — `verify` reads Supabase cookie session; `logout` calls `supabase.auth.signOut()`
 - `/api/db` & `/api/upload` — auth via Supabase cookie session (token in body/formData is vestigial, ignored)
 - `(main)/layout.tsx` — verifies Supabase session via browser client

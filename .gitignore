@@ -60,3 +60,7 @@ next-env.d.ts
 
 # scripts (test files, not part of app)
 /scripts/test-*.ts
+
+# misc
+NUL
+supabase/.temp/

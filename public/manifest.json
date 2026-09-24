@@ -5,14 +5,22 @@
   "description": "A private digital home for two hearts in love",
   "start_url": "/?source=pwa",
   "scope": "/",
-  "lang": "en",
+  "lang": "id",
   "dir": "ltr",
   "display": "standalone",
-  "display_override": ["standalone", "minimal-ui", "browser"],
+  "display_override": [
+    "standalone",
+    "minimal-ui",
+    "browser"
+  ],
   "orientation": "portrait-primary",
   "background_color": "#050816",
   "theme_color": "#8B5CF6",
-  "categories": ["lifestyle", "social", "personalization"],
+  "categories": [
+    "lifestyle",
+    "social",
+    "personalization"
+  ],
   "prefer_related_applications": false,
   "icons": [
     {

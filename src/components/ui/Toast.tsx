@@ -4,10 +4,10 @@ import { X, CheckCircle2, AlertCircle, Info, AlertTriangle } from "lucide-react"
 import { cn } from "@/lib/utils";
 
 const typeStyles = {
-  success: "border-green-300 bg-green-50 text-green-700",
-  error: "border-red-300 bg-red-50 text-red-700",
-  info: "border-blue-300 bg-blue-50 text-blue-700",
-  warning: "border-amber-300 bg-amber-50 text-amber-700",
+  success: "border-green-300 dark:border-green-800 bg-green-50 dark:bg-green-950/70 text-green-700 dark:text-green-300",
+  error: "border-red-300 dark:border-red-800 bg-red-50 dark:bg-red-950/70 text-red-700 dark:text-red-300",
+  info: "border-blue-300 dark:border-blue-800 bg-blue-50 dark:bg-blue-950/70 text-blue-700 dark:text-blue-300",
+  warning: "border-amber-300 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/70 text-amber-700 dark:text-amber-300",
 } as const;
 
 const typeIcons = {

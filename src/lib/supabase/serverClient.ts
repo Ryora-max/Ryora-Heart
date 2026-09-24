@@ -1,12 +1,11 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { supabaseFetch } from "./fetch";
 
 /**
  * Server-side Supabase client yang baca session dari cookies.
  * Pakai di Server Components, Route Handlers, dan Server Actions.
- *
- * Next.js 16: cookies() adalah async function — harus di-await.
  */
 export async function getSupabaseServerClient(): Promise<SupabaseClient> {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -19,10 +18,9 @@ export async function getSupabaseServerClient(): Promise<SupabaseClient> {
   }
 
   const cookieStore = await cookies();
-  const allCookies = cookieStore.getAll();
-  console.log("[getSupabaseServerClient] cookies:", allCookies.map(c => ({ name: c.name, len: c.value.length })));
 
   return createServerClient(url, anonKey, {
+    global: { fetch: supabaseFetch },
     cookies: {
       getAll() {
         return cookieStore.getAll();
@@ -33,8 +31,7 @@ export async function getSupabaseServerClient(): Promise<SupabaseClient> {
             cookieStore.set(name, value, options)
           );
         } catch {
-          // Called from Server Component — cookies read-only di Server Component.
-          // Ini OK kalau hanya baca session. Set akan dihandle oleh Route Handler/Action.
+          // Read-only di Server Component — diabaikan.
         }
       },
     },
@@ -42,39 +39,39 @@ export async function getSupabaseServerClient(): Promise<SupabaseClient> {
 }
 
 /**
- * Ambil user profile dari tabel `users` berdasarkan email Supabase Auth.
+ * Ambil user profile dari tabel `users` berdasarkan Supabase Auth session.
  * Return null kalau tidak ada session atau profile tidak ditemukan.
  */
 export async function getSupabaseUserProfile() {
-  const supabase = await getSupabaseServerClient();
+  try {
+    const supabase = await getSupabaseServerClient();
 
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
 
-  console.log("[getSupabaseUserProfile] user:", user?.email, "error:", userError?.message);
+    if (!user || !user.email || userError) return null;
 
-  if (!user || !user.email) return null;
+    const { data: profile, error: profileError } = await supabase
+      .from("users")
+      .select("*")
+      .eq("email", user.email)
+      .single();
 
-  const { data: profile, error: profileError } = await supabase
-    .from("users")
-    .select("*")
-    .eq("email", user.email)
-    .single();
+    if (!profile || profileError) return null;
 
-  console.log("[getSupabaseUserProfile] profile:", profile?.id, "error:", profileError?.message);
-
-  if (!profile) return null;
-
-  return {
-    id: profile.id as string,
-    username: profile.username as string,
-    name: profile.name as string,
-    role: profile.role as "owner" | "partner",
-    relationship: profile.relationship as string | undefined,
-    avatar_url: profile.avatar_url as string | undefined,
-    pair_id: profile.pair_id as string | undefined,
-    email: user.email,
-  };
+    return {
+      id: profile.id as string,
+      username: profile.username as string,
+      name: profile.name as string,
+      role: profile.role as "owner" | "partner",
+      relationship: profile.relationship as string | undefined,
+      avatar_url: profile.avatar_url as string | undefined,
+      pair_id: profile.pair_id as string | undefined,
+      email: user.email,
+    };
+  } catch {
+    return null;
+  }
 }

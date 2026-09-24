@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 
 export default function OfflinePage() {
   return (
-    <main className="min-h-screen flex flex-col items-center justify-center px-6 text-center bg-gradient-to-br from-pink-200 via-purple-100 to-indigo-100">
+    <main className="min-h-dvh flex flex-col items-center justify-center px-6 text-center page-bg">
       <div className="relative z-10">
         <div className="text-7xl mb-6 animate-breathe">💝</div>
         <h1 className="text-4xl md:text-5xl font-bold mb-3 text-text-primary tracking-tight">
@@ -20,7 +20,7 @@ export default function OfflinePage() {
         </p>
         <Link
           href="/"
-          className="inline-block px-8 py-3 rounded-full bg-white/80 backdrop-blur-xl border-2 border-pink-200 text-text-primary font-semibold shadow-soft hover:shadow-soft-hover transition-all"
+          className="inline-block px-8 py-3 rounded-full surface-card text-text-primary font-semibold shadow-soft hover:shadow-soft-hover transition-all"
         >
           Coba lagi
         </Link>

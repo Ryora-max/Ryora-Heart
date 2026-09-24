@@ -8,7 +8,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
-    "format": "prettier --write \"src/**/*.{ts,tsx,css}\""
+    "format": "prettier --write \"src/**/*.{ts,tsx,css}\"",
+    "cap:sync": "npx cap sync android",
+    "apk:build": "npx cap sync android && cd android && gradlew.bat assembleDebug"
   },
   "dependencies": {
     "@capacitor/android": "^8.5.0",
@@ -30,6 +32,7 @@
     "react-dom": "19.2.4",
     "react-leaflet": "^5.0.0",
     "uuid": "^14.0.1",
+    "web-push": "^3.6.7",
     "zustand": "^5.0.0"
   },
   "devDependencies": {
@@ -38,6 +41,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/web-push": "^3.6.4",
     "eslint": "^9",
     "eslint-config-next": "16.2.10",
     "tailwindcss": "^4",

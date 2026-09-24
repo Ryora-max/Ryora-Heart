@@ -1,131 +1,75 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { APP_CONFIG } from "@/config";
-import { MagneticButton } from "@/components/animations/MagneticButton";
-import { Heart, Sparkles } from "lucide-react";
-import { useMounted } from "@/hooks/useMounted";
-
-interface Star {
-  id: number;
-  width: number;
-  height: number;
-  top: number;
-  left: number;
-  opacity: number;
-  delay: number;
-}
-
-function createStars(count: number): Star[] {
-  const stars: Star[] = [];
-  for (let i = 0; i < count; i++) {
-    stars.push({
-      id: i,
-      width: Math.random() * 3 + 1,
-      height: Math.random() * 3 + 1,
-      top: Math.random() * 100,
-      left: Math.random() * 100,
-      opacity: Math.random() * 0.5 + 0.2,
-      delay: Math.random() * 3,
-    });
-  }
-  return stars;
-}
+import { Sparkles, Key } from "lucide-react";
+import { HouseEntryTransition } from "@/components/home/HouseEntryTransition";
 
 export default function LandingPage() {
   const router = useRouter();
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [stars, setStars] = useState<Star[]>([]);
-  useMounted(() => setStars(createStars(80)));
+  const [showTransition, setShowTransition] = useState(false);
 
-  const handleLogin = () => {
+  const handleEnterClick = () => {
+    setShowTransition(true);
+  };
+
+  const handleFinishTransition = () => {
     router.push("/login");
   };
 
   return (
-    <div ref={containerRef} className="page-bg relative flex min-h-screen flex-col items-center justify-center overflow-hidden px-6">
-      {/* Floating hearts background */}
+    <div className="landing-bg relative flex min-h-dvh flex-col items-center justify-center overflow-hidden px-6">
+      {/* 1-Directional House Entry Animation Overlay */}
+      {showTransition && (
+        <HouseEntryTransition onEnter={handleFinishTransition} />
+      )}
+
+      {/* Floating warm soft glow ambient circles */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        {stars.map((star) => (
-          <div
-            key={star.id}
-            className="star absolute rounded-full bg-primary/60 animate-fade-in-soft"
-            style={{
-              width: `${star.width}px`,
-              height: `${star.height}px`,
-              top: `${star.top}%`,
-              left: `${star.left}%`,
-              opacity: star.opacity,
-              animationDelay: `${star.delay}s`,
-            }}
-          />
-        ))}
+        <div className="absolute top-[10%] left-[15%] h-[400px] w-[400px] rounded-full bg-rose-200/40 dark:bg-rose-500/10 blur-[130px]" />
+        <div className="absolute bottom-[15%] right-[15%] h-[450px] w-[450px] rounded-full bg-amber-200/50 dark:bg-amber-500/10 blur-[140px]" />
       </div>
 
-      {/* Soft glow orbs */}
-      <div className="pointer-events-none absolute top-[15%] left-[10%] h-[400px] w-[400px] rounded-full bg-primary/20 blur-[120px]" />
-      <div className="pointer-events-none absolute bottom-[10%] right-[10%] h-[500px] w-[500px] rounded-full bg-secondary/20 blur-[140px]" />
-
       {/* Hero content */}
-      <div className="relative z-10 flex flex-col items-center text-center">
+      <div className="relative z-10 flex flex-col items-center text-center max-w-lg">
         {/* Badge */}
-        <div className="surface-glass mb-8 flex items-center gap-2 rounded-full px-4 py-2 animate-fade-in-soft" style={{ animationDelay: "0.1s" }}>
-          <Sparkles size={14} className="text-primary" />
-          <span className="text-xs font-medium text-body tracking-wide">A private space for two</span>
+        <div className="mb-6 flex items-center gap-2 rounded-full border border-amber-300/60 dark:border-amber-700/40 bg-white/80 dark:bg-white/5 px-4 py-1.5 shadow-sm backdrop-blur-md animate-fade-in-soft">
+          <Sparkles size={14} className="text-amber-500 dark:text-amber-400 animate-spin" style={{ animationDuration: "8s" }} />
+          <span className="text-xs font-bold text-amber-950 dark:text-amber-100 tracking-wide">
+            Ruang Rumah Digital Pasangan LDR
+          </span>
         </div>
 
         {/* Logo */}
-        <h1 className="mb-4 text-7xl font-bold tracking-tight text-heading md:text-9xl drop-shadow-sm">
-          {APP_CONFIG.name.split("").map((char, idx) => (
-            <span
-              key={idx}
-              className="logo-letter text-gradient-primary inline-block animate-fade-in-soft"
-              style={{ animationDelay: `${0.3 + idx * 0.1}s` }}
-            >
-              {char}
-            </span>
-          ))}
+        <h1 className="mb-3 text-6xl font-black tracking-tight text-amber-950 md:text-8xl drop-shadow-sm">
+          <span className="bg-gradient-to-r from-amber-700 via-rose-600 to-amber-800 dark:from-amber-300 dark:via-rose-400 dark:to-amber-500 bg-clip-text text-transparent">
+            {APP_CONFIG.name}
+          </span>
         </h1>
 
         {/* Subtitle */}
-        <p
-          className="subtitle text-body animate-fade-in-soft mb-3 text-xl font-light tracking-wide md:text-2xl"
-          style={{ animationDelay: "0.6s" }}
-        >
-          {APP_CONFIG.subtitle}
+        <p className="mb-3 text-lg md:text-xl font-bold text-amber-900/90 dark:text-amber-200/90 animate-fade-in-soft">
+          {APP_CONFIG.subtitle} 💕
         </p>
 
         {/* Tagline */}
-        <p
-          className="text-muted animate-fade-in-soft mb-12 max-w-md text-sm font-light md:text-base"
-          style={{ animationDelay: "0.75s" }}
-        >
-          Your shared digital home — moods, memories, letters, and little moments, all in one place.
+        <p className="mb-10 text-xs md:text-sm text-amber-800/80 dark:text-amber-200/70 max-w-md font-medium leading-relaxed animate-fade-in-soft">
+          Rumah impian hangat tempat berbagi mood, lokasi real-time, aktivitas harian, dan kenangan indah untuk {APP_CONFIG.users.owner.username} & {APP_CONFIG.users.partner.username}.
         </p>
 
-        {/* CTA */}
-        <MagneticButton>
-          <a
-            href="/login"
-            onClick={(e) => {
-              e.preventDefault();
-              handleLogin();
-            }}
-            className="landing-btn touch-press animate-scale-soft flex items-center gap-2 rounded-full border-2 border-primary/30 bg-surface/80 px-10 py-4 text-lg font-bold text-heading backdrop-blur-xl shadow-soft transition-all hover:shadow-soft-hover cursor-pointer"
-            style={{ animationDelay: "0.9s" }}
-          >
-            <Heart size={20} className="text-primary" fill="currentColor" />
-            Enter Our Home
-          </a>
-        </MagneticButton>
-
-        {/* Footer hint */}
-        <p
-          className="text-muted animate-fade-in-soft mt-16 text-xs"
-          style={{ animationDelay: "1.2s" }}
+        {/* CTA Button with 1-Directional Entry Flow */}
+        <button
+          onClick={handleEnterClick}
+          className="group touch-press flex items-center gap-3 rounded-full bg-gradient-to-r from-amber-600 via-rose-500 to-amber-600 dark:from-amber-500 dark:via-rose-500 dark:to-amber-500 px-9 py-4 text-base font-bold text-white shadow-xl hover:shadow-2xl transition-all hover:scale-105 border-2 border-amber-200/50 dark:border-amber-400/30 cursor-pointer animate-scale-soft"
         >
-          Made with love for {APP_CONFIG.users.owner.username} & {APP_CONFIG.users.partner.username}
+          <Key size={20} className="text-amber-200 group-hover:rotate-45 transition-transform duration-300" />
+          <span>Buka Pintu & Masuk Rumah 🗝️</span>
+        </button>
+
+        {/* Footer info */}
+        <p className="mt-14 text-[11px] text-amber-800/60 dark:text-amber-200/50 font-medium animate-fade-in-soft">
+          Didesain dengan kehangatan & cinta sejati ✨
         </p>
       </div>
     </div>

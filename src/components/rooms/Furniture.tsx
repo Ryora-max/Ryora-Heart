@@ -1,6 +1,22 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useState, type KeyboardEvent, type ReactNode } from "react";
+
+/** Props a11y untuk elemen clickable non-<button> (div furniture). */
+function a11yClickable(label: string, onClick?: () => void, pressed?: boolean) {
+  return {
+    role: "button" as const,
+    tabIndex: 0,
+    "aria-label": label,
+    ...(pressed !== undefined ? { "aria-pressed": pressed } : {}),
+    onKeyDown: (e: KeyboardEvent) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        onClick?.();
+      }
+    },
+  };
+}
 
 interface FurnitureProps {
   children: ReactNode;
@@ -16,6 +32,7 @@ export function Furniture({ children, label, onClick, className = "" }: Furnitur
     <div
       className={`furniture-item absolute cursor-pointer group perspective-1000 ${className}`}
       onClick={onClick}
+      {...a11yClickable(label, onClick)}
       onMouseMove={(e) => {
         const r = e.currentTarget.getBoundingClientRect();
         const px = (e.clientX - r.left) / r.width - 0.5;
@@ -69,7 +86,11 @@ interface LampProps {
 
 export function Lamp({ on = false, onToggle }: LampProps) {
   return (
-    <div className="relative cursor-pointer perspective-1000" onClick={onToggle}>
+    <div
+      className="relative cursor-pointer perspective-1000"
+      onClick={onToggle}
+      {...a11yClickable(on ? "Matikan lampu" : "Nyalakan lampu", onToggle, on)}
+    >
       <div
         className="w-6 h-10 bg-gradient-to-t from-amber-100 to-amber-200 rounded-full border border-amber-300 flex items-start justify-center pt-1 transition-transform duration-300 hover:translate-z-[10px]"
         style={{ transformStyle: "preserve-3d" }}
@@ -91,7 +112,12 @@ interface BedProps {
 
 export function Bed({ onCozy }: BedProps) {
   return (
-    <div className="relative cursor-pointer perspective-1000" onClick={onCozy} style={{ transformStyle: "preserve-3d" }}>
+    <div
+      className="relative cursor-pointer perspective-1000"
+      onClick={onCozy}
+      {...a11yClickable("Tempat tidur", onCozy)}
+      style={{ transformStyle: "preserve-3d" }}
+    >
       <div className="w-40 h-24 bg-gradient-to-r from-amber-100 to-amber-200 rounded-2xl border-2 border-amber-300 shadow-lg transition-transform duration-300 hover:translate-z-[14px]">
         <div className="absolute top-2 left-2 right-2 h-16 bg-gradient-to-r from-pink-200 to-pink-300 rounded-xl flex items-center justify-center gap-2">
           <span className="text-xl">🧸</span>
@@ -130,7 +156,12 @@ interface TvProps {
 
 export function TvFurniture({ on = false, onToggle }: TvProps) {
   return (
-    <div className="relative cursor-pointer perspective-1000" onClick={onToggle} style={{ transformStyle: "preserve-3d" }}>
+    <div
+      className="relative cursor-pointer perspective-1000"
+      onClick={onToggle}
+      {...a11yClickable(on ? "Matikan TV" : "Nyalakan TV", onToggle, on)}
+      style={{ transformStyle: "preserve-3d" }}
+    >
       <div className={`w-36 h-24 bg-gradient-to-br from-gray-800 to-gray-900 rounded-lg border-4 border-gray-700 shadow-2xl transition-all duration-300 hover:translate-z-[12px] ${on ? "brightness-110" : "brightness-75"}`}>
         {on && (
           <div className="absolute inset-2 bg-gradient-to-br from-white/90 to-gray-200 rounded overflow-hidden">
@@ -150,7 +181,12 @@ interface FireplaceProps {
 
 export function Fireplace({ on = false, onToggle }: FireplaceProps) {
   return (
-    <div className="relative cursor-pointer perspective-1000" onClick={onToggle} style={{ transformStyle: "preserve-3d" }}>
+    <div
+      className="relative cursor-pointer perspective-1000"
+      onClick={onToggle}
+      {...a11yClickable(on ? "Matikan perapian" : "Nyalakan perapian", onToggle, on)}
+      style={{ transformStyle: "preserve-3d" }}
+    >
       <div className="w-28 h-32 bg-gradient-to-b from-stone-400 to-stone-600 rounded-t-2xl border-2 border-stone-500 shadow-lg flex flex-col items-center justify-end pb-2">
         <div className="w-20 h-16 bg-gradient-to-t from-orange-900 to-orange-700 rounded-t-xl relative overflow-hidden">
           {on && (
@@ -178,7 +214,12 @@ interface WindowProps {
 
 export function WindowFurniture({ open = false, onToggle }: WindowProps) {
   return (
-    <div className="relative cursor-pointer perspective-1000" onClick={onToggle} style={{ transformStyle: "preserve-3d" }}>
+    <div
+      className="relative cursor-pointer perspective-1000"
+      onClick={onToggle}
+      {...a11yClickable(open ? "Tutup jendela" : "Buka jendela", onToggle, open)}
+      style={{ transformStyle: "preserve-3d" }}
+    >
       <div className={`w-24 h-28 bg-gradient-to-b from-sky-300 to-sky-400 rounded-lg border-4 border-amber-100 shadow-lg transition-all duration-500 hover:translate-z-[12px] ${open ? "scale-110" : ""}`}>
         <div className="absolute inset-0 bg-gradient-to-br from-white/40 to-transparent" />
         <div className="absolute inset-0 flex items-center justify-center">

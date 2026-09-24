@@ -31,10 +31,10 @@ export async function updateProfile(userId: string, data: { name?: string; relat
   if (error) throw error;
 }
 
-export async function updateSettings(userId: string, data: { relationshipStartDate?: string; distance?: string; nextMeetupDate?: string; secretPin?: string }) {
+export async function updateSettings(userId: string, data: { relationshipStartDate?: string; distanceKm?: string; nextMeetupDate?: string; secretPin?: string }) {
   const supabase = getSupabaseServer();
 
-  if (data.relationshipStartDate === undefined && data.distance === undefined && data.nextMeetupDate === undefined && data.secretPin === undefined) {
+  if (data.relationshipStartDate === undefined && data.distanceKm === undefined && data.nextMeetupDate === undefined && data.secretPin === undefined) {
     return;
   }
 
@@ -49,7 +49,7 @@ export async function updateSettings(userId: string, data: { relationshipStartDa
 
   const updates: Record<string, unknown> = {};
   if (data.relationshipStartDate !== undefined) updates.relationship_start_date = data.relationshipStartDate || null;
-  if (data.distance !== undefined) updates.distance_km = data.distance || null;
+  if (data.distanceKm !== undefined) updates.distance_km = data.distanceKm || null;
   if (data.nextMeetupDate !== undefined) updates.next_meetup_date = data.nextMeetupDate || null;
   if (data.secretPin !== undefined) updates.secret_pin = data.secretPin;
 
@@ -69,15 +69,34 @@ export async function updateSettings(userId: string, data: { relationshipStartDa
 
 export async function getUserSettings(userId: string) {
   const supabase = getSupabaseServer();
-  const { data: settings, error } = await supabase
-    .from("user_settings")
-    .select("*")
-    .eq("user_id", userId)
-    .maybeSingle();
-  if (error) throw error;
-  if (!settings) return null;
 
-  const formatDate = (d: string | Date | null) => {
+  // Settings bersifat pair-level (tanggal jadian & PIN dipakai berdua):
+  // ambil row milik user, lalu isi field yang kosong dari row partner di pair sama.
+  const { data: me } = await supabase
+    .from("users")
+    .select("pair_id")
+    .eq("id", userId)
+    .maybeSingle();
+
+  const query = supabase.from("user_settings").select("*");
+  const { data: rows, error } = me?.pair_id
+    ? await query.eq("pair_id", me.pair_id)
+    : await query.eq("user_id", userId);
+  if (error) throw error;
+  if (!rows || rows.length === 0) return null;
+
+  const own = rows.find((r) => r.user_id === userId);
+  const merged = { ...(rows[0] || {}), ...(own || {}) } as Record<string, unknown>;
+  // Field yang masih kosong di row sendiri → fallback ke row partner mana pun.
+  for (const r of rows) {
+    for (const key of ["relationship_start_date", "distance_km", "next_meetup_date", "secret_pin"] as const) {
+      if ((merged[key] === null || merged[key] === undefined || merged[key] === "") && r[key] != null && r[key] !== "") {
+        merged[key] = r[key];
+      }
+    }
+  }
+
+  const formatDate = (d: string | Date | null | undefined) => {
     if (!d) return "";
     const date = new Date(d);
     if (isNaN(date.getTime())) return "";
@@ -85,9 +104,9 @@ export async function getUserSettings(userId: string) {
   };
 
   return {
-    relationshipStartDate: formatDate(settings.relationship_start_date),
-    distance: settings.distance_km || "",
-    nextMeetupDate: formatDate(settings.next_meetup_date),
-    secretPin: settings.secret_pin || "0101",
+    relationshipStartDate: formatDate(merged.relationship_start_date as string | Date | null),
+    distanceKm: (merged.distance_km as string) || "",
+    nextMeetupDate: formatDate(merged.next_meetup_date as string | Date | null),
+    secretPin: (merged.secret_pin as string) || "0101",
   };
 }

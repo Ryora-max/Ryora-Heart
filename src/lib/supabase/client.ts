@@ -2,6 +2,7 @@
 
 import { createBrowserClient } from "@supabase/ssr";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { supabaseFetch } from "./fetch";
 
 let browserClient: SupabaseClient | null = null;
 
@@ -25,6 +26,7 @@ export function getSupabaseBrowser(): SupabaseClient {
   }
 
   browserClient = createBrowserClient(url, anonKey, {
+    global: { fetch: supabaseFetch },
     realtime: {
       params: { eventsPerSecond: 5 },
     },

@@ -60,7 +60,13 @@ export function ProfilePictureUpload({ currentUrl, onUpload }: ProfilePictureUpl
         className="relative w-24 h-24 rounded-full overflow-hidden cursor-pointer group border-2 border-dashed border-glass-border hover:border-primary/50 transition-all"
         role="button"
         tabIndex={0}
-        onKeyDown={(e) => e.key === "Enter" && fileInputRef.current?.click()}
+        aria-label="Ganti foto profil"
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            fileInputRef.current?.click();
+          }
+        }}
       >
         {(preview || currentUrl) ? (
           <Image

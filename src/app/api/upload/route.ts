@@ -1,6 +1,28 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSupabaseUserProfile } from "@/lib/supabase/serverClient";
+import { cookies } from "next/headers";
 import { uploadToStorage } from "@/lib/supabase/upload";
+import { getLocalUserFromSessionValue, LOCAL_SESSION_COOKIE, LOCAL_PAIR_ID } from "@/lib/localAuth";
+import type { User } from "@/types";
+
+async function getAuthenticatedUser(): Promise<(User & { pair_id: string }) | null> {
+  const cookieStore = await cookies();
+  const localUser = getLocalUserFromSessionValue(cookieStore.get(LOCAL_SESSION_COOKIE)?.value);
+  if (localUser) return localUser as User & { pair_id: string };
+
+  try {
+    const { getSupabaseUserProfile } = await import("@/lib/supabase/serverClient");
+    const profile = await getSupabaseUserProfile();
+    if (profile) {
+      return {
+        ...profile,
+        relationship: profile.relationship ?? "",
+        pair_id: profile.pair_id ?? "",
+      };
+    }
+  } catch {}
+
+  return null;
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -11,13 +33,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Missing file" }, { status: 400 });
     }
 
-    // Auth via Supabase cookie session (token di formData diabaikan)
-    const user = await getSupabaseUserProfile();
+    const user = await getAuthenticatedUser();
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const pairId = user.pair_id || "unpaired";
+    const pairId = user.pair_id || LOCAL_PAIR_ID;
+
 
     // Coba Supabase Storage dulu (butuh SUPABASE_SERVICE_ROLE_KEY)
     if (process.env.SUPABASE_SERVICE_ROLE_KEY) {

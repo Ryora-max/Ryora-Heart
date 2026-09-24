@@ -46,11 +46,19 @@ export function useRealtime(
   useEffect(() => {
     if (!enabled) return;
 
-    const supabase = getSupabaseBrowser();
+    let supabase;
+    try {
+      supabase = getSupabaseBrowser();
+    } catch {
+      // Supabase belum dikonfigurasi — polling fallback tetap jalan
+      return;
+    }
     // Unique suffix per effect mount — avoids React Strict Mode double-invoke
     // collision where supabase.channel(name) returns an already-subscribed channel.
     const channelName = `rt:${table}:${filter || "all"}:${Math.random().toString(36).slice(2, 8)}`;
 
+    let failures = 0;
+    let tornDown = false;
     const channel = supabase
       .channel(channelName)
       .on(
@@ -69,11 +77,25 @@ export function useRealtime(
           });
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        if (status === "SUBSCRIBED") {
+          failures = 0;
+        } else if (
+          !tornDown &&
+          (status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED") &&
+          ++failures >= 3
+        ) {
+          // Circuit breaker: host unreachable — lepas channel supaya tidak
+          // retry tanpa henti. Data tetap sinkron via polling fallback.
+          tornDown = true;
+          supabase.removeChannel(channel);
+        }
+      });
 
     channelRef.current = channel;
 
     return () => {
+      tornDown = true;
       supabase.removeChannel(channel);
       channelRef.current = null;
     };
@@ -117,7 +139,13 @@ export function useRealtimeMulti(
   useEffect(() => {
     if (!enabled || tables.length === 0) return;
 
-    const supabase = getSupabaseBrowser();
+    let supabase;
+    try {
+      supabase = getSupabaseBrowser();
+    } catch {
+      // Supabase belum dikonfigurasi — polling fallback tetap jalan
+      return;
+    }
     // Unique suffix per effect mount — avoids React Strict Mode double-invoke
     // collision where supabase.channel(name) returns an already-subscribed channel.
     const channelName = `rt:multi:${tablesKey}:${Math.random().toString(36).slice(2, 8)}`;
@@ -142,10 +170,24 @@ export function useRealtimeMulti(
       );
     }
 
-    channel.subscribe();
+    let failures = 0;
+    let tornDown = false;
+    channel.subscribe((status) => {
+      if (status === "SUBSCRIBED") {
+        failures = 0;
+      } else if (
+        !tornDown &&
+        (status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED") &&
+        ++failures >= 3
+      ) {
+        tornDown = true;
+        supabase.removeChannel(channel);
+      }
+    });
     channelRef.current = channel;
 
     return () => {
+      tornDown = true;
       supabase.removeChannel(channel);
       channelRef.current = null;
     };

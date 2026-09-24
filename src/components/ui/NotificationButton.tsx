@@ -11,7 +11,7 @@ export function NotificationButton() {
   const { notifications, markRead } = useNotifications(token || "");
 
   const unreadCount = useMemo(
-    () => notifications.filter((n: any) => !n.read).length,
+    () => notifications.filter((n) => !n.read).length,
     [notifications]
   );
 
@@ -24,8 +24,11 @@ export function NotificationButton() {
   return (
     <div className="relative">
       <button
+        type="button"
         onClick={() => setOpen(!open)}
-        className="relative p-2 rounded-xl bg-white/60 hover:bg-white/80 text-text-primary transition-all min-h-[44px] min-w-[44px] flex items-center justify-center shadow-soft"
+        className="relative p-2 rounded-xl bg-surface/60 hover:bg-surface/80 text-text-primary transition-all min-h-[44px] min-w-[44px] flex items-center justify-center shadow-soft"
+        aria-label={unreadCount > 0 ? `Notifikasi (${unreadCount} belum dibaca)` : "Notifikasi"}
+        aria-expanded={open}
       >
         <Bell size={20} />
         {unreadCount > 0 && (
@@ -37,13 +40,13 @@ export function NotificationButton() {
 
       {open && (
         <>
-          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-          <div className="absolute right-0 mt-2 w-80 bg-surface border border-border rounded-2xl shadow-soft-hover z-50 max-h-96 overflow-hidden animate-scale-soft">
+          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} aria-hidden="true" />
+          <div className="absolute right-0 mt-2 w-80 max-w-[calc(100vw-1.5rem)] bg-surface border border-border rounded-2xl shadow-soft-hover z-50 max-h-96 overflow-hidden animate-scale-soft">
             <div className="p-4 border-b border-border flex items-center justify-between">
               <h3 className="font-bold text-text-primary flex items-center gap-2">
                 <Bell size={18} /> Notifications
               </h3>
-              <button onClick={() => setOpen(false)} className="text-text-muted hover:text-text-primary transition-colors p-1 min-h-[44px] min-w-[44px] flex items-center justify-center">
+              <button type="button" onClick={() => setOpen(false)} aria-label="Tutup notifikasi" className="text-text-muted hover:text-text-primary transition-colors p-1 min-h-[44px] min-w-[44px] flex items-center justify-center">
                 <X size={18} />
               </button>
             </div>
@@ -51,7 +54,7 @@ export function NotificationButton() {
               {notifications.length === 0 ? (
                 <p className="text-text-muted text-center py-6 text-sm">No notifications yet 💤</p>
               ) : (
-                notifications.slice(0, 15).map((n: any) => (
+                notifications.slice(0, 15).map((n) => (
                   <div key={n.id} className={`p-3 border-b border-border hover:bg-surface-warm transition-all ${!n.read ? "bg-surface-warm" : ""}`}>
                     <p className={`text-sm ${!n.read ? "font-semibold text-text-primary" : "text-text-secondary"}`}>
                       {n.message}

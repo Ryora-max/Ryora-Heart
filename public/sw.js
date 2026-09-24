@@ -5,7 +5,7 @@
 //   - Same-origin GET lainnya: stale-while-revalidate
 //   - Cross-origin (Supabase, dll): network-only (tidak di-cache)
 
-const VERSION = "v3";
+const VERSION = "v4";
 const STATIC_CACHE = `ryora-static-${VERSION}`;
 const PAGE_CACHE = `ryora-pages-${VERSION}`;
 const RUNTIME_CACHE = `ryora-runtime-${VERSION}`;
@@ -127,7 +127,13 @@ async function staleWhileRevalidate(request, cacheName) {
   return cached || fetchPromise;
 }
 
+// Host dev: jangan intercept — chunk Turbopack dev pakai URL path-based
+// (bukan content-hash), jadi cache-first bisa serve versi lama selamanya.
+const DEV_HOST = /^(localhost|127\.|0\.0\.0\.0|\[::1\]|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.)/;
+
 self.addEventListener("fetch", (event) => {
+  if (DEV_HOST.test(self.location.hostname)) return;
+
   const { request } = event;
 
   // Hanya tangani GET
@@ -166,4 +172,49 @@ self.addEventListener("message", async (event) => {
     const keys = await cache.keys();
     await Promise.all(keys.slice(0, Math.max(0, keys.length - 30)).map((k) => cache.delete(k)));
   }
+});
+
+// ─── Web Push ──────────────────────────────────────────────────────────────
+// Payload dari server: { title, body, url?, tag? }
+self.addEventListener("push", (event) => {
+  if (!event.data) return;
+  let payload = { title: "RYORA 💕", body: "Ada kabar dari pasanganmu", url: "/" };
+  try {
+    payload = { ...payload, ...event.data.json() };
+  } catch {
+    try {
+      payload.body = event.data.text();
+    } catch { /* keep default */ }
+  }
+
+  event.waitUntil(
+    self.registration.showNotification(payload.title, {
+      body: payload.body,
+      icon: "/icon-192.png",
+      badge: "/icon-192.png",
+      tag: payload.tag || "ryora-push",
+      renotify: true,
+      data: { url: payload.url || "/" },
+    })
+  );
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const targetUrl = (event.notification.data && event.notification.data.url) || "/";
+
+  event.waitUntil(
+    (async () => {
+      // Fokus ke tab yang sudah terbuka kalau ada, kalau tidak buka baru
+      const clients = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
+      for (const client of clients) {
+        if (client.url.startsWith(self.location.origin) && "focus" in client) {
+          await client.focus();
+          if ("navigate" in client) await client.navigate(targetUrl);
+          return;
+        }
+      }
+      await self.clients.openWindow(targetUrl);
+    })()
+  );
 });

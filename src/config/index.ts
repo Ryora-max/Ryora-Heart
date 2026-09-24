@@ -16,14 +16,15 @@ export const APP_CONFIG = {
     },
   },
   relationship: {
-    startDate: "2023-01-01",
+    startDate: "2024-10-29",
   },
 } as const;
 
 export const ROOMS = [
-  { name: "Dashboard", href: "/dashboard", emoji: "🏠" },
-  { name: "Live", href: "/live", emoji: "📍" },
-  { name: "Chat", href: "/chat", emoji: "💬" },
-  { name: "Map", href: "/map", emoji: "🗺️" },
-  { name: "Settings", href: "/settings", emoji: "⚙️" },
+  { name: "Rumah Utama", href: "/dashboard", emoji: "🏠" },
+  { name: "Kegiatan", href: "/live", emoji: "📍" },
+  { name: "Chat Cinta", href: "/chat", emoji: "💬" },
+  { name: "Peta LDR", href: "/map", emoji: "🗺️" },
+  { name: "Riwayat", href: "/history", emoji: "📜" },
+  { name: "Pengaturan", href: "/settings", emoji: "⚙️" },
 ] as const;

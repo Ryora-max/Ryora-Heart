@@ -1,19 +1,21 @@
 "use client";
 
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuthStore } from "@/stores";
 import { APP_CONFIG, ROOMS } from "@/config";
 import { cn } from "@/lib/utils";
-import { Menu, LogOut, Home } from "lucide-react";
+import { Menu, LogOut } from "lucide-react";
 import CustomCursor from "@/components/ui/CustomCursor";
 import { NotificationButton } from "@/components/ui/NotificationButton";
 import { BottomNav } from "@/components/ui/BottomNav";
 import { Toaster } from "@/components/ui/Toaster";
-import { getSupabaseBrowser } from "@/lib/supabase/client";
 import { OfflineIndicator } from "@/components/ui/OfflineIndicator";
 import { useOnlineStatus } from "@/hooks/useOnlineStatus";
 import { usePresence, usePartnerId } from "@/hooks/useDatabase";
+import { usePendingSyncCount } from "@/lib/syncStatus";
+import { sessionValueForRole } from "@/lib/localAuth";
+
 
 export default function MainLayout({
   children,
@@ -26,7 +28,7 @@ export default function MainLayout({
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [verifying, setVerifying] = useState(true);
   const online = useOnlineStatus();
-  const [pendingCount, setPendingCount] = useState(0);
+  const pendingCount = usePendingSyncCount();
 
   const authToken = token || "";
   const { presence, updatePresence } = usePresence(authToken);
@@ -35,80 +37,66 @@ export default function MainLayout({
   useEffect(() => {
     if (!authToken) return;
     updatePresence("online");
-    const interval = setInterval(() => updatePresence("online"), 30000);
+    const interval = setInterval(() => updatePresence("online"), 20000);
     return () => clearInterval(interval);
   }, [authToken, updatePresence]);
 
   const partnerPresence = presence.find((p) => p.userId === partnerId);
-  const [isPartnerOnline, setIsPartnerOnline] = useState(false);
-  const lastSeenRef = useRef<Date | undefined>(undefined);
 
+  // Jam "now" via state (Date.now() tidak boleh dipanggil saat render).
+  // Online dihitung derived dari status + lastSeen presence (jendela 90 detik).
+  const [now, setNow] = useState<number | null>(null);
   useEffect(() => {
-    lastSeenRef.current = partnerPresence?.lastSeen;
-  }, [partnerPresence?.lastSeen]);
-
-  useEffect(() => {
-    const tick = () => {
-      const lastSeen = lastSeenRef.current;
-      if (!lastSeen) {
-        setIsPartnerOnline(false);
-        return;
-      }
-      const diff = Date.now() - new Date(lastSeen).getTime();
-      setIsPartnerOnline(diff < 60000);
+    const tick = () => setNow(Date.now());
+    const t0 = setTimeout(tick, 0);
+    const id = setInterval(tick, 10000);
+    return () => {
+      clearTimeout(t0);
+      clearInterval(id);
     };
-    tick();
-    const id = setInterval(tick, 30000);
-    return () => clearInterval(id);
   }, []);
 
-  useEffect(() => {
-    const handleEnqueue = () => {
-      setPendingCount((prev) => prev + 1);
-    };
-    window.addEventListener("ryora-retry-enqueued", handleEnqueue);
-    return () => window.removeEventListener("ryora-retry-enqueued", handleEnqueue);
-  }, []);
+  const isPartnerOnline =
+    now !== null &&
+    partnerPresence?.status === "online" &&
+    now - new Date(partnerPresence.lastSeen).getTime() < 90_000;
 
   useEffect(() => {
     const verifySession = async () => {
-      if (isAuthenticated) {
+      // Kalau sudah ada user di store (local auth), langsung done
+      if (isAuthenticated && user) {
         setVerifying(false);
         return;
       }
 
+      // Cookie lokal httpOnly tidak bisa dibaca via document.cookie →
+      // restore session via endpoint verify (server baca cookie-nya).
       try {
-        // Cek Supabase session dari cookies (browser client)
-        const supabase = getSupabaseBrowser();
-        const { data: { session } } = await supabase.auth.getSession();
-
-        if (!session) {
-          setVerifying(false);
-          return;
-        }
-
-        // Ambil user profile dari /api/auth (baca Supabase session dari cookie)
-        const response = await fetch("/api/auth", {
+        const res = await fetch("/api/auth", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ action: "verify" }),
         });
-        const data = await response.json();
-        if (response.ok && data.user) {
+        const data = await res.json().catch(() => ({}));
+        if (res.ok && data.user) {
           setUser(data.user);
-          setToken(session.access_token);
-        } else {
-          logout();
+          const role = data.user.role;
+          if (role === "owner" || role === "partner") {
+            setToken(sessionValueForRole(role));
+          }
+          setVerifying(false);
+          return;
         }
       } catch {
-        logout();
-      } finally {
-        setVerifying(false);
+        // endpoint unreachable → jatuh ke redirect login
       }
+
+      // Tidak ada sesi valid
+      setVerifying(false);
     };
 
     verifySession();
-  }, [isAuthenticated, token, setUser, setToken, logout]);
+  }, [isAuthenticated, user, setUser, setToken]);
 
   useEffect(() => {
     if (!verifying && !isAuthenticated) {
@@ -117,13 +105,15 @@ export default function MainLayout({
   }, [verifying, isAuthenticated, router]);
 
   const handleLogout = useCallback(async () => {
-    try {
-      const supabase = getSupabaseBrowser();
-      await supabase.auth.signOut();
-    } catch {}
     logout();
-    if (typeof document !== "undefined") {
-      document.cookie = "ryora-session=; Max-Age=0; path=/;";
+    try {
+      await fetch("/api/auth", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "logout" }),
+      });
+    } catch {
+      // endpoint unreachable — cookie kedaluwarsa sendiri
     }
     router.push("/");
   }, [logout, router]);
@@ -146,8 +136,8 @@ export default function MainLayout({
 
   if (verifying) {
     return (
-      <div className="page-bg flex items-center justify-center min-h-screen">
-        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+      <div className="page-bg flex items-center justify-center min-h-dvh">
+        <div className="w-8 h-8 border-4 border-amber-500 border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -157,8 +147,14 @@ export default function MainLayout({
   return (
     <>
       <CustomCursor />
-      <div className="flex min-h-screen">
-        {sidebarOpen && <div className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40 md:hidden" onClick={() => setSidebarOpen(false)} />}
+      <div className="flex min-h-dvh">
+        {sidebarOpen && (
+          <div
+            className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40 md:hidden"
+            onClick={() => setSidebarOpen(false)}
+            aria-hidden="true"
+          />
+        )}
 
         <aside
           className={cn(
@@ -174,7 +170,7 @@ export default function MainLayout({
                   className={cn(
                     "px-2.5 py-1 rounded-full text-[11px] font-semibold border touch-target",
                     isPartnerOnline
-                      ? "bg-emerald-100 text-emerald-700 border-emerald-200"
+                      ? "bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800"
                       : "bg-surface-warm text-text-secondary"
                   )}
                   style={!isPartnerOnline ? { borderColor: "var(--border)" } : {}}
@@ -187,22 +183,12 @@ export default function MainLayout({
             </div>
 
             <nav className="flex-1 space-y-1.5 overflow-y-auto no-scrollbar">
-              <button
-                onClick={() => navigateTo("/home")}
-                className={cn(
-                  "w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all touch-target touch-press",
-                  pathname === "/home" ? "bg-primary-soft text-primary shadow-soft font-semibold" : "text-text-primary hover:bg-surface-warm"
-                )}
-              >
-                <Home size={18} />
-                Home
-              </button>
               {ROOMS.map((room) => (
                 <button
                   key={room.href}
                   onClick={() => navigateTo(room.href)}
                   className={cn(
-                    "w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all touch-target touch-press",
+                    "w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all touch-target touch-press cursor-pointer",
                     pathname === room.href ? "bg-primary-soft text-primary shadow-soft font-semibold" : "text-text-primary hover:bg-surface-warm"
                   )}
                 >
@@ -225,7 +211,7 @@ export default function MainLayout({
               </div>
               <button
                 onClick={handleLogout}
-                className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-text-primary text-sm transition-all touch-target touch-press shadow-soft"
+                className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-text-primary text-sm transition-all touch-target touch-press shadow-soft cursor-pointer"
                 style={{ background: "var(--surface-warm)" }}
               >
                 <LogOut size={16} />
@@ -235,9 +221,9 @@ export default function MainLayout({
           </div>
         </aside>
 
-        <main className="flex-1 min-h-screen pb-16 md:pb-0">
+        <main className="flex-1 min-h-dvh pb-20 md:pb-0 flex flex-col">
           <div className="md:hidden sticky top-0 z-40 flex items-center justify-between p-3 safe-area-top surface-glass border-b" style={{ borderColor: "var(--border)" }}>
-             <button onClick={() => setSidebarOpen(true)} className="touch-target rounded-xl flex items-center justify-center active:scale-95 transition-transform" style={{ background: "var(--primary-soft)" }} aria-label="Open menu">
+             <button onClick={() => setSidebarOpen(true)} className="touch-target rounded-xl flex items-center justify-center active:scale-95 transition-transform cursor-pointer" style={{ background: "var(--primary-soft)" }} aria-label="Open menu">
                <Menu size={20} className="text-text-primary" />
              </button>
              <div className="flex items-center gap-2">
@@ -251,7 +237,16 @@ export default function MainLayout({
       </div>
       <BottomNav />
       <Toaster />
-      {!online && <OfflineIndicator pendingCount={pendingCount} onDismiss={() => setPendingCount(0)} />}
+      {!online && <OfflineIndicator pendingCount={pendingCount} />}
+      {online && pendingCount > 0 && (
+        <div
+          role="status"
+          className="fixed top-3 right-3 z-[60] flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface/90 backdrop-blur-md border border-border shadow-soft text-[11px] font-semibold text-text-secondary animate-fade-in-soft safe-area-top"
+        >
+          <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" aria-hidden="true" />
+          {pendingCount} menunggu sinkron
+        </div>
+      )}
     </>
   );
 }

@@ -8,7 +8,7 @@ export function Toaster() {
 
   return (
     <div
-      className="fixed bottom-4 right-4 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none"
+      className="fixed bottom-24 right-4 md:bottom-4 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none"
       aria-live="assertive"
       aria-atomic="true"
     >

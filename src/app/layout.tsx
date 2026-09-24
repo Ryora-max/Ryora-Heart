@@ -44,8 +44,8 @@ export const viewport: Viewport = {
   themeColor: "#8B5CF6",
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
+  // Tidak ada maximumScale/userScalable — pembatasan zoom di-flag sebagai
+  // accessibility issue oleh DevTools/Lighthouse.
   viewportFit: "cover",
 };
 
@@ -55,14 +55,21 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${sora.variable} ${jakarta.variable} h-full antialiased`}>
-      <body className="min-h-screen flex flex-col bg-background text-foreground overflow-x-hidden">
-      <Loader />
-      <ServiceWorkerRegistrar />
-      <InstallPrompt />
-      <ErrorBoundary>
-          {children}
-        </ErrorBoundary>
+    <html lang="id" className={`${sora.variable} ${jakarta.variable} h-full antialiased`}>
+      <head>
+        {/* Terapkan data-theme sebelum first paint — anti-FOUC untuk user
+            yang memilih tema non-default. Inline & synchronous sengaja. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem("ryora-theme");document.documentElement.setAttribute("data-theme",t==="light"||t==="aurora"?t:"dark")}catch(e){document.documentElement.setAttribute("data-theme","dark")}})()`,
+          }}
+        />
+      </head>
+      <body className="min-h-dvh flex flex-col bg-background text-foreground overflow-x-hidden">
+        <Loader />
+        <ServiceWorkerRegistrar />
+        <InstallPrompt />
+        <ErrorBoundary>{children}</ErrorBoundary>
       </body>
     </html>
   );

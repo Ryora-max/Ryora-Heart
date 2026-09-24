@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSupabaseUserProfile } from "@/lib/supabase/serverClient";
+import { getAuthenticatedUser } from "@/lib/apiAuth";
 import {
   getMoods,
   addMood,
@@ -48,8 +48,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { action, ...params } = body;
 
-    // Auth via Supabase cookie session (token di body diabaikan — vestigial)
-    const user = await getSupabaseUserProfile();
+    const user = await getAuthenticatedUser();
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -57,101 +56,146 @@ export async function POST(request: NextRequest) {
     const userId = user.id;
     const pairId = user.pair_id || "";
 
-    switch (action) {
-      case "getMoods":
-        return NextResponse.json(await getMoods(pairId));
-      case "addMood":
-        return NextResponse.json(await addMood(userId, pairId, params.mood, params.note));
-      case "getActivities":
-        return NextResponse.json(await getActivities(pairId));
-      case "createActivity":
-        return NextResponse.json(await createActivity(userId, pairId, params.title, params.type || "schedule", params.date, params.description, params.mood, params.isLive));
-      case "toggleActivity":
-        return NextResponse.json(await toggleActivity(userId, pairId, params.activityId, params.completed));
-      case "updateActivity":
-        return NextResponse.json(await updateActivity(userId, pairId, params.activityId, params.title, params.description));
-      case "deleteActivity":
-        return NextResponse.json(await deleteActivity(userId, pairId, params.activityId));
-      case "getGallery":
-        return NextResponse.json(await getGallery(pairId));
-      case "addPhoto":
-        return NextResponse.json(await addPhoto(userId, pairId, params.url, params.caption));
-      case "deletePhoto":
-        return NextResponse.json(await deletePhoto(userId, pairId, params.photoId));
-      case "getCalendarEvents":
-        return NextResponse.json(await getCalendarEvents(pairId));
-      case "addCalendarEvent":
-        return NextResponse.json(await addCalendarEvent(userId, pairId, params.title, params.date, params.type, params.description));
-      case "updateCalendarEvent":
-        return NextResponse.json(await updateCalendarEvent(userId, pairId, params.eventId, params.data));
-      case "deleteCalendarEvent":
-        return NextResponse.json({ success: await deleteCalendarEvent(userId, pairId, params.eventId) });
-      case "getLetters":
-        return NextResponse.json(await getLetters(pairId));
-      case "createLetter":
-        return NextResponse.json(await createLetter(userId, pairId, params.letter));
-      case "deleteLetter":
-        return NextResponse.json({ success: await deleteLetter(userId, pairId, params.letterId) });
-      case "getNotifications":
-        return NextResponse.json(await getNotifications(userId));
-      case "markNotificationsAsRead":
-        return NextResponse.json(await markNotificationsAsRead(userId));
-      case "getPartnerId":
-        return NextResponse.json({ partnerId: await getPartnerId(userId, pairId) });
-      case "updatePresence":
-        await updatePresence(userId, pairId, params.status);
-        return NextResponse.json({ success: true });
-      case "getPresence":
-        return NextResponse.json(await getPresence(pairId));
-      case "addStatusUpdate":
-        return NextResponse.json(await addStatusUpdate(userId, pairId, params.message, params.emoji));
-      case "getStatusUpdates":
-        return NextResponse.json(await getStatusUpdates(pairId));
-      case "sendHug":
-        return NextResponse.json(await sendHug(userId, pairId, params.receiverId, params.message));
-      case "getHugs":
-        return NextResponse.json(await getHugs(pairId));
-      case "updateLoveMeter":
-        return NextResponse.json(await updateLoveMeter(userId, pairId, params.percentage));
-      case "getLoveMeter":
-        return NextResponse.json(await getLoveMeter(pairId));
-      case "addLocation":
-        return NextResponse.json(await addLocation(userId, pairId, params.place, params.note, params.lat, params.lng, params.accuracy));
-      case "getLocations":
-        return NextResponse.json(await getLocations(pairId));
-      case "updateProfile":
-        await updateProfile(userId, params.data);
-        return NextResponse.json({ success: true });
-      case "updateSettings":
-        await updateSettings(userId, params.data);
-        return NextResponse.json({ success: true });
-      case "getUserSettings":
-        return NextResponse.json(await getUserSettings(userId));
-      case "getUserExtra":
-        return NextResponse.json(await getUserExtra(userId, params.key));
-      case "setUserExtra":
-        return NextResponse.json(await setUserExtra(userId, pairId, params.key, params.value));
-      case "getAchievements":
-        return NextResponse.json(await getAchievements(pairId));
-      // ─── Chat ───
-      case "getChatMessages":
-        return NextResponse.json(await getChatMessages(pairId));
-      case "sendChatMessage":
-        return NextResponse.json(await sendChatMessage(userId, pairId, params.receiverId, params.content));
-      case "markChatRead":
-        return NextResponse.json(await markChatRead(userId, pairId));
-      // ─── Rindu ───
-      case "getRinduNotifications":
-        return NextResponse.json(await getRinduNotifications(pairId));
-      case "sendRindu":
-        return NextResponse.json(await sendRindu(userId, pairId, params.receiverId, params.level, params.message));
-      case "respondRindu":
-        return NextResponse.json(await respondRindu(userId, pairId, params.rinduId, params.response));
-      default:
-        return NextResponse.json({ error: "Invalid action" }, { status: 400 });
+    // Read actions degrade ke empty data saat backend unreachable — app tetap
+    // usable (empty state) alih-alih error boundary di mana-mana. Write
+    // actions tetap throw → client retry queue menanganinya.
+    const READ_DEFAULTS: Record<string, unknown> = {
+      getMoods: [],
+      getActivities: [],
+      getGallery: [],
+      getCalendarEvents: [],
+      getLetters: [],
+      getNotifications: [],
+      getPartnerId: { partnerId: null },
+      getPresence: [],
+      getStatusUpdates: [],
+      getHugs: [],
+      getLoveMeter: [],
+      getLocations: [],
+      getUserSettings: null,
+      getUserExtra: null,
+      getAchievements: null,
+      getChatMessages: [],
+      getRinduNotifications: [],
+    };
+
+    if (action in READ_DEFAULTS) {
+      try {
+        return NextResponse.json(await runAction(action, userId, pairId, params));
+      } catch (err) {
+        console.warn(`[api/db] ${action} failed, returning empty:`, err);
+        return NextResponse.json(READ_DEFAULTS[action]);
+      }
     }
+
+    return NextResponse.json(await runAction(action, userId, pairId, params));
   } catch (error) {
-    console.error("API error:", error);
+    if (error instanceof InvalidActionError) {
+      return NextResponse.json({ error: "Invalid action" }, { status: 400 });
+    }
+    console.error("API /db error:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
+
+async function runAction(
+  action: string,
+  userId: string,
+  pairId: string,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  params: any
+): Promise<unknown> {
+  switch (action) {
+    case "getMoods":
+      return await getMoods(pairId);
+    case "addMood":
+      return await addMood(userId, pairId, params.mood, params.note);
+    case "getActivities":
+      return await getActivities(pairId);
+    case "createActivity":
+      return await createActivity(userId, pairId, params.title, params.type || "schedule", params.date, params.description, params.mood, params.isLive);
+    case "toggleActivity":
+      return await toggleActivity(userId, pairId, params.activityId, params.completed);
+    case "updateActivity":
+      return await updateActivity(userId, pairId, params.activityId, params.title, params.description, params.endTime, params.isLive);
+    case "deleteActivity":
+      return await deleteActivity(userId, pairId, params.activityId);
+    case "getGallery":
+      return await getGallery(pairId);
+    case "addPhoto":
+      return await addPhoto(userId, pairId, params.url, params.caption);
+    case "deletePhoto":
+      return await deletePhoto(userId, pairId, params.photoId);
+    case "getCalendarEvents":
+      return await getCalendarEvents(pairId);
+    case "addCalendarEvent":
+      return await addCalendarEvent(userId, pairId, params.title, params.date, params.type, params.description);
+    case "updateCalendarEvent":
+      return await updateCalendarEvent(userId, pairId, params.eventId, params.data);
+    case "deleteCalendarEvent":
+      return { success: await deleteCalendarEvent(userId, pairId, params.eventId) };
+    case "getLetters":
+      return await getLetters(pairId);
+    case "createLetter":
+      return await createLetter(userId, pairId, params.letter);
+    case "deleteLetter":
+      return { success: await deleteLetter(userId, pairId, params.letterId) };
+    case "getNotifications":
+      return await getNotifications(userId);
+    case "markNotificationsAsRead":
+      return await markNotificationsAsRead(userId);
+    case "getPartnerId":
+      return { partnerId: await getPartnerId(userId, pairId) };
+    case "updatePresence":
+      await updatePresence(userId, pairId, params.status);
+      return { success: true };
+    case "getPresence":
+      return await getPresence(pairId);
+    case "addStatusUpdate":
+      return await addStatusUpdate(userId, pairId, params.message, params.emoji);
+    case "getStatusUpdates":
+      return await getStatusUpdates(pairId);
+    case "sendHug":
+      return await sendHug(userId, pairId, params.receiverId, params.message);
+    case "getHugs":
+      return await getHugs(pairId);
+    case "updateLoveMeter":
+      return await updateLoveMeter(userId, pairId, params.percentage);
+    case "getLoveMeter":
+      return await getLoveMeter(pairId);
+    case "addLocation":
+      return await addLocation(userId, pairId, params.place, params.note, params.lat, params.lng, params.accuracy);
+    case "getLocations":
+      return await getLocations(pairId);
+    case "updateProfile":
+      await updateProfile(userId, params.data);
+      return { success: true };
+    case "updateSettings":
+      await updateSettings(userId, params.data);
+      return { success: true };
+    case "getUserSettings":
+      return await getUserSettings(userId);
+    case "getUserExtra":
+      return await getUserExtra(pairId, params.key);
+    case "setUserExtra":
+      return await setUserExtra(userId, pairId, params.key, params.value);
+    case "getAchievements":
+      return await getAchievements(pairId);
+    case "getChatMessages":
+      return await getChatMessages(pairId);
+    case "sendChatMessage":
+      return await sendChatMessage(userId, pairId, params.receiverId, params.content);
+    case "markChatRead":
+      return await markChatRead(userId, pairId);
+    case "getRinduNotifications":
+      return await getRinduNotifications(pairId);
+    case "sendRindu":
+      return await sendRindu(userId, pairId, params.receiverId, params.level, params.message);
+    case "respondRindu":
+      return await respondRindu(userId, pairId, params.rinduId, params.response);
+    default:
+      throw new InvalidActionError();
+  }
+}
+
+class InvalidActionError extends Error {}

@@ -23,7 +23,10 @@ function getInitialEnabled() {
 }
 
 export default function CustomCursor() {
-  const [enabled, setEnabled] = useState(getInitialEnabled);
+  // Init false agar SSR dan render client pertama identik (localStorage/
+  // navigator tidak boleh dibaca saat render → hydration mismatch).
+  // Preferensi dibaca deferred di effect.
+  const [enabled, setEnabled] = useState(false);
   const [position, setPosition] = useState({ x: -100, y: -100 });
   const [isVisible, setIsVisible] = useState(false);
   const [sparkles, setSparkles] = useState<Sparkle[]>([]);
@@ -32,11 +35,16 @@ export default function CustomCursor() {
   const targetPos = useRef({ x: -100, y: -100 });
 
   useEffect(() => {
+    const t = setTimeout(() => setEnabled(getInitialEnabled()), 0);
+    return () => clearTimeout(t);
+  }, []);
+
+  useEffect(() => {
     if (!enabled) return;
 
     const handlePointerMove = (e: PointerEvent) => {
       targetPos.current = { x: e.clientX, y: e.clientY };
-      if (!isVisible) setIsVisible(true);
+      setIsVisible(true);
     };
 
     const handlePointerLeave = () => {
@@ -66,15 +74,15 @@ export default function CustomCursor() {
       window.removeEventListener("pointerenter", handlePointerEnter);
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
-  }, [enabled, isVisible]);
+  }, [enabled]);
 
   const handleDoubleClick = useCallback(() => {
     const newSparkles: Sparkle[] = [];
     for (let i = 0; i < SPARKLE_COUNT; i++) {
       newSparkles.push({
         id: Date.now() + i,
-        x: position.x + (Math.random() - 0.5) * 60,
-        y: position.y + (Math.random() - 0.5) * 60,
+        x: currentPos.current.x + (Math.random() - 0.5) * 60,
+        y: currentPos.current.y + (Math.random() - 0.5) * 60,
         angle: Math.random() * 360,
         delay: i * 0.08,
       });
@@ -83,7 +91,7 @@ export default function CustomCursor() {
     setTimeout(() => {
       setSparkles((prev) => prev.filter((s) => !newSparkles.find((ns) => ns.id === s.id)));
     }, 800);
-  }, [position]);
+  }, []);
 
   useEffect(() => {
     if (!enabled) return;
@@ -123,11 +131,13 @@ export default function CustomCursor() {
     };
   }, [enabled]);
 
+  // Toggle disembunyikan di mobile: bentrok dengan BottomNav (bottom-3..4)
+  // dan custom cursor memang nonaktif di touch device.
   if (!enabled) {
     return (
       <button
         onClick={toggleCursor}
-        className="fixed bottom-4 right-4 z-50 p-2 rounded-full bg-white/90 backdrop-blur-sm border-2 border-pink-200 shadow-lg hover:shadow-xl transition-all"
+        className="hidden md:block fixed bottom-4 left-4 z-50 p-2 rounded-full bg-surface/90 backdrop-blur-sm border-2 border-border shadow-lg hover:shadow-xl transition-all"
         title="Enable custom cursor"
       >
         <span className="text-sm">💖</span>
@@ -139,7 +149,7 @@ export default function CustomCursor() {
     <>
       <button
         onClick={toggleCursor}
-        className="fixed bottom-4 right-4 z-50 p-2 rounded-full bg-white/90 backdrop-blur-sm border-2 border-pink-200 shadow-lg hover:shadow-xl transition-all"
+        className="hidden md:block fixed bottom-4 left-4 z-50 p-2 rounded-full bg-surface/90 backdrop-blur-sm border-2 border-border shadow-lg hover:shadow-xl transition-all"
         title="Disable custom cursor"
       >
         <span className="text-sm">✨</span>

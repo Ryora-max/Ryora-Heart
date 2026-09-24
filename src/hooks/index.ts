@@ -26,3 +26,21 @@ export { useOnlineStatus } from "./useOnlineStatus";
 export { useRetryQueue } from "./useRetryQueue";
 export { usePolling } from "./usePolling";
 export { useRealtime, useRealtimeMulti } from "./useRealtime";
+export {
+  usePresence,
+  usePartnerId,
+  useMoods,
+  useActivities,
+  useChat,
+  useRindu,
+  useLiveLocation,
+  useNotifications,
+  useGallery,
+  useCalendarEvents,
+  useLetters,
+  useLoveMeter,
+  useHugs,
+  useUserSettings,
+  useUserExtra,
+} from "./useDatabase";
+

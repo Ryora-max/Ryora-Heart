@@ -9,19 +9,19 @@
   },
   "android": {
     "allowMixedContent": true,
-    "backgroundColor": "#1a1a2e"
+    "backgroundColor": "#FFF9F3"
   },
   "plugins": {
     "SplashScreen": {
       "launchShowDuration": 2000,
-      "backgroundColor": "#1a1a2e",
+      "backgroundColor": "#FFF9F3",
       "androidScaleType": "CENTER_CROP",
       "showSpinner": false,
       "androidSplashResourceName": "splash"
     },
     "StatusBar": {
-      "style": "DARK",
-      "backgroundColor": "#1a1a2e"
+      "style": "LIGHT",
+      "backgroundColor": "#FFF9F3"
     }
   }
 }

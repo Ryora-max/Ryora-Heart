@@ -9,7 +9,7 @@ export default function HomePage() {
     router.replace("/dashboard");
   }, [router]);
   return (
-    <div className="page-bg min-h-screen flex items-center justify-center">
+    <div className="page-bg min-h-dvh flex items-center justify-center">
       <p className="text-body">Memuat...</p>
     </div>
   );

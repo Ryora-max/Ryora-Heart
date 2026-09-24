@@ -41,14 +41,15 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
       }
 
       return (
-        <div className="flex items-center justify-center min-h-screen p-6">
-          <div className="text-center max-w-md glass-panel p-8 rounded-2xl">
+        <div className="page-bg flex items-center justify-center min-h-dvh p-6">
+          <div className="text-center max-w-md surface-card p-8">
             <div className="text-6xl mb-4">😵</div>
-            <h2 className="text-2xl font-bold text-white mb-2">Oops, something broke</h2>
-            <p className="text-white/60 mb-6">
+            <h2 className="text-2xl font-bold text-heading mb-2">Oops, something broke</h2>
+            <p className="text-body mb-6">
               {this.state.error?.message || "An unexpected error occurred"}
             </p>
             <button
+              type="button"
               onClick={() => {
                 this.setState({ hasError: false, error: null });
                 window.location.href = "/home";

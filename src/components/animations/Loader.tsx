@@ -11,7 +11,7 @@ export default function Loader() {
     const timer = setTimeout(() => {
       setLoading(false);
       document.body.style.overflow = "";
-    }, 2500);
+    }, 1000);
 
     return () => {
       clearTimeout(timer);

@@ -1,8 +1,13 @@
 @import "tailwindcss";
 
+/* Map `dark:` variant ke theme system app (data-theme attribute),
+   bukan OS prefers-color-scheme. Aurora juga dark-background → ikut. */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *, [data-theme="aurora"], [data-theme="aurora"] *));
+
 :root {
   --background: #FFF5F7;
   --foreground: #4A3F44;
+  --landing-bg: radial-gradient(circle at center, #FFF9F3 0%, #F5EAE0 50%, #EADBC8 100%);
   --surface: #FFFFFF;
   --surface-warm: #FFF0F3;
   --primary: #E8A0BF;
@@ -26,6 +31,7 @@
 [data-theme="dark"] {
   --background: #1A1520;
   --foreground: #F5F0F2;
+  --landing-bg: radial-gradient(circle at center, #2E2118 0%, #1F1610 50%, #140D09 100%);
   --surface: #241E28;
   --surface-warm: #2A2230;
   --primary: #D4A0C0;
@@ -49,6 +55,7 @@
 [data-theme="aurora"] {
   --background: #0F0A14;
   --foreground: #F5F0F7;
+  --landing-bg: radial-gradient(circle at center, #241430 0%, #160D1E 50%, #0B0610 100%);
   --surface: #1A1225;
   --surface-warm: #20182A;
   --primary: #D4A0E8;
@@ -69,7 +76,7 @@
   --shadow-hover: rgba(0, 0, 0, 0.45);
 }
 
-@theme inline {
+@theme {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-surface: var(--surface);
@@ -195,12 +202,12 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .loading-bar {
-  animation: loading-bar-fill 2s ease-out forwards;
+  animation: loading-bar-fill 0.9s ease-out forwards;
 }
 
-/* CSS-only fallback: hide loader after 3s even if JS breaks */
+/* CSS-only fallback: hide loader even if JS breaks */
 .loader-splash {
-  animation: loader-fade-out 0.5s ease-out 3s forwards;
+  animation: loader-fade-out 0.4s ease-out 1.4s forwards;
 }
 
 .animate-fade-in-soft {
@@ -261,9 +268,7 @@ h1, h2, h3, h4, h5, h6 {
 /* Focus styles */
 input:focus, textarea:focus, select:focus, button:focus-visible {
   outline: none;
-  ring: 2px;
-  ring-offset: 2px;
-  ring-color: var(--primary-soft);
+  box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--primary);
 }
 
 /* Safe area for mobile */
@@ -292,6 +297,12 @@ input:focus, textarea:focus, select:focus, button:focus-visible {
   background: var(--background);
   color: var(--text-primary);
   min-height: 100vh;
+}
+
+/* Landing/login "pintu depan" — warm identity yang adaptif ke tema.
+   Light: cream hangat. Dark/Aurora: warm-dark (coklat/ungu gelap). */
+.landing-bg {
+  background: var(--landing-bg);
 }
 
 /* Card surface (glass effect) */

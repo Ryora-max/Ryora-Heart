@@ -74,7 +74,7 @@ export function InstallPrompt() {
     <div
       role="dialog"
       aria-labelledby="ryora-install-title"
-      className="fixed bottom-4 left-4 right-4 z-50 mx-auto max-w-sm rounded-2xl border border-pink-200 bg-white/90 backdrop-blur-xl p-4 shadow-soft-hover safe-area-inset"
+      className="fixed bottom-24 md:bottom-4 left-4 right-4 z-50 mx-auto max-w-sm rounded-2xl border border-border bg-surface/90 backdrop-blur-xl p-4 shadow-soft-hover safe-area-inset"
     >
       <div className="flex items-start gap-3">
         <div className="text-3xl shrink-0">💝</div>
@@ -96,7 +96,7 @@ export function InstallPrompt() {
             <button
               type="button"
               onClick={handleDismiss}
-              className="px-4 py-2 rounded-full bg-transparent text-text-secondary text-sm font-medium hover:bg-black/5 transition-colors"
+              className="px-4 py-2 rounded-full bg-transparent text-text-secondary text-sm font-medium hover:bg-surface-warm transition-colors"
             >
               Nanti saja
             </button>

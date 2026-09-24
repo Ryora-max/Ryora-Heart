@@ -1,12 +1,13 @@
 "use client";
 
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
-import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { APP_CONFIG } from "@/config";
 import { useAuthStore } from "@/stores";
-import { useLiveLocation, usePartnerId } from "@/hooks/useDatabase";
+import { useLiveLocation, usePartnerId, usePresence, useRindu } from "@/hooks/useDatabase";
+import { playHeartPopSound, playChimeSound } from "@/lib/soundEffects";
 import type { LiveLocation } from "@/types";
 
 // Fix default marker icon (Leaflet has issues with bundlers)
@@ -87,14 +88,58 @@ function FitBounds({ points }: { points: [number, number][] }) {
 
 export default function MapPage() {
   const { user, token } = useAuthStore();
-  const { locations, loading, updateLocation } = useLiveLocation(token || "");
   const { partnerId } = usePartnerId(token || "", user?.id);
+  const { presence } = usePresence(token || "");
+  const { sendRindu } = useRindu(token || "");
+  const [pingSent, setPingSent] = useState(false);
 
-  const [mounted] = useState(() => typeof window !== "undefined");
+  // Adaptive polling: partner online & baru terlihat <90s → 5s (live share),
+  // idle/offline → 15s. Realtime tetap jalan di atas interval ini.
+  const partnerPresence = presence.find((p) => p.userId === partnerId);
+  const [nowTs, setNowTs] = useState<number | null>(null);
+  useEffect(() => {
+    const t = setTimeout(() => setNowTs(Date.now()), 0);
+    const id = setInterval(() => setNowTs(Date.now()), 10000);
+    return () => { clearTimeout(t); clearInterval(id); };
+  }, []);
+  const partnerLive =
+    nowTs !== null &&
+    partnerPresence?.status === "online" &&
+    nowTs - new Date(partnerPresence.lastSeen).getTime() < 90_000;
+  const pollMs = partnerLive ? 5000 : 15000;
+  const { locations, loading, updateLocation } = useLiveLocation(token || "", pollMs);
+
+  const handleSendPingPeluk = useCallback(async () => {
+    if (!partnerId) return;
+    playHeartPopSound();
+    playChimeSound();
+    setPingSent(true);
+    try {
+      await sendRindu(
+        "rindu_banget",
+        partnerId,
+        `${user?.role === "owner" ? APP_CONFIG.users.owner.username : APP_CONFIG.users.partner.username} mengirimkan pelukan hangat & sinyal lokasi cinta! 📍💕`
+      );
+    } catch {
+      // Ignore
+    }
+    setTimeout(() => setPingSent(false), 2500);
+  }, [partnerId, sendRindu, user]);
+
+  // Flag "sudah mount di client" — `typeof window` di useState initializer
+  // menghasilkan SSR=false vs client=true → hydration mismatch. Init false
+  // di kedua sisi, lalu flip deferred setelah mount.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => setMounted(true), 0);
+    return () => clearTimeout(t);
+  }, []);
+
   const [updating, setUpdating] = useState(false);
   const [watching, setWatching] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const watchIdRef = useRef<number | null>(null);
+  const lastWriteRef = useRef(0);
 
   useEffect(() => {
     return () => {
@@ -237,6 +282,11 @@ export default function MapPage() {
     setError(null);
     const id = navigator.geolocation.watchPosition(
       (pos) => {
+        // Throttle write: maks 1 update tiap 4 detik (GPS tick bisa
+        // fire jauh lebih sering saat bergerak)
+        const now = Date.now();
+        if (now - lastWriteRef.current < 4000) return;
+        lastWriteRef.current = now;
         updateLocation({
           place: "Lokasi live",
           lat: pos.coords.latitude,
@@ -282,28 +332,67 @@ export default function MapPage() {
   }, [locations, user?.id, user?.role, partnerId, ownerName, partnerName]);
 
   return (
-    <div className="page-bg min-h-screen safe-area-inset">
+    <div className="page-bg min-h-dvh safe-area-inset">
       <div className="mx-auto max-w-2xl px-4 pt-6 pb-10">
-        {/* Header */}
-        <div className="mb-5">
-          <h1 className="text-gradient-primary text-3xl font-bold mb-1">
-            🗺️ Peta Kita
+        {/* Header — centered, sama seperti Live & Settings */}
+        <div className="mb-5 text-center">
+          <h1 className="text-gradient-primary text-3xl font-bold md:text-4xl mb-2">
+            Peta Kita 🗺️
           </h1>
-          <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
+          <p className="text-body text-sm">
             Lokasi live kamu &amp; pasangan
           </p>
+        </div>
+
+        {/* Romantic LDR Radar & Red Thread of Fate Card */}
+        <div className="mb-4 p-4 rounded-2xl bg-gradient-to-r from-rose-500/15 via-pink-500/10 to-amber-500/15 border border-rose-300/60 dark:border-rose-800/60 backdrop-blur-md shadow-md">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="w-11 h-11 rounded-2xl bg-rose-500 text-white flex items-center justify-center text-xl shadow-md">
+                🧵
+              </div>
+              <div>
+                <div className="flex items-center gap-1.5">
+                  <h2 className="text-sm font-black text-rose-950 dark:text-rose-100">
+                    Benang Merah Cinta LDR
+                  </h2>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-100 dark:bg-rose-900/60 text-rose-700 dark:text-rose-200">
+                    {distanceInfo ? `~${Math.round(distanceInfo.km)} km` : "Terhubung"}
+                  </span>
+                </div>
+                <p className="text-xs text-rose-900/80 dark:text-rose-200/80 mt-0.5">
+                  {distanceInfo
+                    ? `Terpisah sejauh ~${Math.round(distanceInfo.km)} km (estimasi ${distanceInfo.travelLabel}), namun hati selalu beriringan.`
+                    : `Memperbarui koordinat jarak kasih ${ownerName} & ${partnerName}...`}
+                </p>
+              </div>
+            </div>
+
+            {/* Ping Peluk Button */}
+            <button
+              onClick={handleSendPingPeluk}
+              disabled={pingSent || !partnerId}
+              className={`touch-press px-4 py-2 rounded-xl text-xs font-bold shadow-sm transition-all flex items-center gap-1.5 cursor-pointer ml-auto ${
+                pingSent
+                  ? "bg-emerald-600 text-white"
+                  : "bg-rose-500 hover:bg-rose-600 text-white"
+              }`}
+            >
+              <span>{pingSent ? "Pelukan Terkirim! 💕" : "Titip Peluk Sini 🤗"}</span>
+            </button>
+          </div>
         </div>
 
         {/* Map */}
         <div
           className="surface-card overflow-hidden mb-4"
           style={{
-            height: "70vh",
+            height: "65vh",
             borderRadius: 20,
             border: "1px solid var(--border)",
           }}
         >
-          {mounted && typeof window !== "undefined" ? (
+          {mounted ? (
             <MapContainer
               center={DEFAULT_CENTER}
               zoom={DEFAULT_ZOOM}
@@ -340,6 +429,17 @@ export default function MapPage() {
                   </Popup>
                 </Marker>
               ))}
+              {markerPoints.length >= 2 && (
+                <Polyline
+                  positions={markerPoints}
+                  pathOptions={{
+                    color: "#f43f5e",
+                    weight: 3.5,
+                    dashArray: "8, 8",
+                    opacity: 0.85,
+                  }}
+                />
+              )}
               <FitBounds points={markerPoints} />
             </MapContainer>
           ) : (

@@ -2,6 +2,9 @@
 "use server";
 
 import { getSupabaseServer } from "@/lib/supabase/server";
+import { sendPushToPartner } from "@/lib/push";
+import { APP_CONFIG } from "@/config";
+import { LOCAL_PAIR_ID } from "@/lib/localAuth";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 // Note: initializeDatabase() dari lib/db/init.ts TIDAK dipanggil lagi di sini.
@@ -124,9 +127,10 @@ function mapStatusUpdate(r: any) {
 
 function mapPresence(r: any) {
   return {
-    user_id: r.user_id,
+    id: r.id,
+    userId: r.user_id,
     status: r.status,
-    last_seen: r.last_seen,
+    lastSeen: r.last_seen,
   };
 }
 
@@ -136,31 +140,94 @@ function genId(): string {
 
 // ─── Partner / Notifications ──────────────────────────────────────────────
 
+let usersEnsured = false;
+async function ensureUsersExist(supabase: SupabaseClient, pairId: string) {
+  // Hanya seed user lokal ke pair lokal — jangan pernah menyuntikkan
+  // user-1/user-2 palsu ke pair Supabase Auth (UUID) yang asli.
+  if (usersEnsured || pairId !== LOCAL_PAIR_ID) return;
+  try {
+    const o = APP_CONFIG.users.owner;
+    const p = APP_CONFIG.users.partner;
+    await supabase.from("users").upsert([
+      {
+        id: "user-1",
+        username: o.username,
+        name: o.name,
+        role: "owner",
+        relationship: o.relationship,
+        pair_id: LOCAL_PAIR_ID,
+        email: o.email,
+      },
+      {
+        id: "user-2",
+        username: p.username,
+        name: p.name,
+        role: "partner",
+        relationship: p.relationship,
+        pair_id: LOCAL_PAIR_ID,
+        email: p.email,
+      },
+    ], { onConflict: "id" });
+    usersEnsured = true;
+  } catch (e) {
+    // Non-fatal if upsert cannot run
+    console.warn("ensureUsersExist warning:", e);
+  }
+}
+
 export async function getPartnerId(userId: string, pairId: string): Promise<string | null> {
-  const supabase = getSupabaseServer();
-  const { data } = await supabase
-    .from("users")
-    .select("id")
-    .eq("pair_id", pairId)
-    .neq("id", userId)
-    .limit(1)
-    .maybeSingle();
-  return data?.id || null;
+  try {
+    const supabase = getSupabaseServer();
+    await ensureUsersExist(supabase, pairId);
+    const { data } = await supabase
+      .from("users")
+      .select("id")
+      .eq("pair_id", pairId)
+      .neq("id", userId)
+      .limit(1)
+      .maybeSingle();
+    if (data?.id) return data.id;
+  } catch {
+    // Fallback if DB query fails
+  }
+
+  // Infallible pair resolution for Ryo & Ara
+  if (userId === "user-1" || userId === "eb6dfbf6-8389-4cf2-b771-f52b9ac32cac") {
+    return "user-2";
+  }
+  if (userId === "user-2" || userId === "8cc49c82-072b-4b48-a329-9d6ddda94f52") {
+    return "user-1";
+  }
+  return userId === "user-1" ? "user-2" : "user-1";
 }
 
 async function notifyPartner(supabase: SupabaseClient, userId: string, pairId: string, message: string, type: string) {
-  const partnerId = await getPartnerId(userId, pairId);
-  if (!partnerId) return;
-  await supabase.from("notifications").insert({
-    id: genId(),
-    user_id: partnerId,
-    pair_id: pairId,
-    message,
-    type,
-    read: false,
-    created_at: new Date().toISOString(),
-  });
+  try {
+    const partnerId = await getPartnerId(userId, pairId);
+    if (!partnerId) return;
+    await supabase.from("notifications").insert({
+      id: genId(),
+      user_id: partnerId,
+      pair_id: pairId,
+      message,
+      type,
+      read: false,
+      created_at: new Date().toISOString(),
+    });
+
+    // Web push ke partner — fire-and-forget, kegagalan tidak boleh
+    // mengganggu aksi utama.
+    sendPushToPartner(userId, pairId, partnerId, {
+      title: "RYORA 💕",
+      body: message,
+      url: type === "chat" ? "/chat" : "/dashboard",
+      tag: `ryora-${type}`,
+    }).catch(() => {});
+  } catch (err) {
+    console.warn("notifyPartner warning:", err);
+  }
 }
+
 
 // ─── Moods ────────────────────────────────────────────────────────────────
 
@@ -252,11 +319,21 @@ export async function toggleActivity(userId: string, pairId: string, activityId:
   return { success: true };
 }
 
-export async function updateActivity(userId: string, pairId: string, activityId: string, title?: string, description?: string) {
+export async function updateActivity(
+  userId: string,
+  pairId: string,
+  activityId: string,
+  title?: string,
+  description?: string,
+  endTime?: string,
+  isLive?: boolean
+) {
   const supabase = getSupabaseServer();
   const updates: Record<string, unknown> = {};
   if (title !== undefined) updates.title = title;
   if (description !== undefined) updates.description = description || null;
+  if (endTime !== undefined) updates.end_time = endTime;
+  if (isLive !== undefined) updates.is_live = isLive;
 
   if (Object.keys(updates).length === 0) return { success: true };
 
@@ -435,7 +512,10 @@ export async function createLetter(userId: string, pairId: string, letter: { tit
   });
   if (error) throw error;
 
-  await notifyPartner(supabase, userId, pairId, `New letter: ${letter.title}`, "letter");
+  // Fridge notes sering ditulis — jangan spam notifikasi (dan title-nya JSON meta).
+  if (letter.type !== "fridge_note") {
+    await notifyPartner(supabase, userId, pairId, `New letter: ${letter.title}`, "letter");
+  }
 
   return { id, title: letter.title, content: letter.content, type: letter.type, openDate: letter.openDate, createdAt: now, createdBy: userId };
 }
@@ -474,10 +554,17 @@ export async function updatePresence(userId: string, pairId: string, status: str
   const supabase = getSupabaseServer();
   const now = new Date().toISOString();
 
-  const { data: existing } = await supabase.from("ldr_presence").select("id").eq("user_id", userId).maybeSingle();
+  // Scope by user+pair — user_id saja bisa kena row pair lain kalau user
+  // yang sama ada di multiple pair.
+  const { data: existing } = await supabase
+    .from("ldr_presence")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("pair_id", pairId)
+    .maybeSingle();
 
   if (existing) {
-    const { error } = await supabase.from("ldr_presence").update({ status, last_seen: now }).eq("user_id", userId);
+    const { error } = await supabase.from("ldr_presence").update({ status, last_seen: now }).eq("id", existing.id);
     if (error) throw error;
   } else {
     const { error } = await supabase.from("ldr_presence").insert({
@@ -496,7 +583,7 @@ export async function getPresence(pairId: string) {
   const supabase = getSupabaseServer();
   const { data, error } = await supabase
     .from("ldr_presence")
-    .select("user_id, status, last_seen")
+    .select("id, user_id, status, last_seen")
     .eq("pair_id", pairId);
   if (error) throw error;
   return (data || []).map(mapPresence);
@@ -678,16 +765,19 @@ export async function getLocations(pairId: string) {
 
 // ─── User Extras ──────────────────────────────────────────────────────────
 
-export async function getUserExtra(userId: string, key: string) {
+// user_extras adalah state BERSAMA per-pair (mis. jumlah siram Pohon Cinta).
+// Baca & tulis di-scope by pair_id+key supaya kedua partner melihat nilai sama.
+export async function getUserExtra(pairId: string, key: string) {
   const supabase = getSupabaseServer();
   const { data, error } = await supabase
     .from("user_extras")
     .select("value")
-    .eq("user_id", userId)
+    .eq("pair_id", pairId)
     .eq("key", key)
-    .maybeSingle();
+    .order("updated_at", { ascending: false })
+    .limit(1);
   if (error) throw error;
-  return data?.value || null;
+  return data?.[0]?.value || null;
 }
 
 export async function setUserExtra(userId: string, pairId: string, key: string, value: string) {
@@ -697,12 +787,14 @@ export async function setUserExtra(userId: string, pairId: string, key: string, 
   const { data: existing } = await supabase
     .from("user_extras")
     .select("id")
-    .eq("user_id", userId)
+    .eq("pair_id", pairId)
     .eq("key", key)
-    .maybeSingle();
+    .order("updated_at", { ascending: false })
+    .limit(1);
 
-  if (existing) {
-    const { error } = await supabase.from("user_extras").update({ value, updated_at: now }).eq("id", existing.id);
+  const existingId = existing?.[0]?.id;
+  if (existingId) {
+    const { error } = await supabase.from("user_extras").update({ value, updated_at: now }).eq("id", existingId);
     if (error) throw error;
   } else {
     const { error } = await supabase.from("user_extras").insert({
@@ -738,7 +830,7 @@ export async function getAchievements(pairId: string) {
     .limit(1)
     .maybeSingle();
 
-  const startDate = settings?.relationship_start_date ? new Date(settings.relationship_start_date) : new Date("2023-01-01");
+  const startDate = settings?.relationship_start_date ? new Date(settings.relationship_start_date) : new Date(APP_CONFIG.relationship.startDate);
   const daysTogether = Math.floor((Date.now() - startDate.getTime()) / (1000 * 60 * 60 * 24));
   const meetupPassed = settings?.next_meetup_date ? new Date(settings.next_meetup_date) < new Date() : false;
 
@@ -790,6 +882,17 @@ export async function sendChatMessage(userId: string, pairId: string, receiverId
     created_at: now,
   });
   if (error) throw error;
+
+  // Push-only (bukan in-app notification — chat sudah realtime).
+  // Preview dipotong supaya payload push tetap kecil.
+  const preview = content.length > 80 ? content.slice(0, 77) + "…" : content;
+  sendPushToPartner(userId, pairId, receiverId, {
+    title: "💬 Pesan baru",
+    body: preview,
+    url: "/chat",
+    tag: "ryora-chat",
+  }).catch(() => {});
+
   return { id, senderId: userId, receiverId, content, createdAt: now };
 }
 
