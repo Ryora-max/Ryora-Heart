@@ -95,15 +95,16 @@ DROP POLICY IF EXISTS "notifications_pair_insert" ON notifications;
 CREATE POLICY "notifications_pair_insert" ON notifications
   FOR INSERT WITH CHECK (pair_id = auth_pair_id());
 
--- user_settings: user hanya bisa baca/update settings sendiri
+-- user_settings: pair-scoped — settings (tanggal jadian, dll) shared per pair.
+-- Penting untuk realtime: partner harus bisa SELECT row yang sama.
 DROP POLICY IF EXISTS "user_settings_user_all" ON user_settings;
-CREATE POLICY "user_settings_user_all" ON user_settings
-  FOR ALL USING (user_id = auth_user_id()) WITH CHECK (user_id = auth_user_id());
+CREATE POLICY "user_settings_pair_all" ON user_settings
+  FOR ALL USING (pair_id = auth_pair_id()) WITH CHECK (pair_id = auth_pair_id());
 
--- user_extras: user hanya bisa baca/update extras sendiri
+-- user_extras: pair-scoped — love points, game state, push subscriptions, dll.
 DROP POLICY IF EXISTS "user_extras_user_all" ON user_extras;
-CREATE POLICY "user_extras_user_all" ON user_extras
-  FOR ALL USING (user_id = auth_user_id()) WITH CHECK (user_id = auth_user_id());
+CREATE POLICY "user_extras_pair_all" ON user_extras
+  FOR ALL USING (pair_id = auth_pair_id()) WITH CHECK (pair_id = auth_pair_id());
 
 -- ldr_presence: pair members bisa CRUD
 DROP POLICY IF EXISTS "ldr_presence_pair_all" ON ldr_presence;

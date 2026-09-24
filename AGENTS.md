@@ -83,10 +83,17 @@ Semua phase (2a-2e) selesai. Ryora sekarang fully powered by Supabase:
 
 ## Environment Variables
 
+Active Supabase project: `hftcdemqxtlbdbzyvxtn` (restored original — akun Ryora-max).
+Project lama `jjlgnxufrpqydzuwdbzn` (akun lain) tidak dipakai lagi.
+
 Required in `.env.local` (local) and Vercel project settings:
 - `NEXT_PUBLIC_SUPABASE_URL` — Supabase project URL
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY` — Supabase anon key (browser client)
 - `SUPABASE_SERVICE_ROLE_KEY` — Supabase service role key (server client, bypass RLS)
+- `OWNER_PIN` / `PARTNER_PIN` — local-auth PINs (server-only, fallback saat Supabase down)
+- `NEXT_PUBLIC_VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY` / `VAPID_SUBJECT` — Web Push
+
+Local users: `user-1` (Ryo/owner) + `user-2` (Ara/partner), `pair_id = 'pair-1'`.
 
 Tidak lagi dipakai (dihapus di Phase 2e):
 - ~~`DATABASE_URL`~~ — DB queries via Supabase client SDK

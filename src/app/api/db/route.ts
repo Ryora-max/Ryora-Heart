@@ -93,7 +93,10 @@ export async function POST(request: NextRequest) {
     if (error instanceof InvalidActionError) {
       return NextResponse.json({ error: "Invalid action" }, { status: 400 });
     }
-    console.error("API /db error:", error);
+    console.error(
+      "API /db error:",
+      error instanceof Error ? `${error.message}\n${error.stack}` : JSON.stringify(error, Object.getOwnPropertyNames(error as object))
+    );
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
