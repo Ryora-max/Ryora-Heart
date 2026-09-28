@@ -12,6 +12,40 @@ import { APP_CONFIG } from "@/config";
 
 const SESSION_MAX_AGE = 60 * 60 * 24 * 30; // 30 hari
 
+// Rate limit login — PIN 4-digit mudah di-brute-force tanpa throttle.
+// In-memory (per instance); cukup untuk app privat 2 user.
+const loginAttempts = new Map<string, { fails: number; lockedUntil: number }>();
+const MAX_FAILS = 5;
+const LOCK_MS = 60_000;
+
+function attemptKey(request: NextRequest): string {
+  return (
+    request.headers.get("x-forwarded-for")?.split(",")[0].trim() ||
+    request.headers.get("x-real-ip") ||
+    "unknown"
+  );
+}
+
+function isLocked(key: string): boolean {
+  const rec = loginAttempts.get(key);
+  if (!rec) return false;
+  if (rec.lockedUntil > Date.now()) return true;
+  if (rec.lockedUntil > 0) loginAttempts.delete(key); // lock expired
+  return false;
+}
+
+function recordFail(key: string) {
+  const rec = loginAttempts.get(key) ?? { fails: 0, lockedUntil: 0 };
+  rec.fails += 1;
+  if (rec.fails >= MAX_FAILS) {
+    rec.fails = 0;
+    rec.lockedUntil = Date.now() + LOCK_MS;
+  }
+  // Batasi pertumbuhan map
+  if (loginAttempts.size > 500) loginAttempts.clear();
+  loginAttempts.set(key, rec);
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
@@ -19,6 +53,14 @@ export async function POST(request: NextRequest) {
 
     switch (action) {
       case "login": {
+        const key = attemptKey(request);
+        if (isLocked(key)) {
+          return NextResponse.json(
+            { error: "Terlalu banyak percobaan — tunggu 1 menit 🔒" },
+            { status: 429 }
+          );
+        }
+
         const { role, password } = body as { role?: string; password?: string };
         if (role !== "owner" && role !== "partner") {
           return NextResponse.json({ error: "Role tidak valid" }, { status: 400 });
@@ -40,6 +82,7 @@ export async function POST(request: NextRequest) {
             password,
           });
           if (!error && data.user) {
+            loginAttempts.delete(key); // sukses — reset counter
             const profile = await getSupabaseUserProfile();
             // Set local cookie juga — saat Supabase down, session tetap
             // ter-autentikasi via fallback lokal (bridge resilience).
@@ -57,6 +100,7 @@ export async function POST(request: NextRequest) {
           // (AuthApiError status 400). Network/timeout (status 0/5xx,
           // AuthRetryableFetchError) → lanjut ke local PIN fallback.
           if (error && error.status === 400) {
+            recordFail(key);
             return NextResponse.json({ error: "Password salah 😢" }, { status: 401 });
           }
         } catch {
@@ -67,8 +111,11 @@ export async function POST(request: NextRequest) {
         const expected =
           role === "owner" ? process.env.OWNER_PIN : process.env.PARTNER_PIN;
         if (!expected || password !== expected) {
+          recordFail(key);
           return NextResponse.json({ error: "Password salah 😢" }, { status: 401 });
         }
+
+        loginAttempts.delete(key); // sukses — reset counter
 
         const response = NextResponse.json({ user: getLocalProfile(role as LocalRole) });
         response.cookies.set(LOCAL_SESSION_COOKIE, sessionValueForRole(role), {

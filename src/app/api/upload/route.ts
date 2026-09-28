@@ -4,6 +4,9 @@ import { uploadToStorage } from "@/lib/supabase/upload";
 import { getLocalUserFromSessionValue, LOCAL_SESSION_COOKIE, LOCAL_PAIR_ID } from "@/lib/localAuth";
 import type { User } from "@/types";
 
+// Validasi server-side — client check bisa di-bypass via curl.
+const MAX_UPLOAD_BYTES = 15 * 1024 * 1024;
+
 async function getAuthenticatedUser(): Promise<(User & { pair_id: string }) | null> {
   const cookieStore = await cookies();
   const localUser = getLocalUserFromSessionValue(cookieStore.get(LOCAL_SESSION_COOKIE)?.value);
@@ -31,6 +34,15 @@ export async function POST(request: NextRequest) {
 
     if (!file) {
       return NextResponse.json({ error: "Missing file" }, { status: 400 });
+    }
+    if (!(file instanceof File) || typeof file.size !== "number" || file.size === 0) {
+      return NextResponse.json({ error: "File tidak valid" }, { status: 400 });
+    }
+    if (file.size > MAX_UPLOAD_BYTES) {
+      return NextResponse.json({ error: "File melebihi 15 MB" }, { status: 413 });
+    }
+    if (file.type && !file.type.startsWith("image/")) {
+      return NextResponse.json({ error: "Hanya file gambar yang diizinkan" }, { status: 400 });
     }
 
     const user = await getAuthenticatedUser();

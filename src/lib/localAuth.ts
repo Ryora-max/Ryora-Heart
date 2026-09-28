@@ -36,19 +36,45 @@ export const LOCAL_USERS: Record<LocalRole, LocalUser> = {
 
 export const LOCAL_SESSION_COOKIE = "ryora-session";
 
-/** Session cookie value per role, e.g. "user-session-owner". */
+// Nilai cookie di-sign dengan server secret — string polos "user-session-owner"
+// ada di repo publik, jadi tanpa signature siapa pun bisa forge cookie auth.
+// Secret: env server (tidak pernah masuk client bundle — non-NEXT_PUBLIC
+// env var jadi undefined di browser; value di sana tidak pernah dipakai
+// untuk validasi, jadi aman).
+function sessionSecret(): string {
+  return (
+    process.env.LOCAL_SESSION_SECRET ||
+    process.env.SUPABASE_SERVICE_ROLE_KEY ||
+    "ryora-local-fallback"
+  );
+}
+
+/** Fingerprint sinkron tanpa dependency — aman di edge/proxy & browser. */
+function fingerprint(input: string): string {
+  const s = `ryora:${sessionSecret()}:${input}`;
+  let h1 = 0x811c9dc5;
+  let h2 = 0x01000193;
+  for (let i = 0; i < s.length; i++) {
+    const c = s.charCodeAt(i);
+    h1 = Math.imul(h1 ^ c, 0x01000193) >>> 0;
+    h2 = Math.imul(h2 + c, 0x85ebca6b) >>> 0;
+  }
+  return `${h1.toString(36)}${h2.toString(36)}${s.length.toString(36)}`;
+}
+
+/** Session cookie value per role, e.g. "user-session-owner-1a2b3c". */
 export function sessionValueForRole(role: LocalRole): string {
-  return `user-session-${role}`;
+  return `user-session-${role}-${fingerprint(role)}`;
 }
 
 /**
- * Resolve role dari nilai cookie ryora-session.
- * Return null kalau cookie tidak ada / tidak dikenal.
+ * Resolve role dari nilai cookie ryora-session — exact match terhadap
+ * nilai signed; nilai unsigned/forged ditolak.
  */
 export function roleFromSessionValue(sessionValue: string | undefined | null): LocalRole | null {
   if (!sessionValue) return null;
-  if (sessionValue.includes("user-session-owner")) return "owner";
-  if (sessionValue.includes("user-session-partner")) return "partner";
+  if (sessionValue === sessionValueForRole("owner")) return "owner";
+  if (sessionValue === sessionValueForRole("partner")) return "partner";
   return null;
 }
 
