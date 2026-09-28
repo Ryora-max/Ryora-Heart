@@ -56,6 +56,18 @@ export async function POST(request: NextRequest) {
     const userId = user.id;
     const pairId = user.pair_id || "";
 
+    // Validasi field wajib per write action — payload cacat → 400, bukan 500
+    // dari NOT NULL violation di DB.
+    const missing = (REQUIRED_FIELDS[action] || []).find(
+      (f) => params[f] === undefined || params[f] === null
+    );
+    if (missing) {
+      return NextResponse.json(
+        { error: `Missing required field: ${missing}` },
+        { status: 400 }
+      );
+    }
+
     // Read actions degrade ke empty data saat backend unreachable — app tetap
     // usable (empty state) alih-alih error boundary di mana-mana. Write
     // actions tetap throw → client retry queue menanganinya.
@@ -92,6 +104,9 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     if (error instanceof InvalidActionError) {
       return NextResponse.json({ error: "Invalid action" }, { status: 400 });
+    }
+    if (error instanceof BadRequestError) {
+      return NextResponse.json({ error: error.message }, { status: 400 });
     }
     console.error(
       "API /db error:",
@@ -201,4 +216,32 @@ async function runAction(
   }
 }
 
+const REQUIRED_FIELDS: Record<string, string[]> = {
+  addMood: ["mood"],
+  createActivity: ["title"],
+  toggleActivity: ["activityId"],
+  updateActivity: ["activityId"],
+  deleteActivity: ["activityId"],
+  addPhoto: ["url"],
+  deletePhoto: ["photoId"],
+  addCalendarEvent: ["title", "date"],
+  updateCalendarEvent: ["eventId", "data"],
+  deleteCalendarEvent: ["eventId"],
+  createLetter: ["letter"],
+  deleteLetter: ["letterId"],
+  updatePresence: ["status"],
+  addStatusUpdate: ["message"],
+  sendHug: ["receiverId"],
+  updateLoveMeter: ["percentage"],
+  addLocation: ["place"],
+  updateProfile: ["data"],
+  updateSettings: ["data"],
+  getUserExtra: ["key"],
+  setUserExtra: ["key"],
+  sendChatMessage: ["receiverId", "content"],
+  sendRindu: ["receiverId"],
+  respondRindu: ["rinduId"],
+};
+
 class InvalidActionError extends Error {}
+class BadRequestError extends Error {}

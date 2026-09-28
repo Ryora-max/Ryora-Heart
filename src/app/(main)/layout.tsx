@@ -137,7 +137,7 @@ export default function MainLayout({
   if (verifying) {
     return (
       <div className="page-bg flex items-center justify-center min-h-dvh">
-        <div className="w-8 h-8 border-4 border-amber-500 border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -189,8 +189,9 @@ export default function MainLayout({
                   onClick={() => navigateTo(room.href)}
                   className={cn(
                     "w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all touch-target touch-press cursor-pointer",
-                    pathname === room.href ? "bg-primary-soft text-primary shadow-soft font-semibold" : "text-text-primary hover:bg-surface-warm"
+                    pathname === room.href ? "text-white font-semibold shadow-soft" : "text-text-primary hover:bg-surface-warm"
                   )}
+                  style={pathname === room.href ? { background: "var(--gradient-primary)" } : {}}
                 >
                   <span className="text-lg">{room.emoji}</span>
                   {room.name}
@@ -200,7 +201,7 @@ export default function MainLayout({
 
             <div className="mt-auto pt-4 border-t" style={{ borderColor: "var(--border)" }}>
               <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 rounded-full bg-surface flex items-center justify-center text-lg flex-shrink-0 shadow-soft">
+                <div className="w-10 h-10 rounded-full flex items-center justify-center text-lg flex-shrink-0 shadow-soft" style={{ background: "var(--gradient-primary)" }}>
                   {user.role === "owner" ? "🤴" : "👸"}
                 </div>
                 <div className="flex-1 min-w-0">

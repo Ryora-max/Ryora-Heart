@@ -4,76 +4,134 @@
    bukan OS prefers-color-scheme. Aurora juga dark-background → ikut. */
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *, [data-theme="aurora"], [data-theme="aurora"] *));
 
+/* ═══════════════════════════════════════════════════════════════
+   RYORA DESIGN SYSTEM — "Premium Glass Romantic"
+   Synthesis: glass surfaces + ambient aurora orbs + rose→violet
+   gradient + emerald accent + soft playful motion.
+   Light = soft clean pastel · Dark = premium neon glow ·
+   Aurora = vivid dreamy gradient.
+   ═══════════════════════════════════════════════════════════════ */
+
 :root {
-  --background: #FFF5F7;
-  --foreground: #4A3F44;
+  /* Light — soft clean dengan warm undertone */
+  --background: #FAF5F8;
+  --foreground: #221A20;
   --landing-bg: radial-gradient(circle at center, #FFF9F3 0%, #F5EAE0 50%, #EADBC8 100%);
-  --surface: #FFFFFF;
-  --surface-warm: #FFF0F3;
-  --primary: #E8A0BF;
-  --primary-soft: #F3C5D8;
-  --secondary: #B8C9E8;
-  --secondary-soft: #D4DFF0;
-  --accent: #A8D5BA;
-  --accent-soft: #C8E6D0;
-  --peach: #FFDAB9;
-  --peach-soft: #FFF0E0;
-  --lavender: #D4C4E8;
-  --lavender-soft: #F0E8F7;
-  --text-primary: #4A3F44;
-  --text-secondary: #8C7E85;
-  --text-muted: #B8AEB3;
-  --border: rgba(0, 0, 0, 0.06);
-  --shadow: rgba(0, 0, 0, 0.04);
-  --shadow-hover: rgba(0, 0, 0, 0.08);
+
+  /* Surfaces translucent — glass di atas ambient orbs */
+  --surface: rgba(255, 255, 255, 0.66);
+  --surface-solid: #FFFFFF;
+  --surface-warm: rgba(253, 240, 245, 0.72);
+
+  /* Brand: rose → violet gradient, emerald accent */
+  --primary: #F43F5E;
+  --primary-2: #A855F7;
+  --primary-soft: rgba(244, 63, 94, 0.10);
+  --secondary: #8B5CF6;
+  --secondary-soft: rgba(139, 92, 246, 0.10);
+  --accent: #10B981;
+  --accent-soft: rgba(16, 185, 129, 0.12);
+  --peach: #FB923C;
+  --peach-soft: rgba(251, 146, 60, 0.12);
+  --lavender: #C084FC;
+  --lavender-soft: rgba(192, 132, 252, 0.12);
+
+  --text-primary: #221A20;
+  --text-secondary: #655A63;
+  --text-muted: #9C8F97;
+
+  --border: rgba(34, 26, 32, 0.09);
+  --border-strong: rgba(34, 26, 32, 0.16);
+  --glass-highlight: rgba(255, 255, 255, 0.7);
+  --shadow: rgba(60, 30, 45, 0.07);
+  --shadow-hover: rgba(60, 30, 45, 0.14);
+
+  /* Ambient orbs — pastel lembut di light */
+  --orb-1: rgba(244, 114, 158, 0.14);
+  --orb-2: rgba(168, 85, 247, 0.12);
+  --orb-3: rgba(52, 211, 153, 0.10);
+
+  --gradient-primary: linear-gradient(135deg, var(--primary), var(--primary-2));
 }
 
 [data-theme="dark"] {
-  --background: #1A1520;
-  --foreground: #F5F0F2;
+  /* Dark — premium near-black + neon glow */
+  --background: #0C0810;
+  --foreground: #F6F1F5;
   --landing-bg: radial-gradient(circle at center, #2E2118 0%, #1F1610 50%, #140D09 100%);
-  --surface: #241E28;
-  --surface-warm: #2A2230;
-  --primary: #D4A0C0;
-  --primary-soft: #3A2840;
-  --secondary: #A0B8D4;
-  --secondary-soft: #283040;
-  --accent: #A8D5BA;
-  --accent-soft: #283830;
-  --peach: #D4B098;
-  --peach-soft: #302420;
-  --lavender: #B8A0D4;
-  --lavender-soft: #302840;
-  --text-primary: #F5F0F2;
-  --text-secondary: #C8BEC5;
-  --text-muted: #8C7E85;
-  --border: rgba(255, 255, 255, 0.08);
-  --shadow: rgba(0, 0, 0, 0.2);
-  --shadow-hover: rgba(0, 0, 0, 0.35);
+
+  --surface: rgba(32, 24, 40, 0.58);
+  --surface-solid: #201828;
+  --surface-warm: rgba(40, 30, 50, 0.62);
+
+  --primary: #FB7185;
+  --primary-2: #C084FC;
+  --primary-soft: rgba(251, 113, 133, 0.14);
+  --secondary: #A78BFA;
+  --secondary-soft: rgba(167, 139, 250, 0.14);
+  --accent: #34D399;
+  --accent-soft: rgba(52, 211, 153, 0.14);
+  --peach: #FDBA74;
+  --peach-soft: rgba(253, 186, 116, 0.12);
+  --lavender: #C4B5FD;
+  --lavender-soft: rgba(196, 181, 253, 0.12);
+
+  --text-primary: #F6F1F5;
+  --text-secondary: #C7BCC5;
+  --text-muted: #8E8190;
+
+  --border: rgba(255, 255, 255, 0.10);
+  --border-strong: rgba(255, 255, 255, 0.20);
+  --glass-highlight: rgba(255, 255, 255, 0.08);
+  --shadow: rgba(0, 0, 0, 0.35);
+  --shadow-hover: rgba(0, 0, 0, 0.5);
+
+  /* Neon orbs — glowing vivid */
+  --orb-1: rgba(244, 63, 94, 0.22);
+  --orb-2: rgba(139, 92, 246, 0.20);
+  --orb-3: rgba(16, 185, 129, 0.14);
+
+  --gradient-primary: linear-gradient(135deg, var(--primary), var(--primary-2));
 }
 
 [data-theme="aurora"] {
-  --background: #0F0A14;
-  --foreground: #F5F0F7;
+  /* Aurora — vivid dreamy, orbs paling hidup */
+  --background: #08060F;
+  --foreground: #F7F2FA;
   --landing-bg: radial-gradient(circle at center, #241430 0%, #160D1E 50%, #0B0610 100%);
-  --surface: #1A1225;
-  --surface-warm: #20182A;
-  --primary: #D4A0E8;
-  --primary-soft: #2A1835;
-  --secondary: #A0C4E8;
-  --secondary-soft: #182535;
-  --accent: #A8E8D0;
-  --accent-soft: #183028;
-  --peach: #E8C0A0;
-  --peach-soft: #302418;
-  --lavender: #C0A0E8;
-  --lavender-soft: #281835;
-  --text-primary: #F5F0F7;
-  --text-secondary: #C8BED5;
-  --text-muted: #8C7E9A;
-  --border: rgba(255, 255, 255, 0.1);
-  --shadow: rgba(0, 0, 0, 0.25);
-  --shadow-hover: rgba(0, 0, 0, 0.45);
+
+  --surface: rgba(28, 18, 44, 0.52);
+  --surface-solid: #1C122C;
+  --surface-warm: rgba(36, 24, 56, 0.58);
+
+  --primary: #E879F9;
+  --primary-2: #818CF8;
+  --primary-soft: rgba(232, 121, 249, 0.14);
+  --secondary: #818CF8;
+  --secondary-soft: rgba(129, 140, 248, 0.14);
+  --accent: #6EE7B7;
+  --accent-soft: rgba(110, 231, 183, 0.14);
+  --peach: #FDBA74;
+  --peach-soft: rgba(253, 186, 116, 0.12);
+  --lavender: #C4B5FD;
+  --lavender-soft: rgba(196, 181, 253, 0.14);
+
+  --text-primary: #F7F2FA;
+  --text-secondary: #CFC4DC;
+  --text-muted: #9186A6;
+
+  --border: rgba(255, 255, 255, 0.12);
+  --border-strong: rgba(255, 255, 255, 0.22);
+  --glass-highlight: rgba(255, 255, 255, 0.10);
+  --shadow: rgba(0, 0, 0, 0.4);
+  --shadow-hover: rgba(0, 0, 0, 0.55);
+
+  /* Aurora orbs — paling vivid, animated drift */
+  --orb-1: rgba(232, 121, 249, 0.26);
+  --orb-2: rgba(99, 102, 241, 0.24);
+  --orb-3: rgba(52, 211, 153, 0.18);
+
+  --gradient-primary: linear-gradient(135deg, var(--primary), var(--primary-2));
 }
 
 @theme {
@@ -82,6 +140,7 @@
   --color-surface: var(--surface);
   --color-surface-warm: var(--surface-warm);
   --color-primary: var(--primary);
+  --color-primary-2: var(--primary-2);
   --color-primary-soft: var(--primary-soft);
   --color-secondary: var(--secondary);
   --color-secondary-soft: var(--secondary-soft);
@@ -101,7 +160,7 @@
 
 * {
   scrollbar-width: thin;
-  scrollbar-color: var(--primary-soft) var(--surface);
+  scrollbar-color: var(--primary) transparent;
 }
 
 *::-webkit-scrollbar {
@@ -109,20 +168,46 @@
 }
 
 *::-webkit-scrollbar-track {
-  background: var(--surface);
+  background: transparent;
 }
 
 *::-webkit-scrollbar-thumb {
-  background: var(--primary-soft);
+  background: color-mix(in srgb, var(--primary) 45%, transparent);
   border-radius: 3px;
 }
 
 html {
   scroll-behavior: smooth;
+  background: var(--background);
+}
+
+/* ─── Ambient aurora orbs ──────────────────────────────────────
+   Fixed layer di belakang semua konten. Orbs memberi warna yang
+   bisa di-blur oleh glass surfaces — inti glassmorphism look. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: -10%;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(600px 480px at 12% 18%, var(--orb-1), transparent 70%),
+    radial-gradient(540px 440px at 88% 72%, var(--orb-2), transparent 70%),
+    radial-gradient(420px 360px at 62% 6%, var(--orb-3), transparent 70%),
+    var(--background);
+}
+
+[data-theme="aurora"] body::before {
+  animation: aurora-drift 26s ease-in-out infinite alternate;
+}
+
+@keyframes aurora-drift {
+  0%   { background-position: 0% 0%, 0% 0%, 0% 0%; }
+  50%  { background-position: 4% 6%, -5% -3%, 3% 5%; }
+  100% { background-position: -3% -4%, 5% 6%, -4% -2%; }
 }
 
 body {
-  background: var(--background);
   color: var(--text-primary);
   font-family: var(--font-jakarta), sans-serif;
   overflow-x: hidden;
@@ -139,22 +224,26 @@ body {
 
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-sora), sans-serif;
-  line-height: 1.25;
-  letter-spacing: -0.01em;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
 }
 
-/* Minimal soft shadows */
+/* Elevation system — layered, lebih dalam */
 .shadow-soft {
-  box-shadow: 0 2px 12px var(--shadow);
+  box-shadow:
+    0 1px 2px var(--shadow),
+    0 4px 16px var(--shadow);
 }
 
 .shadow-soft-hover {
-  box-shadow: 0 8px 24px var(--shadow-hover);
+  box-shadow:
+    0 2px 4px var(--shadow),
+    0 12px 32px var(--shadow-hover);
 }
 
-/* Soft border radius system */
+/* Radius system — lebih generous */
 .radius-soft {
-  border-radius: 1rem;
+  border-radius: 1.125rem;
 }
 
 .radius-soft-lg {
@@ -165,7 +254,7 @@ h1, h2, h3, h4, h5, h6 {
   border-radius: 2rem;
 }
 
-/* Gentle animations */
+/* ─── Motion ────────────────────────────────────────────────── */
 @keyframes breathe {
   0%, 100% { transform: scale(1); }
   50% { transform: scale(1.02); }
@@ -191,6 +280,16 @@ h1, h2, h3, h4, h5, h6 {
   to { opacity: 1; transform: translateY(0); }
 }
 
+@keyframes shimmer {
+  from { background-position: -200% 0; }
+  to { background-position: 200% 0; }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--primary) 35%, transparent); }
+  50% { box-shadow: 0 0 0 8px transparent; }
+}
+
 @keyframes loading-bar-fill {
   from { width: 0%; }
   to { width: 100%; }
@@ -203,6 +302,8 @@ h1, h2, h3, h4, h5, h6 {
 
 .loading-bar {
   animation: loading-bar-fill 0.9s ease-out forwards;
+  background: var(--gradient-primary);
+  border-radius: 999px;
 }
 
 /* CSS-only fallback: hide loader even if JS breaks */
@@ -212,17 +313,17 @@ h1, h2, h3, h4, h5, h6 {
 
 .animate-fade-in-soft {
   opacity: 0;
-  animation: fade-in-soft 0.7s ease-out forwards;
+  animation: fade-in-soft 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
 .animate-scale-soft {
   opacity: 0;
-  animation: scale-soft 0.5s ease-out forwards;
+  animation: scale-soft 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
 .animate-slide-up-soft {
   opacity: 0;
-  animation: slide-up-soft 0.6s ease-out forwards;
+  animation: slide-up-soft 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
 .animate-float-soft {
@@ -233,42 +334,96 @@ h1, h2, h3, h4, h5, h6 {
   animation: breathe 3s ease-in-out infinite;
 }
 
-/* Removed heavy 3D and glow effects for minimal aesthetic */
+.animate-pulse-glow {
+  animation: pulse-glow 2.4s ease-in-out infinite;
+}
+
+/* ─── Components ─────────────────────────────────────────────── */
 
 /* Soft button base */
 .btn-soft {
-  border-radius: 0.875rem;
+  border-radius: 1rem;
   font-weight: 600;
-  transition: all 0.2s ease;
-  box-shadow: 0 1px 4px var(--shadow);
+  transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+  box-shadow: 0 1px 3px var(--shadow);
 }
 
 .btn-soft:hover {
-  box-shadow: 0 4px 12px var(--shadow-hover);
-  transform: translateY(-1px);
+  box-shadow: 0 6px 20px var(--shadow-hover);
+  transform: translateY(-1.5px);
 }
 
 .btn-soft:active {
-  transform: translateY(0);
+  transform: translateY(0) scale(0.98);
 }
 
-/* Soft card base */
-.card-soft {
+/* Gradient primary button — CTA utama */
+.btn-gradient {
+  background: var(--gradient-primary);
+  color: #fff;
+  border-radius: 1rem;
+  font-weight: 700;
+  box-shadow:
+    0 4px 16px color-mix(in srgb, var(--primary) 35%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.btn-gradient:hover {
+  box-shadow:
+    0 8px 28px color-mix(in srgb, var(--primary) 45%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  transform: translateY(-1.5px);
+}
+
+.btn-gradient:active {
+  transform: translateY(0) scale(0.98);
+}
+
+/* Glass card — inti design system */
+.card-soft,
+.surface-card {
   background: var(--surface);
+  backdrop-filter: blur(18px) saturate(1.5);
+  -webkit-backdrop-filter: blur(18px) saturate(1.5);
   border: 1px solid var(--border);
-  border-radius: 1.25rem;
-  box-shadow: 0 2px 12px var(--shadow);
-  transition: all 0.25s ease;
+  border-radius: 1.375rem;
+  box-shadow:
+    0 4px 24px var(--shadow),
+    inset 0 1px 0 var(--glass-highlight);
+  transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.card-soft:hover {
-  box-shadow: 0 8px 24px var(--shadow-hover);
+.card-soft:hover,
+.surface-card:hover {
+  box-shadow:
+    0 12px 40px var(--shadow-hover),
+    inset 0 1px 0 var(--glass-highlight);
+  border-color: var(--border-strong);
+  transform: translateY(-2px);
+}
+
+/* Glass tanpa hover lift — untuk overlay/nav */
+.surface-glass {
+  background: color-mix(in srgb, var(--surface) 82%, transparent);
+  backdrop-filter: blur(18px) saturate(1.5);
+  -webkit-backdrop-filter: blur(18px) saturate(1.5);
+  border: 1px solid var(--border);
+  box-shadow: 0 4px 24px var(--shadow), inset 0 1px 0 var(--glass-highlight);
+}
+
+/* Solid surface — untuk konten yang butuh opacity penuh */
+.surface-solid {
+  background: var(--surface-solid);
+  border: 1px solid var(--border);
+  border-radius: 1.375rem;
+  box-shadow: 0 4px 24px var(--shadow);
 }
 
 /* Focus styles */
 input:focus, textarea:focus, select:focus, button:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--primary);
+  box-shadow: 0 0 0 2px var(--background), 0 0 0 4px var(--primary);
 }
 
 /* Safe area for mobile */
@@ -289,41 +444,18 @@ input:focus, textarea:focus, select:focus, button:focus-visible {
 
 /* === Theme-aware utility classes ===
    Pakai ini bukan bg-white/text-gray-800 supaya dark/aurora mode jalan.
-   Tailwind @theme inline sudah map --color-* jadi bg-surface, text-text-primary, dll.
-   Tapi class di bawah ini untuk pattern berulang supaya konsisten. */
+   Tailwind @theme inline sudah map --color-* jadi bg-surface, text-text-primary, dll. */
 
-/* Page background — pakai di root page wrapper */
+/* Page wrapper — transparan supaya ambient orbs kelihatan */
 .page-bg {
-  background: var(--background);
   color: var(--text-primary);
   min-height: 100vh;
+  min-height: 100dvh;
 }
 
-/* Landing/login "pintu depan" — warm identity yang adaptif ke tema.
-   Light: cream hangat. Dark/Aurora: warm-dark (coklat/ungu gelap). */
+/* Landing/login "pintu depan" — warm identity yang adaptif ke tema. */
 .landing-bg {
   background: var(--landing-bg);
-}
-
-/* Card surface (glass effect) */
-.surface-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 1.25rem;
-  box-shadow: 0 2px 12px var(--shadow);
-  transition: all 0.25s ease;
-}
-
-.surface-card:hover {
-  box-shadow: 0 8px 24px var(--shadow-hover);
-}
-
-/* Glass variant — semi-transparent surface */
-.surface-glass {
-  background: color-mix(in srgb, var(--surface) 80%, transparent);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid var(--border);
 }
 
 /* Text helpers */
@@ -344,8 +476,8 @@ input:focus, textarea:focus, select:focus, button:focus-visible {
   background: var(--surface-warm);
   border: 1px solid var(--border);
   color: var(--text-primary);
-  border-radius: 0.75rem;
-  transition: border-color 0.2s ease;
+  border-radius: 1rem;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .input-soft::placeholder {
@@ -354,16 +486,28 @@ input:focus, textarea:focus, select:focus, button:focus-visible {
 
 .input-soft:focus {
   border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-soft);
   outline: none;
 }
 
-/* Gradient text — pakai primary + secondary theme colors */
+/* Gradient text — brand rose→violet */
 .text-gradient-primary {
-  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  background: var(--gradient-primary);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
   color: transparent;
+}
+
+/* Tab/pill aktif — brand gradient */
+.tab-active-gradient {
+  background: var(--gradient-primary);
+}
+
+/* Subtle glow untuk elemen primary di tema gelap */
+[data-theme="dark"] .glow-primary,
+[data-theme="aurora"] .glow-primary {
+  box-shadow: 0 0 24px color-mix(in srgb, var(--primary) 30%, transparent);
 }
 
 /* Mobile touch target — minimum 44x44px (Apple HIG) */

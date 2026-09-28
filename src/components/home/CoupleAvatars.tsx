@@ -172,7 +172,7 @@ export function CoupleAvatars({
 
       {/* Floating Action Banner Alert if tapped */}
       {selectedPartnerAction && (
-        <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 z-40 bg-white/95 dark:bg-amber-950/95 border border-rose-300 shadow-xl px-4 py-1.5 rounded-full text-xs font-bold text-rose-600 animate-fade-in-soft flex items-center gap-1.5">
+        <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 z-40 bg-surface/95 backdrop-blur-md border border-rose-300 shadow-xl px-4 py-1.5 rounded-full text-xs font-bold text-rose-600 animate-fade-in-soft flex items-center gap-1.5">
           <Sparkles size={14} className="text-amber-500 animate-spin" />
           <span>{selectedPartnerAction}</span>
         </div>
@@ -185,13 +185,13 @@ export function CoupleAvatars({
           {/* Thought Bubble */}
           <div
             onClick={() => handleTapAvatar("ryo")}
-            className="mb-2 max-w-[130px] sm:max-w-[160px] p-2 rounded-2xl bg-white/95 dark:bg-amber-950/95 border border-blue-200 dark:border-blue-800 shadow-md text-center transition-transform group-hover:scale-105 active:scale-95 cursor-pointer relative"
+            className="mb-2 max-w-[130px] sm:max-w-[160px] p-2 rounded-2xl bg-surface/95 backdrop-blur-md border border-blue-200 dark:border-blue-800 shadow-md text-center transition-transform group-hover:scale-105 active:scale-95 cursor-pointer relative"
           >
             <p className="text-[11px] sm:text-xs font-semibold text-blue-950 dark:text-blue-100 line-clamp-2 leading-snug">
               {getActivityBubble("owner")}
             </p>
             {/* Bubble Tail */}
-            <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-white dark:bg-amber-950 border-r border-b border-blue-200 dark:border-blue-800 transform rotate-45" />
+            <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-surface-solid border-r border-b border-blue-200 dark:border-blue-800 transform rotate-45" />
           </div>
 
           {/* SVG Character Avatar: Ryo */}
@@ -301,13 +301,13 @@ export function CoupleAvatars({
           {/* Thought Bubble */}
           <div
             onClick={() => handleTapAvatar("ara")}
-            className="mb-2 max-w-[130px] sm:max-w-[160px] p-2 rounded-2xl bg-white/95 dark:bg-amber-950/95 border border-pink-200 dark:border-pink-800 shadow-md text-center transition-transform group-hover:scale-105 active:scale-95 cursor-pointer relative"
+            className="mb-2 max-w-[130px] sm:max-w-[160px] p-2 rounded-2xl bg-surface/95 backdrop-blur-md border border-pink-200 dark:border-pink-800 shadow-md text-center transition-transform group-hover:scale-105 active:scale-95 cursor-pointer relative"
           >
             <p className="text-[11px] sm:text-xs font-semibold text-pink-950 dark:text-pink-100 line-clamp-2 leading-snug">
               {getActivityBubble("partner")}
             </p>
             {/* Bubble Tail */}
-            <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-white dark:bg-amber-950 border-r border-b border-pink-200 dark:border-pink-800 transform rotate-45" />
+            <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-surface-solid border-r border-b border-pink-200 dark:border-pink-800 transform rotate-45" />
           </div>
 
           {/* SVG Character Avatar: Ara */}
@@ -408,31 +408,31 @@ export function CoupleAvatars({
       <div className="mt-4 flex flex-wrap items-center justify-center gap-2 px-2">
         <button
           onClick={() => handleAction("Peluk Erat", "🤗", "purr")}
-          className="touch-press px-3 py-1.5 rounded-full bg-white/80 dark:bg-amber-950/80 border border-rose-200 dark:border-rose-900 text-rose-700 dark:text-rose-300 text-xs font-bold shadow-sm hover:bg-rose-50 dark:hover:bg-rose-950/50 flex items-center gap-1 cursor-pointer transition-all"
+          className="touch-press px-3 py-1.5 rounded-full bg-surface/80 backdrop-blur-md border border-rose-200 dark:border-rose-900 text-rose-700 dark:text-rose-300 text-xs font-bold shadow-sm hover:bg-rose-50 dark:hover:bg-rose-950/50 flex items-center gap-1 cursor-pointer transition-all"
         >
           <span>🤗</span> Peluk
         </button>
         <button
           onClick={() => handleAction("Kecup Manis", "💋", "kiss")}
-          className="touch-press px-3 py-1.5 rounded-full bg-white/80 dark:bg-amber-950/80 border border-rose-200 dark:border-rose-900 text-rose-700 dark:text-rose-300 text-xs font-bold shadow-sm hover:bg-rose-50 dark:hover:bg-rose-950/50 flex items-center gap-1 cursor-pointer transition-all"
+          className="touch-press px-3 py-1.5 rounded-full bg-surface/80 backdrop-blur-md border border-rose-200 dark:border-rose-900 text-rose-700 dark:text-rose-300 text-xs font-bold shadow-sm hover:bg-rose-50 dark:hover:bg-rose-950/50 flex items-center gap-1 cursor-pointer transition-all"
         >
           <span>💋</span> Kecup
         </button>
         <button
           onClick={() => handleAction("Beri Bunga", "🌹", "chime")}
-          className="touch-press px-3 py-1.5 rounded-full bg-white/80 dark:bg-amber-950/80 border border-rose-200 dark:border-rose-900 text-rose-700 dark:text-rose-300 text-xs font-bold shadow-sm hover:bg-rose-50 dark:hover:bg-rose-950/50 flex items-center gap-1 cursor-pointer transition-all"
+          className="touch-press px-3 py-1.5 rounded-full bg-surface/80 backdrop-blur-md border border-rose-200 dark:border-rose-900 text-rose-700 dark:text-rose-300 text-xs font-bold shadow-sm hover:bg-rose-50 dark:hover:bg-rose-950/50 flex items-center gap-1 cursor-pointer transition-all"
         >
           <span>🌹</span> Mawar
         </button>
         <button
           onClick={() => handleAction("Beri Boba", "🧋", "pop")}
-          className="touch-press px-3 py-1.5 rounded-full bg-white/80 dark:bg-amber-950/80 border border-rose-200 dark:border-rose-900 text-rose-700 dark:text-rose-300 text-xs font-bold shadow-sm hover:bg-rose-50 dark:hover:bg-rose-950/50 flex items-center gap-1 cursor-pointer transition-all"
+          className="touch-press px-3 py-1.5 rounded-full bg-surface/80 backdrop-blur-md border border-rose-200 dark:border-rose-900 text-rose-700 dark:text-rose-300 text-xs font-bold shadow-sm hover:bg-rose-50 dark:hover:bg-rose-950/50 flex items-center gap-1 cursor-pointer transition-all"
         >
           <span>🧋</span> Boba
         </button>
         <button
           onClick={() => handleAction("Cubit Manja", "🤏", "pop")}
-          className="touch-press px-3 py-1.5 rounded-full bg-white/80 dark:bg-amber-950/80 border border-rose-200 dark:border-rose-900 text-rose-700 dark:text-rose-300 text-xs font-bold shadow-sm hover:bg-rose-50 dark:hover:bg-rose-950/50 flex items-center gap-1 cursor-pointer transition-all"
+          className="touch-press px-3 py-1.5 rounded-full bg-surface/80 backdrop-blur-md border border-rose-200 dark:border-rose-900 text-rose-700 dark:text-rose-300 text-xs font-bold shadow-sm hover:bg-rose-50 dark:hover:bg-rose-950/50 flex items-center gap-1 cursor-pointer transition-all"
         >
           <span>🤏</span> Cubit
         </button>

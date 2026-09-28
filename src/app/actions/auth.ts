@@ -98,7 +98,11 @@ export async function getUserSettings(userId: string) {
 
   const formatDate = (d: string | Date | null | undefined) => {
     if (!d) return "";
-    const date = new Date(d);
+    // Kolom date/timestamp naive → string "YYYY-MM-DD[...]"; ambil 10 char pertama
+    // agar tidak bergeser timezone (new Date(...) parse naive = local, toISOString = UTC → off-by-one).
+    const s = String(d);
+    if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0, 10);
+    const date = new Date(s);
     if (isNaN(date.getTime())) return "";
     return date.toISOString().split("T")[0];
   };

@@ -50,8 +50,9 @@ function relativeDayLabel(d: Date, now: Date): string {
 
 export default function HistoryPage() {
   const { user, token } = useAuthStore();
-  const { moods } = useMoods(token || "");
-  const { activities } = useActivities(token || "");
+  const { moods, loading: moodsLoading } = useMoods(token || "");
+  const { activities, loading: activitiesLoading } = useActivities(token || "");
+  const loading = moodsLoading || activitiesLoading;
   const { partnerId } = usePartnerId(token || "", user?.id);
 
   const ownerName = APP_CONFIG.users.owner.username;
@@ -265,7 +266,14 @@ export default function HistoryPage() {
 
         {/* Timeline */}
         <div className="space-y-4">
-          {grouped.length === 0 && (
+          {loading && (
+            <div className="space-y-2">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="surface-card animate-pulse rounded-xl p-4" style={{ height: 64 }} />
+              ))}
+            </div>
+          )}
+          {!loading && grouped.length === 0 && (
             <div className="surface-card p-8 text-center">
               <div className="text-4xl mb-2">🌱</div>
               <p className="text-body text-sm">

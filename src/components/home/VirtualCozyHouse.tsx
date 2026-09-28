@@ -276,7 +276,7 @@ export function VirtualCozyHouse({
     <div className="w-full max-w-2xl mx-auto px-3 sm:px-4 pb-24 pt-1 animate-fade-in-soft">
       {/* Warm Ambient House Lighting Container */}
       <div
-        className={`relative rounded-3xl p-4 sm:p-6 transition-all duration-700 border border-amber-900/10 shadow-2xl overflow-hidden ${getAmbienceBg()}`}
+        className={`relative rounded-3xl p-4 sm:p-6 transition-all duration-700 border border-border shadow-2xl overflow-hidden ${getAmbienceBg()}`}
       >
         {/* Soft Ambient Glows */}
         <div
@@ -299,12 +299,12 @@ export function VirtualCozyHouse({
         />
 
         {/* House Top Status & Controls */}
-        <div className="relative z-10 flex flex-wrap items-center justify-between gap-2.5 mb-4 pb-3 border-b border-amber-900/10 dark:border-amber-100/10">
+        <div className="relative z-10 flex flex-wrap items-center justify-between gap-2.5 mb-4 pb-3 border-b border-border">
           <div className="flex items-center gap-2.5">
             <button
               onClick={onReenterDoor}
               title="Ketuk Pintu Depan Rumah"
-              className="group flex items-center justify-center w-9 h-9 rounded-2xl bg-amber-100/80 hover:bg-amber-200/80 dark:bg-amber-900/40 text-amber-900 dark:text-amber-100 shadow-sm border border-amber-300/50 transition-transform active:scale-95 cursor-pointer"
+              className="group flex items-center justify-center w-9 h-9 rounded-2xl bg-surface-warm hover:bg-surface text-heading shadow-sm border border-border transition-transform active:scale-95 cursor-pointer"
             >
               <span className="text-lg group-hover:scale-110 transition-transform">🚪</span>
             </button>
@@ -313,7 +313,7 @@ export function VirtualCozyHouse({
                 <h2 className="text-base sm:text-lg font-black tracking-tight">
                   Rumah {myName} & {partnerName} 🏡
                 </h2>
-                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-900 dark:text-amber-200 bg-amber-200/60 dark:bg-amber-900/60 px-2 py-0.5 rounded-full">
+                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-heading bg-primary-soft px-2 py-0.5 rounded-full">
                   <Flame size={11} className="text-orange-500 fill-orange-500 animate-pulse" />
                   {daysTogether} Hari
                 </span>
@@ -338,7 +338,7 @@ export function VirtualCozyHouse({
               className={`px-2.5 py-1.5 rounded-xl border text-[11px] font-bold flex items-center gap-1 transition-all cursor-pointer shadow-sm hover:scale-105 active:scale-95 ${
                 decorMode
                   ? "bg-rose-500 text-white border-rose-400"
-                  : "bg-white/70 dark:bg-amber-950/60 border-amber-300/50 text-amber-900 dark:text-amber-200"
+                  : "bg-surface-warm border-border text-heading"
               }`}
               title="Dekorasi ruangan pakai Love Points"
             >
@@ -347,7 +347,7 @@ export function VirtualCozyHouse({
             </button>
             <button
               onClick={handleToggleAmbience}
-              className="px-2.5 py-1.5 rounded-xl border text-[11px] font-bold flex items-center gap-1 transition-all cursor-pointer bg-white/70 dark:bg-amber-950/60 border-amber-300/50 shadow-sm hover:scale-105 active:scale-95"
+              className="px-2.5 py-1.5 rounded-xl border text-[11px] font-bold flex items-center gap-1 transition-all cursor-pointer bg-surface-warm border-border shadow-sm hover:scale-105 active:scale-95"
               title="Ganti Suasana Waktu (Pagi / Senja / Malam)"
             >
               {ambience === "day" && <Sun size={14} className="text-amber-500" />}
@@ -363,7 +363,7 @@ export function VirtualCozyHouse({
               className={`p-2 rounded-xl border text-xs font-bold flex items-center gap-1 transition-all cursor-pointer shadow-sm hover:scale-105 active:scale-95 ${
                 musicPlaying
                   ? "bg-rose-500 text-white border-rose-400"
-                  : "bg-white/70 dark:bg-amber-950/60 border-amber-300/50 text-amber-900 dark:text-amber-200"
+                  : "bg-surface-warm border-border text-heading"
               }`}
               title={musicPlaying ? "Matikan Melodi Cozy" : "Putar Melodi Romantis"}
             >
@@ -373,12 +373,12 @@ export function VirtualCozyHouse({
         </div>
 
         {/* Room Navigation Tabs (Game Style ala Talking Tom Friends) */}
-        <div className="relative z-10 grid grid-cols-4 gap-1.5 mb-4 p-1 rounded-2xl bg-amber-900/10 dark:bg-black/20 backdrop-blur-md border border-amber-900/10 dark:border-white/10">
+        <div className="relative z-10 grid grid-cols-4 gap-1.5 mb-4 p-1 rounded-2xl bg-black/5 dark:bg-white/5 backdrop-blur-md border border-border">
           <button
             onClick={() => handleRoomChange("living")}
             className={`flex flex-col sm:flex-row items-center justify-center gap-1 py-2 px-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
               activeRoom === "living"
-                ? "bg-white dark:bg-amber-900/80 text-amber-950 dark:text-amber-100 shadow-md scale-100 border border-amber-200/60 dark:border-amber-700"
+                ? "text-white shadow-md scale-100 tab-active-gradient"
                 : "opacity-70 hover:opacity-100"
             }`}
           >
@@ -390,7 +390,7 @@ export function VirtualCozyHouse({
             onClick={() => handleRoomChange("kitchen")}
             className={`flex flex-col sm:flex-row items-center justify-center gap-1 py-2 px-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
               activeRoom === "kitchen"
-                ? "bg-white dark:bg-amber-900/80 text-amber-950 dark:text-amber-100 shadow-md scale-100 border border-amber-200/60 dark:border-amber-700"
+                ? "text-white shadow-md scale-100 tab-active-gradient"
                 : "opacity-70 hover:opacity-100"
             }`}
           >
@@ -402,7 +402,7 @@ export function VirtualCozyHouse({
             onClick={() => handleRoomChange("bedroom")}
             className={`flex flex-col sm:flex-row items-center justify-center gap-1 py-2 px-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
               activeRoom === "bedroom"
-                ? "bg-white dark:bg-amber-900/80 text-amber-950 dark:text-amber-100 shadow-md scale-100 border border-amber-200/60 dark:border-amber-700"
+                ? "text-white shadow-md scale-100 tab-active-gradient"
                 : "opacity-70 hover:opacity-100"
             }`}
           >
@@ -414,7 +414,7 @@ export function VirtualCozyHouse({
             onClick={() => handleRoomChange("garden")}
             className={`flex flex-col sm:flex-row items-center justify-center gap-1 py-2 px-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
               activeRoom === "garden"
-                ? "bg-white dark:bg-amber-900/80 text-amber-950 dark:text-amber-100 shadow-md scale-100 border border-amber-200/60 dark:border-amber-700"
+                ? "text-white shadow-md scale-100 tab-active-gradient"
                 : "opacity-70 hover:opacity-100"
             }`}
           >
@@ -448,7 +448,7 @@ export function VirtualCozyHouse({
 
         {/* ================= ROOM DECOR STRIP ================= */}
         {activeDecor.length > 0 && (
-          <div className="relative z-10 flex items-center justify-center gap-3 mb-3 py-2 px-3 rounded-2xl bg-white/40 dark:bg-black/20 border border-amber-900/10 dark:border-white/10 animate-fade-in-soft">
+          <div className="relative z-10 flex items-center justify-center gap-3 mb-3 py-2 px-3 rounded-2xl bg-white/40 dark:bg-black/20 border border-border dark:border-white/10 animate-fade-in-soft">
             {activeDecor.map((decorId, i) => {
               const item = DECOR_ITEMS.find((d) => d.id === decorId);
               return item ? (
@@ -480,7 +480,7 @@ export function VirtualCozyHouse({
                   type="button"
                   onClick={() => handleSetWallpaper(w.id)}
                   aria-pressed={roomCustom.wallpaper[activeRoom] === w.id}
-                  className={`px-3 py-1.5 rounded-xl text-[11px] font-bold border-2 transition-all cursor-pointer bg-gradient-to-b ${w.cls} text-amber-950 dark:text-amber-100 ${
+                  className={`px-3 py-1.5 rounded-xl text-[11px] font-bold border-2 transition-all cursor-pointer bg-gradient-to-b ${w.cls} text-heading ${
                     roomCustom.wallpaper[activeRoom] === w.id
                       ? "border-rose-500 scale-105 shadow-md"
                       : "border-transparent opacity-80 hover:opacity-100"
@@ -537,8 +537,8 @@ export function VirtualCozyHouse({
         {activeRoom === "living" && (
           <div className={`relative z-10 space-y-4 animate-fade-in-soft rounded-2xl bg-gradient-to-b ${activeWallpaper} p-3`}>
             {/* Interactive Smart TV */}
-            <div className="p-4 rounded-2xl bg-white/70 dark:bg-amber-950/60 backdrop-blur-md border border-amber-200/60 dark:border-amber-800/60 shadow-md">
-              <div className="flex items-center justify-between mb-2 pb-2 border-b border-amber-200/40 dark:border-amber-800/40">
+            <div className="surface-card p-4">
+              <div className="flex items-center justify-between mb-2 pb-2 border-b border-border">
                 <div className="flex items-center gap-2">
                   <Tv size={16} className="text-rose-500" />
                   <span className="text-xs font-extrabold">TV Ruang Tamu {myName} & {partnerName}</span>
@@ -560,7 +560,7 @@ export function VirtualCozyHouse({
                   <h4 className="text-xs font-bold text-rose-900 dark:text-rose-200">
                     {TV_CHANNELS[currentTvChannel].title}
                   </h4>
-                  <p className="text-[11px] text-amber-900/80 dark:text-amber-200/80 mt-0.5">
+                  <p className="text-[11px] text-body mt-0.5">
                     {TV_CHANNELS[currentTvChannel].desc}
                   </p>
                 </div>
@@ -576,7 +576,7 @@ export function VirtualCozyHouse({
             {/* Quick Live Activities Side-by-Side */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {/* My Status Card */}
-              <div className="p-3.5 rounded-2xl bg-white/70 dark:bg-amber-950/60 backdrop-blur-md border border-blue-200/60 dark:border-blue-900/60 shadow-sm">
+              <div className="p-3.5 rounded-2xl bg-surface backdrop-blur-md border border-border shadow-sm">
                 <div className="flex items-center justify-between mb-1.5">
                   <span className="text-xs font-bold text-blue-900 dark:text-blue-300">{isOwner ? "🤴" : "👸"} Status Kamu ({myName})</span>
                   <span className="w-2 h-2 rounded-full bg-emerald-500" />
@@ -593,7 +593,7 @@ export function VirtualCozyHouse({
               </div>
 
               {/* Partner Status Card */}
-              <div className="p-3.5 rounded-2xl bg-white/70 dark:bg-amber-950/60 backdrop-blur-md border border-pink-200/60 dark:border-pink-900/60 shadow-sm">
+              <div className="p-3.5 rounded-2xl bg-surface backdrop-blur-md border border-border shadow-sm">
                 <div className="flex items-center justify-between mb-1.5">
                   <span className="text-xs font-bold text-pink-900 dark:text-pink-300">{isOwner ? "👸" : "🤴"} Status {partnerName}</span>
                   <span className={`w-2 h-2 rounded-full ${isPartnerOnline ? "bg-emerald-500 animate-ping" : "bg-gray-400"}`} />
@@ -616,7 +616,7 @@ export function VirtualCozyHouse({
         {activeRoom === "kitchen" && (
           <div className={`relative z-10 space-y-4 animate-fade-in-soft rounded-2xl bg-gradient-to-b ${activeWallpaper} p-3`}>
             {/* Treat Feeding Bar */}
-            <div className="p-3.5 rounded-2xl bg-white/70 dark:bg-amber-950/60 backdrop-blur-md border border-amber-200/60 dark:border-amber-800/60 shadow-sm">
+            <div className="surface-card p-3.5">
               <h4 className="text-xs font-extrabold mb-2 flex items-center gap-1.5">
                 <span>🍽️ Meja Makan Virtual: Suapin {partnerName} Cemilan!</span>
               </h4>
@@ -630,7 +630,7 @@ export function VirtualCozyHouse({
                 </button>
                 <button
                   onClick={() => handleFeedTreat("🧋", "Boba Brown Sugar")}
-                  className="p-2 rounded-xl bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 border border-amber-200/60 flex flex-col items-center gap-1 text-[11px] font-semibold transition-transform active:scale-95 cursor-pointer"
+                  className="p-2 rounded-xl bg-surface-warm hover:bg-surface border border-border flex flex-col items-center gap-1 text-[11px] font-semibold transition-transform active:scale-95 cursor-pointer"
                 >
                   <span className="text-xl">🧋</span>
                   <span>Boba</span>
@@ -660,7 +660,7 @@ export function VirtualCozyHouse({
         {/* ROOM 3: BEDROOM (Kamar Tidur) */}
         {activeRoom === "bedroom" && (
           <div className={`relative z-10 space-y-4 animate-fade-in-soft rounded-2xl bg-gradient-to-b ${activeWallpaper} p-3`}>
-            <div className="p-5 rounded-2xl bg-white/80 dark:bg-amber-950/70 backdrop-blur-md border border-rose-200/60 dark:border-rose-900/60 shadow-sm text-center">
+            <div className="surface-card p-5 text-center">
               <div className="w-14 h-14 mx-auto rounded-full bg-rose-100 dark:bg-rose-900/50 flex items-center justify-center text-rose-500 mb-2 shadow-inner">
                 <BedDouble size={28} />
               </div>
@@ -730,7 +730,7 @@ export function VirtualCozyHouse({
             </div>
 
             {/* Radar LDR & Red Thread of Fate */}
-            <div className="p-5 rounded-2xl bg-white/80 dark:bg-amber-950/70 backdrop-blur-md border border-teal-200/60 dark:border-teal-900/60 shadow-sm text-center">
+            <div className="surface-card p-5 text-center">
               <div className="w-12 h-12 mx-auto rounded-full bg-teal-100 dark:bg-teal-900/50 flex items-center justify-center text-teal-600 mb-2 shadow-inner">
                 <Compass size={24} className="animate-spin-slow" />
               </div>
@@ -754,7 +754,7 @@ export function VirtualCozyHouse({
         )}
 
         {/* BOTTOM QUICK RINDU HEART EXPLOSION BUTTON */}
-        <div className="relative z-10 mt-6 pt-4 border-t border-amber-900/10 dark:border-amber-100/10 flex items-center justify-between gap-3">
+        <div className="relative z-10 mt-6 pt-4 border-t border-border flex items-center justify-between gap-3">
           <div>
             <p className="text-[11px] font-extrabold uppercase tracking-wider text-rose-700 dark:text-rose-400">
               Detak Rindu Instan

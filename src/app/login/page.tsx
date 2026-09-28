@@ -64,15 +64,21 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="landing-bg flex items-center justify-center p-4 safe-area-inset min-h-dvh">
-      <div className="login-card animate-scale-soft w-full max-w-md">
-        <div className="surface-card p-6 sm:p-8 rounded-3xl border border-amber-200/60 dark:border-amber-800/40 shadow-xl bg-white/90 dark:bg-surface/80 backdrop-blur-md">
+    <div className="page-bg flex items-center justify-center p-4 safe-area-inset min-h-dvh">
+      {/* Ambient hearts */}
+      <div className="pointer-events-none fixed inset-0 overflow-hidden" aria-hidden="true">
+        <span className="absolute top-[14%] right-[16%] text-2xl animate-float-soft opacity-30">💗</span>
+        <span className="absolute bottom-[20%] left-[14%] text-xl animate-float-soft opacity-25" style={{ animationDelay: "1.4s" }}>💜</span>
+      </div>
+
+      <div className="login-card animate-scale-soft w-full max-w-md relative z-10">
+        <div className="surface-card p-6 sm:p-8">
           <div className="text-center mb-8">
             <div className="text-6xl mb-3 animate-breathe">💝</div>
-            <h1 className="text-3xl font-extrabold text-amber-950 dark:text-amber-100 mb-1">
-              {APP_CONFIG.name}
+            <h1 className="text-3xl font-extrabold mb-1">
+              <span className="text-gradient-primary">{APP_CONFIG.name}</span>
             </h1>
-            <p className="text-xs text-amber-800 dark:text-amber-300/80 font-medium">{APP_CONFIG.subtitle}</p>
+            <p className="text-xs text-body font-medium">{APP_CONFIG.subtitle}</p>
           </div>
 
           {!selectedRole ? (
@@ -81,17 +87,21 @@ export default function LoginPage() {
                 <MagneticButton key={role}>
                   <button
                     onClick={() => handleSelectRole(role)}
-                    className="login-option animate-slide-up-soft touch-press w-full p-4 rounded-2xl border-2 transition-all cursor-pointer group touch-target bg-amber-50/60 hover:bg-amber-100/80 dark:bg-white/5 dark:hover:bg-white/10 border-amber-200/80 dark:border-amber-800/40"
+                    className="login-option animate-slide-up-soft touch-press w-full p-4 rounded-2xl border transition-all cursor-pointer group touch-target bg-surface-warm border-border hover:border-primary/50 hover:shadow-soft-hover"
                     style={{ animationDelay: `${0.2 + idx * 0.1}s` }}
                   >
                     <div className="flex items-center gap-4">
-                      <div className="text-4xl group-hover:scale-110 transition-transform">
+                      <div
+                        className="w-14 h-14 rounded-2xl flex items-center justify-center text-3xl group-hover:scale-110 transition-transform"
+                        style={{ background: "var(--gradient-primary)" }}
+                      >
                         {role === "owner" ? "🤴" : "👸"}
                       </div>
                       <div className="text-left flex-1">
-                        <h2 className="font-bold text-amber-950 dark:text-amber-100 text-base">{APP_CONFIG.users[role].name}</h2>
-                        <p className="text-xs text-amber-800/80 dark:text-amber-300/70">@{APP_CONFIG.users[role].username}</p>
+                        <h2 className="font-bold text-heading text-base">{APP_CONFIG.users[role].name}</h2>
+                        <p className="text-xs text-muted">@{APP_CONFIG.users[role].username}</p>
                       </div>
+                      <span className="text-muted group-hover:text-primary group-hover:translate-x-1 transition-all">→</span>
                     </div>
                   </button>
                 </MagneticButton>
@@ -101,23 +111,28 @@ export default function LoginPage() {
             <div className={`space-y-4 ${shake ? "animate-shake" : ""}`}>
               <button
                 onClick={() => { setSelectedRole(null); setPassword(""); setError(""); }}
-                className="touch-target text-amber-800 hover:text-amber-950 dark:text-amber-300 dark:hover:text-amber-100 text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer"
+                className="touch-target text-body hover:text-heading text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer"
               >
                 ← Pilih Profil Lain
               </button>
 
-              <div className="flex items-center gap-3 p-3.5 rounded-2xl border border-amber-200/80 dark:border-amber-800/40 bg-amber-50/70 dark:bg-white/5">
-                <div className="text-3xl">{selectedRole === "owner" ? "🤴" : "👸"}</div>
+              <div className="flex items-center gap-3 p-3.5 rounded-2xl border border-border bg-surface-warm">
+                <div
+                  className="w-11 h-11 rounded-xl flex items-center justify-center text-2xl flex-shrink-0"
+                  style={{ background: "var(--gradient-primary)" }}
+                >
+                  {selectedRole === "owner" ? "🤴" : "👸"}
+                </div>
                 <div>
-                  <h2 className="font-bold text-amber-950 dark:text-amber-100 text-base">{APP_CONFIG.users[selectedRole].name}</h2>
-                  <p className="text-xs text-amber-800 dark:text-amber-300/80">@{APP_CONFIG.users[selectedRole].username}</p>
+                  <h2 className="font-bold text-heading text-base">{APP_CONFIG.users[selectedRole].name}</h2>
+                  <p className="text-xs text-muted">@{APP_CONFIG.users[selectedRole].username}</p>
                 </div>
               </div>
 
               <div>
                 <label
                   htmlFor="login-password"
-                  className="block text-xs font-bold text-amber-900 dark:text-amber-200 mb-1.5 text-center"
+                  className="block text-xs font-bold text-body mb-1.5 text-center"
                 >
                   Password Rumah Cinta
                 </label>
@@ -129,19 +144,19 @@ export default function LoginPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleLogin()}
-                  className="w-full px-4 py-3 rounded-xl border border-amber-300 dark:border-amber-700/50 text-center text-lg tracking-wider bg-white dark:bg-surface-warm text-amber-950 dark:text-amber-100 font-mono shadow-inner focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  className="input-soft w-full px-4 py-3 text-center text-lg tracking-wider font-mono"
                   placeholder="Masukkan password 💝"
                   autoFocus
                 />
               </div>
 
-              {error && <p className="text-rose-600 text-xs font-bold text-center animate-pulse">{error}</p>}
+              {error && <p className="text-rose-500 text-xs font-bold text-center animate-pulse">{error}</p>}
 
               <MagneticButton>
                 <button
                   onClick={handleLogin}
                   disabled={!password || loading}
-                  className="touch-target touch-press w-full py-3.5 rounded-2xl text-white font-bold disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md hover:shadow-lg bg-gradient-to-r from-amber-600 via-rose-500 to-amber-600 cursor-pointer"
+                  className="btn-gradient touch-target touch-press w-full py-3.5 rounded-2xl text-white font-bold disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                 >
                   {loading ? "Melangkah Masuk..." : "Masuk ke Rumah 💕"}
                 </button>

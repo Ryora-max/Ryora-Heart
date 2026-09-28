@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { APP_CONFIG } from "@/config";
+import { calculateDaysTogether } from "@/lib/utils";
 import { useAuthStore } from "@/stores";
 import {
   usePresence,
@@ -78,11 +79,7 @@ export default function DashboardPage() {
   // Tanggal jadian: row user_settings tersinkron (pair-aware) menang atas
   // fallback APP_CONFIG (2024-10-29).
   const startDate = settings?.relationshipStartDate || APP_CONFIG.relationship.startDate;
-  const startMs = new Date(startDate).getTime();
-  const daysTogether =
-    now === null || !Number.isFinite(startMs)
-      ? 0
-      : Math.max(0, Math.floor((now - startMs) / 86_400_000));
+  const daysTogether = now === null ? 0 : calculateDaysTogether(startDate);
 
   const handleFinishEntry = () => {
     setShowEntryTransition(false);

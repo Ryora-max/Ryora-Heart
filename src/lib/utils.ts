@@ -37,10 +37,14 @@ export function formatDistance(date: Date | string): string {
 }
 
 export function calculateDaysTogether(startDate: Date | string): number {
-  const start = new Date(startDate);
+  // Parse "YYYY-MM-DD" sebagai hari lokal (bukan UTC midnight) agar hitungan hari
+  // tidak bergeser di timezone positif (WIB/UTC+7 dst).
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(startDate));
+  const start = m ? new Date(+m[1], +m[2] - 1, +m[3]) : new Date(startDate);
   const now = new Date();
-  const diff = now.getTime() - start.getTime();
-  return Math.floor(diff / (1000 * 60 * 60 * 24));
+  const startDay = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  return Math.max(0, Math.floor((today.getTime() - startDay.getTime()) / (1000 * 60 * 60 * 24)));
 }
 
 export function generateId(): string {

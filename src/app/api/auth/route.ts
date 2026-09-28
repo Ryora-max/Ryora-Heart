@@ -41,10 +41,17 @@ export async function POST(request: NextRequest) {
           });
           if (!error && data.user) {
             const profile = await getSupabaseUserProfile();
-            if (profile) {
-              return NextResponse.json({ user: profile });
-            }
-            return NextResponse.json({ user: getLocalProfile(role) });
+            // Set local cookie juga — saat Supabase down, session tetap
+            // ter-autentikasi via fallback lokal (bridge resilience).
+            const user = profile || getLocalProfile(role);
+            const response = NextResponse.json({ user });
+            response.cookies.set(LOCAL_SESSION_COOKIE, sessionValueForRole(role), {
+              path: "/",
+              maxAge: SESSION_MAX_AGE,
+              sameSite: "lax",
+              httpOnly: true,
+            });
+            return response;
           }
           // Hanya tolak kalau Supabase PASTI merespons kredensial salah
           // (AuthApiError status 400). Network/timeout (status 0/5xx,

@@ -91,7 +91,7 @@ interface LoveNotesFridgeProps {
 
 export function LoveNotesFridge({ currentUserName, partnerName, onSendHeart, onEarnPoints }: LoveNotesFridgeProps) {
   const { token } = useAuthStore();
-  const { letters, createLetter, deleteLetter } = useLetters(token || "");
+  const { letters, loading: lettersLoading, createLetter, deleteLetter } = useLetters(token || "");
 
   const [tab, setTab] = useState<Tab>("memo");
   const [localNotes, setLocalNotes] = useState<LoveNote[]>(DEFAULT_NOTES);
@@ -467,7 +467,14 @@ export function LoveNotesFridge({ currentUserName, partnerName, onSendHeart, onE
       {/* Surat tab — envelope cards */}
       {tab === "surat" && (
         <div className="space-y-2.5">
-          {loveLetters.length === 0 && (
+          {lettersLoading && (
+            <div className="space-y-2">
+              {[0, 1].map((i) => (
+                <div key={i} className="h-16 rounded-2xl bg-slate-100/70 dark:bg-slate-700/40 animate-pulse" />
+              ))}
+            </div>
+          )}
+          {!lettersLoading && loveLetters.length === 0 && (
             <div className="text-center py-8 text-slate-500 dark:text-slate-400">
               <div className="text-4xl mb-2">📭</div>
               <p className="text-xs">Belum ada surat cinta — tulis yang pertama!</p>

@@ -22,7 +22,7 @@ export function BottomNav() {
       className="md:hidden fixed bottom-3 left-4 right-4 z-40 safe-area-bottom pointer-events-auto"
       aria-label="Bottom navigation"
     >
-      <div className="flex items-center justify-around px-1.5 py-2 rounded-full bg-white/85 dark:bg-amber-950/85 backdrop-blur-xl border border-amber-200/60 dark:border-amber-800/60 shadow-xl">
+      <div className="flex items-center justify-around px-1.5 py-2 rounded-[1.75rem] surface-glass">
         {NAV_ITEMS.map((item) => {
           const isActive =
             pathname === item.href ||
@@ -34,16 +34,16 @@ export function BottomNav() {
               key={item.href}
               onClick={() => router.push(item.href)}
               className={cn(
-                "touch-press flex flex-col items-center justify-center gap-1 rounded-full px-1 py-1.5 min-h-[44px] transition-all flex-1 min-w-0 cursor-pointer relative",
+                "touch-press flex flex-col items-center justify-center gap-1 rounded-2xl px-1 py-1.5 min-h-[44px] transition-all flex-1 min-w-0 cursor-pointer relative",
                 isActive
-                  ? "text-rose-600 dark:text-rose-400 font-bold scale-105"
-                  : "text-amber-900/60 dark:text-amber-200/60 hover:text-amber-950"
+                  ? "text-primary font-bold scale-105"
+                  : "text-muted-foreground opacity-60 hover:opacity-100 hover:text-heading"
               )}
               aria-label={item.label}
               aria-current={isActive ? "page" : undefined}
             >
               {isActive && (
-                <span className="absolute -top-1 w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
+                <span className="absolute -top-1 w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: "var(--gradient-primary)" }} />
               )}
               <Icon
                 size={20}
