@@ -146,6 +146,7 @@ export default function DashboardPage() {
       <VirtualCozyHouse
         daysTogether={daysTogether}
         daysUntilMeetup={daysUntilMeetup}
+        distanceKm={settings?.distanceKm}
         myName={myName}
         partnerName={partnerDisplayName}
         isOwner={isOwner}

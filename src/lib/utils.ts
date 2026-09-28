@@ -47,6 +47,34 @@ export function calculateDaysTogether(startDate: Date | string): number {
   return Math.max(0, Math.floor((today.getTime() - startDay.getTime()) / (1000 * 60 * 60 * 24)));
 }
 
+/** Salam sesuai waktu lokal — pagi/siang/sore/malam. */
+export function getTimeGreeting(date: Date = new Date()): { text: string; emoji: string } {
+  const h = date.getHours();
+  if (h >= 4 && h < 11) return { text: "Selamat pagi", emoji: "🌤️" };
+  if (h >= 11 && h < 15) return { text: "Selamat siang", emoji: "☀️" };
+  if (h >= 15 && h < 19) return { text: "Selamat sore", emoji: "🌇" };
+  return { text: "Selamat malam", emoji: "🌙" };
+}
+
+/** "5 menit lalu" / "2 jam lalu" — untuk lastSeen partner. */
+export function formatLastSeen(date: Date | string): string {
+  const diff = Date.now() - new Date(date).getTime();
+  if (diff < 60_000) return "baru saja";
+  const mins = Math.floor(diff / 60_000);
+  if (mins < 60) return `${mins} menit lalu`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours} jam lalu`;
+  const days = Math.floor(hours / 24);
+  return `${days} hari lalu`;
+}
+
+/** "1.234 km" — format ribuan Indonesia. */
+export function formatDistanceKm(km: string | number): string {
+  const n = typeof km === "string" ? parseFloat(km.replace(/[^\d.,]/g, "").replace(",", ".")) : km;
+  if (!Number.isFinite(n)) return String(km);
+  return `${n.toLocaleString("id-ID")} km`;
+}
+
 export function calculateDaysUntil(targetDate: Date | string): number {
   // Hari menuju tanggal target (0 = hari ini, negatif = sudah lewat).
   const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(targetDate));

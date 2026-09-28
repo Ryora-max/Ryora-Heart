@@ -18,6 +18,7 @@ import {
   Flame,
 } from "lucide-react";
 import { useAuthStore } from "@/stores";
+import { getTimeGreeting, formatLastSeen, formatDistanceKm } from "@/lib/utils";
 import {
   useHugs,
   useUserExtra,
@@ -40,6 +41,7 @@ import type { MoodEntry, Activity, Presence } from "@/types";
 interface VirtualCozyHouseProps {
   daysTogether: number;
   daysUntilMeetup?: number | null;
+  distanceKm?: string;
   myName: string;
   partnerName: string;
   isOwner?: boolean;
@@ -101,6 +103,25 @@ function parseRoomCustom(raw: string | null): RoomCustom {
   }
 }
 
+// Kalimat cinta LDR — satu per hari, dipilih by day-of-year (stabil 24 jam,
+// tidak perlu network/DB). Kecil tapi bikin rumah terasa hidup.
+const DAILY_LINES = [
+  "Jarak hanyalah angka — hati kita sudah terhubung.",
+  "LDR itu bukan seberapa jauh, tapi seberapa kuat.",
+  "Tiap hari terpisah = satu hari lebih dekat untuk bertemu.",
+  "Peluk lewat layar dulu, peluk beneran nanti.",
+  "Rumah kita tidak ada di peta — rumah kita di sini, di hati.",
+  "Rindu yang tertahan hari ini jadi pelukan ekstra besok.",
+  "Kita ini tim — jarak cuma level permainan.",
+  "Langit yang sama menaungi kita berdua malam ini.",
+  "Sinyal boleh lambat, cinta tidak pernah buffering.",
+  "Kamu jauh dari mata, tapi tidak pernah dari pikiran.",
+  "Nanti ketemu, semua kangen dibayar lunas.",
+  "Jarak menguji kita — dan kita lulus tiap hari.",
+  "Seribu kilometer cuma detail; kita tetap satu rumah.",
+  "Cinta jarak jauh: kangen sekarang, cerita nanti.",
+];
+
 const TV_CHANNELS = [
   {
     title: "Movie Night Romantis 🎬",
@@ -122,6 +143,7 @@ const TV_CHANNELS = [
 export function VirtualCozyHouse({
   daysTogether,
   daysUntilMeetup,
+  distanceKm,
   myName,
   partnerName,
   isOwner = true,
@@ -129,6 +151,7 @@ export function VirtualCozyHouse({
   partnerMood,
   myActivity,
   partnerActivity,
+  partnerPresence,
   isPartnerOnline,
   onSendHeartPing,
   onReenterDoor,
@@ -147,6 +170,20 @@ export function VirtualCozyHouse({
   const [currentTvChannel, setCurrentTvChannel] = useState(0);
   const [waterAnimation, setWaterAnimation] = useState(false);
   const [feedMessage, setFeedMessage] = useState<string | null>(null);
+  // Greeting waktu lokal — deferred via effect (new Date() tidak boleh
+  // di render untuk React purity lint).
+  const [greeting, setGreeting] = useState({ text: "Hai", emoji: "💕" });
+  const [dailyLine, setDailyLine] = useState(DAILY_LINES[0]);
+  useEffect(() => {
+    const t = setTimeout(() => {
+      setGreeting(getTimeGreeting());
+      const dayOfYear = Math.floor(
+        (Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86_400_000
+      );
+      setDailyLine(DAILY_LINES[dayOfYear % DAILY_LINES.length]);
+    }, 0);
+    return () => clearTimeout(t);
+  }, []);
   const [decorMode, setDecorMode] = useState(false);
 
   // Synced Tree Water count
@@ -327,13 +364,27 @@ export function VirtualCozyHouse({
                     💕 {daysUntilMeetup === 0 ? "Ketemu hari ini!" : `${daysUntilMeetup} hari lagi ketemu`}
                   </span>
                 )}
+                {distanceKm && (
+                  <span className="inline-flex items-center gap-1 text-[10px] font-bold text-secondary bg-secondary-soft px-2 py-0.5 rounded-full whitespace-nowrap">
+                    🗺️ {formatDistanceKm(distanceKm)} terpisah
+                  </span>
+                )}
+                {daysTogether > 0 && (daysTogether % 100 === 0 || daysTogether % 365 === 0) && (
+                  <span className="inline-flex items-center gap-1 text-[10px] font-bold text-white px-2 py-0.5 rounded-full shadow-sm whitespace-nowrap animate-pulse-glow" style={{ background: "var(--gradient-primary)" }}>
+                    🎉 {daysTogether % 365 === 0 ? `${daysTogether / 365} tahun!` : `${daysTogether} hari!`}
+                  </span>
+                )}
               </div>
-              <p className="text-[11px] opacity-80 font-medium flex items-center gap-1">
+              <p className="text-[11px] opacity-80 font-medium flex items-center gap-1 flex-wrap">
+                <span>{greeting.emoji} {greeting.text}, {myName}</span>
+                <span className="opacity-50">·</span>
                 {isPartnerOnline ? (
                   <span className="text-accent font-semibold flex items-center gap-1">
                     <span className="w-2 h-2 rounded-full bg-accent animate-ping" />
                     {partnerName} sedang bersamamu di rumah 💕
                   </span>
+                ) : partnerPresence?.lastSeen ? (
+                  <span className="text-body">{partnerName} aktif {formatLastSeen(partnerPresence.lastSeen)}</span>
                 ) : (
                   <span>Menantikan pasangan kembali ke pelukan ✨</span>
                 )}
@@ -432,6 +483,11 @@ export function VirtualCozyHouse({
             <span className="text-[10px] sm:text-xs">Taman</span>
           </button>
         </div>
+
+        {/* Kata hari ini — detail kecil yang bikin rumah terasa hidup */}
+        <p className="relative z-10 text-center text-[11px] italic text-muted mb-4 px-4">
+          ✉️ {dailyLine}
+        </p>
 
         {/* FEED TREAT ALERT */}
         {feedMessage && (
