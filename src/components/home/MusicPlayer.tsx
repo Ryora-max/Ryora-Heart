@@ -47,11 +47,11 @@ export function MusicPlayer() {
   };
 
   return (
-    <div className="p-4 rounded-2xl bg-white/70 dark:bg-amber-950/60 backdrop-blur-md border border-emerald-200/60 dark:border-emerald-800/60 shadow-md">
-      <div className="flex items-center justify-between mb-2 pb-2 border-b border-emerald-200/40 dark:border-emerald-800/40">
+    <div className="surface-card p-4">
+      <div className="flex items-center justify-between mb-2 pb-2 border-b border-border">
         <div className="flex items-center gap-2">
-          <Music size={16} className="text-emerald-500" />
-          <span className="text-xs font-extrabold">Musik Kita 🎧</span>
+          <Music size={16} className="text-accent" />
+          <span className="text-xs font-extrabold text-heading">Musik Kita 🎧</span>
         </div>
         <div className="flex items-center gap-1.5">
           {embedUrl && (
@@ -59,7 +59,7 @@ export function MusicPlayer() {
               type="button"
               onClick={handleClear}
               aria-label="Hapus lagu"
-              className="p-1.5 rounded-lg text-slate-400 hover:text-rose-500 transition-colors cursor-pointer"
+              className="p-1.5 rounded-lg text-muted hover:text-red-500 transition-colors cursor-pointer"
             >
               <X size={14} />
             </button>
@@ -67,7 +67,7 @@ export function MusicPlayer() {
           <button
             type="button"
             onClick={() => setEditing((v) => !v)}
-            className="px-2.5 py-1 rounded-lg bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-200 text-[10px] font-bold hover:bg-emerald-200 transition-colors cursor-pointer flex items-center gap-1"
+            className="px-2.5 py-1 rounded-lg bg-accent-soft text-accent text-[10px] font-bold hover:opacity-80 transition-opacity cursor-pointer flex items-center gap-1"
           >
             <Link2 size={11} />
             {embedUrl ? "Ganti" : "Set Lagu"}
@@ -85,13 +85,13 @@ export function MusicPlayer() {
             value={input}
             onChange={(e) => { setInput(e.target.value); setErr(false); }}
             placeholder="Paste link Spotify (lagu / playlist)..."
-            className={`w-full text-xs p-2.5 rounded-xl border bg-transparent focus:outline-none focus:ring-2 ${
-              err ? "border-rose-400 focus:ring-rose-400" : "border-emerald-300 dark:border-emerald-700 focus:ring-emerald-400"
+            className={`input-soft w-full text-xs p-2.5 ${
+              err ? "!border-red-400" : ""
             }`}
             aria-label="Link Spotify"
           />
           {err && (
-            <p className="text-[10px] text-rose-500 font-semibold">
+            <p className="text-[10px] text-red-500 font-semibold">
               Link tidak valid — pakai format open.spotify.com/track/... atau /playlist/...
             </p>
           )}
@@ -99,7 +99,7 @@ export function MusicPlayer() {
             type="button"
             onClick={handleSave}
             disabled={!input.trim()}
-            className="w-full py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 disabled:opacity-50 text-white text-xs font-bold shadow-md cursor-pointer"
+            className="btn-gradient w-full py-2 text-xs disabled:opacity-50 cursor-pointer"
           >
             Pasang Musik 🎵
           </button>
@@ -117,7 +117,7 @@ export function MusicPlayer() {
         />
       ) : (
         !editing && (
-          <p className="text-[11px] text-slate-500 dark:text-slate-400 text-center py-3">
+          <p className="text-[11px] text-body text-center py-3">
             Belum ada lagu — set link Spotify untuk dengarkan bareng 🎶
           </p>
         )

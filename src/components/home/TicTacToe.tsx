@@ -89,21 +89,21 @@ export function TicTacToe({ partnerName }: TicTacToeProps) {
     : `Giliran ${partnerName}...`;
 
   return (
-    <div className="p-4 rounded-2xl bg-white/70 dark:bg-amber-950/60 backdrop-blur-md border border-violet-200/60 dark:border-violet-800/60 shadow-md">
-      <div className="flex items-center justify-between mb-2 pb-2 border-b border-violet-200/40 dark:border-violet-800/40">
+    <div className="surface-card p-4">
+      <div className="flex items-center justify-between mb-2 pb-2 border-b border-border">
         <div className="flex items-center gap-2">
-          <Gamepad2 size={16} className="text-violet-500" />
-          <span className="text-xs font-extrabold">Tic-Tac-Toe Berdua</span>
+          <Gamepad2 size={16} className="text-secondary" />
+          <span className="text-xs font-extrabold text-heading">Tic-Tac-Toe Berdua</span>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400">
+          <span className="text-[10px] font-bold text-muted">
             Kamu: {myMark === "x" ? "❌" : "⭕"}
           </span>
           {(game.winner || game.board.some((c) => c !== "")) && (
             <button
               type="button"
               onClick={handleReset}
-              className="px-2.5 py-1 rounded-lg bg-violet-100 dark:bg-violet-900/60 text-violet-700 dark:text-violet-200 text-[10px] font-bold hover:bg-violet-200 transition-colors cursor-pointer flex items-center gap-1"
+              className="px-2.5 py-1 rounded-lg bg-secondary-soft text-secondary text-[10px] font-bold hover:opacity-80 transition-opacity cursor-pointer flex items-center gap-1"
             >
               <RotateCcw size={11} /> {game.winner ? "Main lagi" : "Reset"}
             </button>
@@ -124,19 +124,19 @@ export function TicTacToe({ partnerName }: TicTacToeProps) {
               "aspect-square rounded-xl text-2xl font-black flex items-center justify-center transition-all border",
               cell === ""
                 ? isMyTurn
-                  ? "bg-white/60 dark:bg-white/5 border-violet-200 dark:border-violet-800 hover:bg-violet-100 dark:hover:bg-violet-900/40 cursor-pointer"
-                  : "bg-white/40 dark:bg-white/5 border-violet-200/50 dark:border-violet-800/50 cursor-not-allowed"
-                : "bg-white/80 dark:bg-white/10 border-violet-300 dark:border-violet-700"
+                  ? "bg-surface-warm border-border hover:bg-secondary-soft cursor-pointer"
+                  : "bg-surface-warm border-border/60 cursor-not-allowed opacity-70"
+                : "bg-surface-warm border-secondary/40"
             )}
           >
-            {cell === "x" ? <span className="text-rose-500">❌</span> : cell === "o" ? <span className="text-blue-500">⭕</span> : ""}
+            {cell === "x" ? <span className="text-primary">❌</span> : cell === "o" ? <span className="text-secondary">⭕</span> : ""}
           </button>
         ))}
       </div>
 
       <p className={cn(
         "text-center text-[11px] font-bold mt-2.5",
-        game.winner === myMark && game.winner ? "text-emerald-600 dark:text-emerald-400" : "text-slate-500 dark:text-slate-400"
+        game.winner === myMark && game.winner ? "text-accent" : "text-muted"
       )}>
         {statusText}
       </p>

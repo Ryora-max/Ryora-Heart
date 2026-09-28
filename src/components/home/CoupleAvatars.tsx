@@ -173,7 +173,7 @@ export function CoupleAvatars({
 
       {/* Floating Action Banner Alert if tapped */}
       {selectedPartnerAction && (
-        <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 z-40 bg-surface/95 backdrop-blur-md border border-rose-300 shadow-xl px-4 py-1.5 rounded-full text-xs font-bold text-rose-600 animate-fade-in-soft flex items-center gap-1.5">
+        <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 z-40 bg-surface/95 backdrop-blur-md border border-border shadow-xl px-4 py-1.5 rounded-full text-xs font-bold text-primary animate-fade-in-soft flex items-center gap-1.5">
           <Sparkles size={14} className="text-amber-500 animate-spin" />
           <span>{selectedPartnerAction}</span>
         </div>

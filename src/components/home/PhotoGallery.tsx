@@ -48,7 +48,7 @@ export function PhotoGallery() {
     <div className="surface-card p-4">
       <div className="flex items-center justify-between mb-3 pb-2 border-b border-border">
         <div className="flex items-center gap-2">
-          <Camera size={16} className="text-violet-500" />
+          <Camera size={16} className="text-secondary" />
           <span className="text-xs font-extrabold">Galeri Kenangan 📸</span>
           {gallery.length > 0 && (
             <span className="text-[10px] font-bold text-muted">({gallery.length})</span>
@@ -56,7 +56,7 @@ export function PhotoGallery() {
         </div>
         <button
           onClick={() => setUploadOpen((v) => !v)}
-          className="px-2.5 py-1 rounded-lg bg-violet-100 dark:bg-violet-900/60 text-violet-700 dark:text-violet-200 text-[10px] font-bold hover:bg-violet-200 transition-colors cursor-pointer"
+          className="px-2.5 py-1 rounded-lg bg-secondary-soft text-secondary text-[10px] font-bold hover:opacity-80 transition-opacity cursor-pointer"
         >
           {uploadOpen ? "Tutup" : "+ Tambah"}
         </button>

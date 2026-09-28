@@ -261,7 +261,8 @@ export function LoveNotesFridge({ currentUserName, partnerName, onEarnPoints }: 
         <button
           type="button"
           onClick={() => setIsAdding(!isAdding)}
-          className="touch-press px-3 py-1.5 rounded-full bg-rose-500 hover:bg-rose-600 text-white text-xs font-bold shadow-md flex items-center gap-1 cursor-pointer transition-transform flex-shrink-0"
+          className="touch-press px-3 py-1.5 rounded-full text-white text-xs font-bold shadow-md flex items-center gap-1 cursor-pointer transition-transform flex-shrink-0 hover:opacity-90"
+          style={{ background: "var(--gradient-primary)" }}
         >
           <Plus size={14} />
           <span>{isAdding ? "Batal" : tab === "memo" ? "Tulis Memo" : "Tulis Surat"}</span>
@@ -285,7 +286,7 @@ export function LoveNotesFridge({ currentUserName, partnerName, onEarnPoints }: 
             className={cn(
               "touch-press px-3 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer border",
               tab === t.key
-                ? "bg-rose-500 text-white border-rose-400 shadow-md"
+                ? "text-white border-transparent shadow-md tab-active-gradient"
                 : "bg-white/60 dark:bg-slate-800/60 text-slate-600 dark:text-slate-300 border-slate-300 dark:border-slate-600"
             )}
           >
