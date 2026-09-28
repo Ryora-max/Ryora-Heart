@@ -1,5 +1,5 @@
 /* QA matrix: hit every /api/db action as both roles, print pass/fail. */
-const BASE = "http://127.0.0.1:3000";
+const BASE = process.env.QA_BASE_URL || "http://127.0.0.1:3000";
 
 async function login(role, password) {
   const r = await fetch(`${BASE}/api/auth`, {
