@@ -44,19 +44,19 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
         <div className="page-bg flex items-center justify-center min-h-dvh p-6">
           <div className="text-center max-w-md surface-card p-8">
             <div className="text-6xl mb-4">😵</div>
-            <h2 className="text-2xl font-bold text-heading mb-2">Oops, something broke</h2>
+            <h2 className="text-2xl font-bold text-heading mb-2">Ada yang rusak nih</h2>
             <p className="text-body mb-6">
-              {this.state.error?.message || "An unexpected error occurred"}
+              {this.state.error?.message || "Terjadi kesalahan tak terduga"}
             </p>
             <button
               type="button"
               onClick={() => {
                 this.setState({ hasError: false, error: null });
-                window.location.href = "/home";
+                window.location.href = "/dashboard";
               }}
               className="px-6 py-3 rounded-xl bg-gradient-to-r from-primary to-secondary text-white font-medium hover:opacity-90 transition-opacity cursor-pointer"
             >
-              Go Home
+              Kembali ke Rumah 🏠
             </button>
           </div>
         </div>

@@ -1,9 +1,12 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Camera, Loader2 } from "lucide-react";
 import Image from "next/image";
 import { useAuthStore } from "@/stores";
+import { showToast } from "@/hooks/useToast";
+
+const MAX_FILE_BYTES = 15 * 1024 * 1024;
 
 interface ProfilePictureUploadProps {
   currentUrl?: string;
@@ -14,13 +17,36 @@ export function ProfilePictureUpload({ currentUrl, onUpload }: ProfilePictureUpl
   const [uploading, setUploading] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const previewUrl = useRef<string | null>(null);
   const { token } = useAuthStore();
+
+  useEffect(() => {
+    return () => {
+      if (previewUrl.current) URL.revokeObjectURL(previewUrl.current);
+    };
+  }, []);
+
+  const clearPreview = () => {
+    if (previewUrl.current) {
+      URL.revokeObjectURL(previewUrl.current);
+      previewUrl.current = null;
+    }
+    setPreview(null);
+  };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !token) return;
 
-    setPreview(URL.createObjectURL(file));
+    if (file.size > MAX_FILE_BYTES) {
+      showToast("Ukuran file melebihi 15 MB", "error");
+      e.target.value = "";
+      return;
+    }
+
+    if (previewUrl.current) URL.revokeObjectURL(previewUrl.current);
+    previewUrl.current = URL.createObjectURL(file);
+    setPreview(previewUrl.current);
     setUploading(true);
 
     try {
@@ -37,11 +63,14 @@ export function ProfilePictureUpload({ currentUrl, onUpload }: ProfilePictureUpl
 
       const data = await response.json();
       onUpload(data.url);
-      setPreview(null);
+      clearPreview();
     } catch (error) {
       console.error("Upload error:", error);
+      showToast("Gagal upload foto profil", "error");
+      clearPreview();
     } finally {
       setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
     }
   };
 

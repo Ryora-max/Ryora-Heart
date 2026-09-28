@@ -22,6 +22,8 @@ interface LoveNote {
   color: NoteColor;
   magnet: NoteMagnet;
   timestamp: string;
+  /** Note contoh bawaan — tidak ada di DB, tidak bisa dihapus. */
+  isDefault?: boolean;
 }
 
 const DEFAULT_NOTES: LoveNote[] = [
@@ -32,6 +34,7 @@ const DEFAULT_NOTES: LoveNote[] = [
     color: "pink",
     magnet: "heart",
     timestamp: "Hari ini",
+    isDefault: true,
   },
   {
     id: "note-2",
@@ -40,6 +43,7 @@ const DEFAULT_NOTES: LoveNote[] = [
     color: "yellow",
     magnet: "star",
     timestamp: "Hari ini",
+    isDefault: true,
   },
 ];
 
@@ -84,12 +88,11 @@ function senderName(createdBy: string, myName: string, partnerName: string): str
 interface LoveNotesFridgeProps {
   currentUserName: string;
   partnerName?: string;
-  onSendHeart: () => void;
   /** Dipanggil saat memo/surat berhasil dibuat — untuk Love Points. */
   onEarnPoints?: (n: number) => void;
 }
 
-export function LoveNotesFridge({ currentUserName, partnerName, onSendHeart, onEarnPoints }: LoveNotesFridgeProps) {
+export function LoveNotesFridge({ currentUserName, partnerName, onEarnPoints }: LoveNotesFridgeProps) {
   const { token } = useAuthStore();
   const { letters, loading: lettersLoading, createLetter, deleteLetter } = useLetters(token || "");
 
@@ -105,6 +108,7 @@ export function LoveNotesFridge({ currentUserName, partnerName, onSendHeart, onE
   const [letterText, setLetterText] = useState("");
   const [openWhen, setOpenWhen] = useState("");
   const [openedLetter, setOpenedLetter] = useState<string | null>(null);
+  const [likedNote, setLikedNote] = useState<string | null>(null);
 
   // "now" dari state (bukan Date.now() di render — melanggar purity).
   // Di-refresh tiap 30 detik supaya label "Xm lalu" tetap akurat.
@@ -194,7 +198,6 @@ export function LoveNotesFridge({ currentUserName, partnerName, onSendHeart, onE
     setNewText("");
     setIsAdding(false);
     playChimeSound();
-    onSendHeart();
     onEarnPoints?.(2);
 
     try {
@@ -222,7 +225,6 @@ export function LoveNotesFridge({ currentUserName, partnerName, onSendHeart, onE
       setOpenWhen("");
       setIsAdding(false);
       playChimeSound();
-      onSendHeart();
       onEarnPoints?.(2);
     } catch {
       // Graceful fallback
@@ -439,25 +441,31 @@ export function LoveNotesFridge({ currentUserName, partnerName, onSendHeart, onE
                 <button
                   type="button"
                   onClick={() => {
+                    // Like memo = feedback lokal saja — jangan ping rindu
+                    // ke partner untuk setiap tap hati kecil.
                     playHeartPopSound();
-                    onSendHeart();
+                    setLikedNote(note.id);
+                    setTimeout(() => setLikedNote(null), 1200);
                   }}
                   title="Sukai Memo"
+                  aria-label="Sukai memo"
                   className="text-[11px] font-bold text-rose-600 flex items-center gap-1 hover:scale-105 active:scale-95 transition-transform cursor-pointer"
                 >
-                  <Heart size={12} className="fill-rose-500" />
-                  <span>Love</span>
+                  <Heart size={12} className={`transition-all ${likedNote === note.id ? "fill-rose-500 scale-125" : "fill-rose-500"}`} />
+                  <span>{likedNote === note.id ? "💕" : "Love"}</span>
                 </button>
 
-                <button
-                  type="button"
-                  onClick={() => handleDelete(note.id)}
-                  title="Lepas Memo"
-                  aria-label="Lepas memo"
-                  className="text-slate-400 hover:text-red-500 p-1 rounded transition-colors cursor-pointer"
-                >
-                  <Trash2 size={12} />
-                </button>
+                {!note.isDefault && (
+                  <button
+                    type="button"
+                    onClick={() => handleDelete(note.id)}
+                    title="Lepas Memo"
+                    aria-label="Lepas memo"
+                    className="text-slate-400 hover:text-red-500 p-1 rounded transition-colors cursor-pointer"
+                  >
+                    <Trash2 size={12} />
+                  </button>
+                )}
               </div>
             </div>
           ))}

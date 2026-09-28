@@ -338,6 +338,27 @@ h1, h2, h3, h4, h5, h6 {
   animation: pulse-glow 2.4s ease-in-out infinite;
 }
 
+/* Shake — feedback salah PIN di login */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  15%, 45%, 75% { transform: translateX(-7px); }
+  30%, 60%, 90% { transform: translateX(7px); }
+}
+
+.animate-shake {
+  animation: shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97);
+}
+
+/* ─── 3D helpers — dipakai Furniture tilt & HouseEntryTransition door ─── */
+/* Tailwind `perspective-*` hanya punya skala bernama — 1000px custom. */
+.perspective-1000 {
+  perspective: 1000px;
+}
+
+.preserve-3d {
+  transform-style: preserve-3d;
+}
+
 /* ─── Components ─────────────────────────────────────────────── */
 
 /* Soft button base */
@@ -418,6 +439,16 @@ h1, h2, h3, h4, h5, h6 {
   border: 1px solid var(--border);
   border-radius: 1.375rem;
   box-shadow: 0 4px 24px var(--shadow);
+}
+
+/* GlassPanel — panel kaca serbaguna (dipakai lewat komponen GlassPanel) */
+.glass-panel {
+  background: color-mix(in srgb, var(--surface) 70%, transparent);
+  backdrop-filter: blur(18px) saturate(1.5);
+  -webkit-backdrop-filter: blur(18px) saturate(1.5);
+  border: 1px solid var(--border);
+  border-radius: 1.375rem;
+  box-shadow: 0 8px 32px var(--shadow), inset 0 1px 0 var(--glass-highlight);
 }
 
 /* Focus styles */

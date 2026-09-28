@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Upload, X, Loader2, AlertCircle, RefreshCw } from "lucide-react";
 import { useAuthStore } from "@/stores";
 
@@ -8,21 +8,42 @@ interface ImageUploadProps {
   onUpload: (url: string) => void;
 }
 
+const MAX_FILE_BYTES = 15 * 1024 * 1024; // 15 MB — samakan dengan copy di bawah
+
 export function ImageUpload({ onUpload }: ImageUploadProps) {
   const [uploading, setUploading] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const previewUrl = useRef<string | null>(null);
   const { token } = useAuthStore();
 
+  // Lepas object URL saat komponen unmount — mencegah memory leak.
+  useEffect(() => {
+    return () => {
+      if (previewUrl.current) URL.revokeObjectURL(previewUrl.current);
+    };
+  }, []);
+
   const resetPreview = () => {
+    if (previewUrl.current) {
+      URL.revokeObjectURL(previewUrl.current);
+      previewUrl.current = null;
+    }
     setPreview(null);
     setError(null);
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const uploadFile = async (file: File) => {
-    setPreview(URL.createObjectURL(file));
+    if (file.size > MAX_FILE_BYTES) {
+      setError("Ukuran file melebihi 15 MB — pilih foto yang lebih kecil");
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      return;
+    }
+    if (previewUrl.current) URL.revokeObjectURL(previewUrl.current);
+    previewUrl.current = URL.createObjectURL(file);
+    setPreview(previewUrl.current);
     setUploading(true);
     setError(null);
 
@@ -43,10 +64,9 @@ export function ImageUpload({ onUpload }: ImageUploadProps) {
 
       const result = await response.json();
       onUpload(result.url);
-      setPreview(null);
-      if (fileInputRef.current) fileInputRef.current.value = "";
+      resetPreview();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Upload failed");
+      setError(err instanceof Error ? err.message : "Upload gagal");
     } finally {
       setUploading(false);
     }
@@ -108,7 +128,7 @@ export function ImageUpload({ onUpload }: ImageUploadProps) {
         <div className="flex items-start gap-3 p-3 rounded-xl bg-red-50 dark:bg-red-950/60 border-2 border-red-200 dark:border-red-800 text-red-700 dark:text-red-300">
           <AlertCircle size={18} className="mt-0.5 flex-shrink-0" />
           <div className="flex-1">
-            <p className="text-sm font-medium">Upload failed</p>
+            <p className="text-sm font-medium">Upload gagal</p>
             <p className="text-xs mt-0.5">{error}</p>
           </div>
           <button
@@ -118,7 +138,7 @@ export function ImageUpload({ onUpload }: ImageUploadProps) {
             className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-red-100 hover:bg-red-200 dark:bg-red-900/60 dark:hover:bg-red-900 text-red-700 dark:text-red-300 text-xs font-semibold transition-all min-h-[44px]"
           >
             <RefreshCw size={14} />
-            Retry
+            Coba lagi
           </button>
         </div>
       )}
@@ -132,12 +152,12 @@ export function ImageUpload({ onUpload }: ImageUploadProps) {
         {uploading ? (
           <>
             <Loader2 size={18} className="animate-spin text-primary" />
-            Uploading...
+            Mengunggah...
           </>
         ) : (
           <>
             <Upload size={18} className="text-primary" />
-            Upload Photo
+            Upload Foto
           </>
         )}
       </button>

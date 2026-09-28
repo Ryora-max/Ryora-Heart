@@ -12,7 +12,7 @@ import { BottomNav } from "@/components/ui/BottomNav";
 import { Toaster } from "@/components/ui/Toaster";
 import { OfflineIndicator } from "@/components/ui/OfflineIndicator";
 import { useOnlineStatus } from "@/hooks/useOnlineStatus";
-import { usePresence, usePartnerId } from "@/hooks/useDatabase";
+import { usePresence, usePartnerId, useNotifications } from "@/hooks/useDatabase";
 import { usePendingSyncCount } from "@/lib/syncStatus";
 import { sessionValueForRole } from "@/lib/localAuth";
 
@@ -33,6 +33,9 @@ export default function MainLayout({
   const authToken = token || "";
   const { presence, updatePresence } = usePresence(authToken);
   const { partnerId } = usePartnerId(authToken, user?.id);
+  // Satu sumber notifikasi untuk kedua render NotificationButton —
+  // tanpa ini ada 2 poller paralel.
+  const { notifications, markRead: markNotificationsRead } = useNotifications(authToken);
 
   useEffect(() => {
     if (!authToken) return;
@@ -208,7 +211,7 @@ export default function MainLayout({
                   <p className="text-sm font-semibold text-text-primary truncate">{user.name}</p>
                   <p className="text-xs text-text-secondary truncate">@{user.username}</p>
                 </div>
-                <NotificationButton />
+                <NotificationButton notifications={notifications} markRead={markNotificationsRead} />
               </div>
               <button
                 onClick={handleLogout}
@@ -231,7 +234,7 @@ export default function MainLayout({
                <h1 className="text-gradient-primary text-base font-bold">🏠 RYORA</h1>
                <span className={cn("w-2 h-2 rounded-full", isPartnerOnline ? "bg-emerald-500" : "bg-text-muted")} />
              </div>
-             <NotificationButton />
+             <NotificationButton notifications={notifications} markRead={markNotificationsRead} />
            </div>
            {children}
         </main>

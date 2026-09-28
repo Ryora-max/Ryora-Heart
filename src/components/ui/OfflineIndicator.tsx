@@ -14,10 +14,10 @@ export function OfflineIndicator({ pendingCount = 0, onRetry, onDismiss }: Offli
       <div className="flex items-center gap-2 min-w-0">
         <WifiOff className="w-4 h-4 flex-shrink-0 text-amber-600 dark:text-amber-400" aria-hidden="true" />
         <p className="text-sm font-medium text-amber-800 dark:text-amber-200 truncate">
-          You are offline
+          Kamu sedang offline
           {pendingCount > 0 && (
             <span className="ml-2 bg-amber-200 dark:bg-amber-800/60 px-2 py-0.5 rounded-full text-xs">
-              {pendingCount} pending
+              {pendingCount} menunggu sinkron
             </span>
           )}
         </p>

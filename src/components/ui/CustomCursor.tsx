@@ -27,10 +27,10 @@ export default function CustomCursor() {
   // navigator tidak boleh dibaca saat render → hydration mismatch).
   // Preferensi dibaca deferred di effect.
   const [enabled, setEnabled] = useState(false);
-  const [position, setPosition] = useState({ x: -100, y: -100 });
   const [isVisible, setIsVisible] = useState(false);
   const [sparkles, setSparkles] = useState<Sparkle[]>([]);
   const rafRef = useRef<number | null>(null);
+  const cursorEl = useRef<HTMLDivElement | null>(null);
   const currentPos = useRef({ x: -100, y: -100 });
   const targetPos = useRef({ x: -100, y: -100 });
 
@@ -59,7 +59,10 @@ export default function CustomCursor() {
     const animate = () => {
       currentPos.current.x += (targetPos.current.x - currentPos.current.x) * LERP_FACTOR;
       currentPos.current.y += (targetPos.current.y - currentPos.current.y) * LERP_FACTOR;
-      setPosition({ x: currentPos.current.x, y: currentPos.current.y });
+      // Direct DOM write — jangan setState tiap frame (60 re-render/detik).
+      if (cursorEl.current) {
+        cursorEl.current.style.transform = `translate(${currentPos.current.x - CURSOR_SIZE / 2}px, ${currentPos.current.y - CURSOR_SIZE / 2}px)`;
+      }
       rafRef.current = requestAnimationFrame(animate);
     };
 
@@ -81,8 +84,9 @@ export default function CustomCursor() {
     for (let i = 0; i < SPARKLE_COUNT; i++) {
       newSparkles.push({
         id: Date.now() + i,
-        x: currentPos.current.x + (Math.random() - 0.5) * 60,
-        y: currentPos.current.y + (Math.random() - 0.5) * 60,
+        // Offset relatif terhadap pusat cursor (div ikut bergerak).
+        x: CURSOR_SIZE / 2 + (Math.random() - 0.5) * 60,
+        y: CURSOR_SIZE / 2 + (Math.random() - 0.5) * 60,
         angle: Math.random() * 360,
         delay: i * 0.08,
       });
@@ -157,8 +161,9 @@ export default function CustomCursor() {
 
       {isVisible && (
         <div
+          ref={cursorEl}
           className="fixed top-0 left-0 pointer-events-none z-[9999]"
-          style={{ transform: `translate(${position.x - CURSOR_SIZE / 2}px, ${position.y - CURSOR_SIZE / 2}px)` }}
+          style={{ transform: "translate(-100px, -100px)", willChange: "transform" }}
         >
           <svg width={CURSOR_SIZE} height={CURSOR_SIZE} viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
             <defs>
@@ -186,8 +191,8 @@ export default function CustomCursor() {
               fill="none"
               style={{
                 position: "absolute",
-                left: s.x - position.x,
-                top: s.y - position.y,
+                left: s.x,
+                top: s.y,
                 animation: `sparkle-fly 0.7s ease-out ${s.delay}s forwards`,
                 opacity: 0,
               }}

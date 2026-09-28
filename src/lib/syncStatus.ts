@@ -14,8 +14,8 @@ function emit() {
   for (const l of listeners) l();
 }
 
-export function incrementPendingSync() {
-  pending += 1;
+export function incrementPendingSync(n = 1) {
+  pending += n;
   emit();
 }
 

@@ -746,7 +746,8 @@ export async function addLocation(userId: string, pairId: string, place: string,
   });
   if (error) throw error;
 
-  await notifyPartner(supabase, userId, pairId, `Location update: ${place}`, "location");
+  // Tidak notifyPartner — GPS watch bisa menulis tiap beberapa detik;
+  // lokasi sync silent via realtime peta, notifikasi per-tick = spam.
 
   return { id, userId, place, note, lat, lng, accuracy, createdAt: now, updatedAt: now };
 }

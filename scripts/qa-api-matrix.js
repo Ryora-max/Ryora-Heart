@@ -65,7 +65,6 @@ async function main() {
   // ── Writes (owner) ──
   let r2 = await call(R, "addMood", { mood: "happy", note: "QA mood" });
   rec("addMood", r2.status === 200 && r2.data?.id, JSON.stringify(r2.data).slice(0, 80));
-  const moodId = r2.data?.id;
 
   r2 = await call(R, "createActivity", { title: "QA activity", type: "schedule", date: new Date().toISOString(), description: "test", mood: "happy", isLive: true });
   rec("createActivity", r2.status === 200 && r2.data?.id, JSON.stringify(r2.data).slice(0, 80));
@@ -165,7 +164,7 @@ async function main() {
   rec("no-auth → 401", r2.status === 401);
 
   // cleanup QA data
-  const cleanup = await call(R, "setUserExtra", { key: "qa_test", value: "" });
+  await call(R, "setUserExtra", { key: "qa_test", value: "" });
 
   console.log(results.join("\n"));
   const fails = results.filter(r => r.startsWith("FAIL"));

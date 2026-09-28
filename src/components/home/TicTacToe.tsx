@@ -99,13 +99,13 @@ export function TicTacToe({ partnerName }: TicTacToeProps) {
           <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400">
             Kamu: {myMark === "x" ? "❌" : "⭕"}
           </span>
-          {game.winner && (
+          {(game.winner || game.board.some((c) => c !== "")) && (
             <button
               type="button"
               onClick={handleReset}
               className="px-2.5 py-1 rounded-lg bg-violet-100 dark:bg-violet-900/60 text-violet-700 dark:text-violet-200 text-[10px] font-bold hover:bg-violet-200 transition-colors cursor-pointer flex items-center gap-1"
             >
-              <RotateCcw size={11} /> Main lagi
+              <RotateCcw size={11} /> {game.winner ? "Main lagi" : "Reset"}
             </button>
           )}
         </div>

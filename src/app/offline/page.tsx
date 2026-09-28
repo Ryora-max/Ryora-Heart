@@ -12,7 +12,7 @@ export default function OfflinePage() {
       <div className="relative z-10">
         <div className="text-7xl mb-6 animate-breathe">💝</div>
         <h1 className="text-4xl md:text-5xl font-bold mb-3 text-text-primary tracking-tight">
-          You&apos;re offline
+          Kamu sedang offline
         </h1>
         <p className="text-lg text-text-secondary font-light max-w-md mx-auto mb-8">
           Ryora butuh koneksi internet untuk memuat kenangan kamu. Coba cek sinyal

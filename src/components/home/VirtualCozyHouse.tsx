@@ -147,8 +147,10 @@ export function VirtualCozyHouse({
   const [decorMode, setDecorMode] = useState(false);
 
   // Synced Tree Water count
-  const treeWaterCount = syncedTreeWater ? parseInt(syncedTreeWater, 10) || 12 : 12;
-  const lovePoints = syncedLovePoints ? parseInt(syncedLovePoints, 10) || 0 : 0;
+  const parsedWater = parseInt(syncedTreeWater ?? "", 10);
+  const treeWaterCount = Number.isNaN(parsedWater) ? 12 : parsedWater;
+  const parsedPoints = parseInt(syncedLovePoints ?? "", 10);
+  const lovePoints = Number.isNaN(parsedPoints) ? 0 : parsedPoints;
   const roomCustom = parseRoomCustom(syncedRoomCustom);
 
   const addLovePoints = async (n: number) => {
@@ -236,7 +238,6 @@ export function VirtualCozyHouse({
     const nextCount = treeWaterCount + 1;
     await setSyncedTreeWater(nextCount.toString());
     addLovePoints(1);
-    onSendHeartPing();
     setTimeout(() => setWaterAnimation(false), 1500);
   };
 
@@ -244,9 +245,10 @@ export function VirtualCozyHouse({
     playHeartPopSound();
     setFeedMessage(`Kamu menyuapkan ${treat} ${name} ke ${partnerName} dengan penuh cinta! 💕`);
     addLovePoints(1);
-    onSendHeartPing();
     try {
-      await sendHug(partnerId, `${myName} menyuapkan ${treat} ${name} di meja makan rumah! 😋💕`);
+      if (partnerId) {
+        await sendHug(partnerId, `${myName} menyuapkan ${treat} ${name} di meja makan rumah! 😋💕`);
+      }
     } catch {
       // Graceful
     }
@@ -443,6 +445,10 @@ export function VirtualCozyHouse({
             partnerMood={partnerMood}
             currentRoom={activeRoom}
             onSendHeart={handleHeartClick}
+            onSendAction={(label, emoji) => {
+              if (!partnerId) return;
+              sendHug(partnerId, `${myName} mengirimkan ${label} ${emoji}`);
+            }}
           />
         </div>
 
@@ -653,7 +659,7 @@ export function VirtualCozyHouse({
             </div>
 
             {/* Love Notes Fridge Component */}
-            <LoveNotesFridge currentUserName={myName} partnerName={partnerName} onSendHeart={handleHeartClick} onEarnPoints={addLovePoints} />
+            <LoveNotesFridge currentUserName={myName} partnerName={partnerName} onEarnPoints={addLovePoints} />
           </div>
         )}
 
@@ -677,7 +683,10 @@ export function VirtualCozyHouse({
                 <button
                   onClick={() => {
                     playChimeSound();
-                    handleHeartClick();
+                    // Peluk malam = notifikasi ringan (hug), bukan ping rindu_banget.
+                    if (partnerId) {
+                      sendHug(partnerId, `${myName} menyelimuti & memelukmu selamat malam 🛌💕`).catch(() => {});
+                    }
                   }}
                   className="touch-press px-5 py-2.5 rounded-full bg-gradient-to-r from-rose-500 to-pink-500 text-white text-xs font-bold shadow-lg hover:shadow-xl flex items-center gap-2 cursor-pointer transition-transform"
                 >

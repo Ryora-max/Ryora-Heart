@@ -285,7 +285,9 @@ export function useChat(token: string, pairId?: string, userId?: string) {
     }
   }, [token]);
 
-  usePolling(fetchMessages, 3000, enabled);
+  // Realtime mengantar pesan instan; polling 15s hanya fallback kalau
+  // channel putus — jangan terlalu agresif (hemat data & baterai).
+  usePolling(fetchMessages, 15000, enabled);
   useRealtimeRefetch("chat_messages", fetchMessages, enabled);
 
   const sendMessage = useCallback(async (content: string, receiverId: string) => {
@@ -818,13 +820,22 @@ export function useUserExtra(token: string, key: string) {
   usePolling(fetchExtra, 20000, enabled);
   useRealtimeRefetch("user_extras", fetchExtra, enabled);
 
+  const valueRef = useRef(value);
+  useEffect(() => {
+    valueRef.current = value;
+  }, [value]);
+
   const setValue = useCallback(
     async (newVal: string) => {
+      const prev = valueRef.current;
       setValueState(newVal);
       try {
         await callDb("setUserExtra", token, { key, value: newVal });
         fetchExtra();
       } catch (error) {
+        // Revert optimistic update — jangan tampilkan state yang tidak tersimpan.
+        setValueState(prev);
+        showToast("Gagal sinkron — coba lagi", "error");
         console.error(`Error setting extra ${key}:`, error);
       }
     },

@@ -103,8 +103,8 @@ export function CoupleAvatars({
       spawnParticles("💕", "ara");
       setTimeout(() => setAraBlush(false), 2000);
     }
-
-    onSendHeart();
+    // Tap avatar = interaksi lokal saja — tidak mengirim notifikasi ke partner
+    // (popup rindu berisik hanya untuk tombol hati eksplisit).
   };
 
   const handleAction = (label: string, emoji: string, sound: "kiss" | "pop" | "chime" | "purr") => {
@@ -115,10 +115,11 @@ export function CoupleAvatars({
     else playPurrSound();
 
     spawnParticles(emoji, isOwner ? "ara" : "ryo");
+    // Quick action kirim sebagai hug (notif ringan) — bukan rindu popup
+    // yang berbunyi keras + vibrasi berulang di HP partner.
     if (onSendAction) {
       onSendAction(label, emoji);
     }
-    onSendHeart();
 
     setTimeout(() => setSelectedPartnerAction(null), 3000);
   };
