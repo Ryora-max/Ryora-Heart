@@ -61,7 +61,7 @@ export default function RootLayout({
             yang memilih tema non-default. Inline & synchronous sengaja. */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem("ryora-theme");document.documentElement.setAttribute("data-theme",t==="light"||t==="aurora"?t:"dark")}catch(e){document.documentElement.setAttribute("data-theme","dark")}})()`,
+            __html: `(function(){try{var d=document.documentElement;var t=localStorage.getItem("ryora-theme-v2");d.setAttribute("data-theme",t==="dark"||t==="aurora"?t:"light");if(localStorage.getItem("ryora-lite")==="1")d.setAttribute("data-lite","1")}catch(e){document.documentElement.setAttribute("data-theme","light")}})()`,
           }}
         />
       </head>

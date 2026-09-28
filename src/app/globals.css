@@ -201,6 +201,49 @@ body::before {
   animation: aurora-drift 26s ease-in-out infinite alternate;
 }
 
+/* ─── Mode Ringan (data-lite="1") ──────────────────────────────
+   Untuk device lemot / hemat baterai & data:
+   - orbs + drift dimatikan (background polos)
+   - backdrop-filter blur dimatikan (operasi GPU termahal)
+   - animasi ambient (float/breathe/glow/shimmer) diam
+   - shadow dalam diganti tipis
+   Toggle: Settings → Mode Ringan. Disimpan di localStorage
+   "ryora-lite" + dipasang pre-paint lewat inline script. */
+[data-lite="1"] body::before {
+  background: var(--background);
+  animation: none;
+}
+
+[data-lite="1"] .surface-card,
+[data-lite="1"] .card-soft,
+[data-lite="1"] .surface-glass,
+[data-lite="1"] .glass-panel {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  background: var(--surface-solid);
+  box-shadow: 0 1px 3px var(--shadow);
+}
+
+[data-lite="1"] .surface-card:hover,
+[data-lite="1"] .card-soft:hover {
+  box-shadow: 0 4px 12px var(--shadow);
+  transform: none;
+}
+
+[data-lite="1"] .animate-float-soft,
+[data-lite="1"] .animate-breathe,
+[data-lite="1"] .animate-pulse-glow,
+[data-lite="1"] .animate-shimmer {
+  animation: none;
+}
+
+/* Entrance animations tetap jalan (murah) tapi dipersingkat */
+[data-lite="1"] .animate-fade-in-soft,
+[data-lite="1"] .animate-scale-soft,
+[data-lite="1"] .animate-slide-up-soft {
+  animation-duration: 0.2s;
+}
+
 @keyframes aurora-drift {
   0%   { background-position: 0% 0%, 0% 0%, 0% 0%; }
   50%  { background-position: 4% 6%, -5% -3%, 3% 5%; }

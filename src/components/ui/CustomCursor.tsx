@@ -16,6 +16,8 @@ interface Sparkle {
 
 function getInitialEnabled() {
   if (typeof window === "undefined") return false;
+  // Mode Ringan — cursor custom + sparkle dimatikan.
+  if (document.documentElement.dataset.lite === "1") return false;
   const isTouchDevice = "ontouchstart" in window || navigator.maxTouchPoints > 0;
   if (isTouchDevice) return false;
   const stored = localStorage.getItem("ryora-custom-cursor");
@@ -36,7 +38,15 @@ export default function CustomCursor() {
 
   useEffect(() => {
     const t = setTimeout(() => setEnabled(getInitialEnabled()), 0);
-    return () => clearTimeout(t);
+    // Lite mode bisa dinyalakan runtime — cursor langsung mati tanpa reload.
+    const onLiteChange = () => {
+      if (document.documentElement.dataset.lite === "1") setEnabled(false);
+    };
+    window.addEventListener("ryora-lite-change", onLiteChange);
+    return () => {
+      clearTimeout(t);
+      window.removeEventListener("ryora-lite-change", onLiteChange);
+    };
   }, []);
 
   useEffect(() => {

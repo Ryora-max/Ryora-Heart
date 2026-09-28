@@ -40,6 +40,25 @@ export default function SettingsPage() {
   const [pushState, setPushState] = useState<PushState>("loading");
   const [pushBusy, setPushBusy] = useState(false);
 
+  // Mode Ringan — matikan efek visual berat (blur, orbs, cursor custom).
+  const [lite, setLite] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => setLite(document.documentElement.dataset.lite === "1"), 0);
+    return () => clearTimeout(t);
+  }, []);
+
+  const handleToggleLite = () => {
+    const next = !lite;
+    setLite(next);
+    try {
+      localStorage.setItem("ryora-lite", next ? "1" : "0");
+    } catch {}
+    if (next) document.documentElement.setAttribute("data-lite", "1");
+    else document.documentElement.removeAttribute("data-lite");
+    window.dispatchEvent(new Event("ryora-lite-change"));
+    showToast(next ? "Mode Ringan aktif — efek visual dikurangi ⚡" : "Mode Ringan mati — efek penuh kembali ✨", "info");
+  };
+
   useEffect(() => {
     let cancelled = false;
     // Deferred — browser API check tidak boleh sync-setState dalam effect.
@@ -371,6 +390,27 @@ export default function SettingsPage() {
               );
             })}
           </div>
+        </div>
+
+        {/* Mode Ringan */}
+        <div className="surface-card p-5 mb-5">
+          <h2 className="text-heading text-lg font-bold mb-1">Mode Ringan ⚡</h2>
+          <p className="text-body text-xs mb-4">
+            Kurangi efek visual berat (blur kaca, orbs bergerak, cursor custom) — lebih lancar di device lemot & hemat baterai.
+          </p>
+          <button
+            type="button"
+            onClick={handleToggleLite}
+            aria-pressed={lite}
+            className="touch-target touch-press w-full py-3 rounded-xl border-2 transition-all cursor-pointer flex items-center justify-center gap-2 font-medium"
+            style={{
+              borderColor: lite ? "var(--primary)" : "var(--border)",
+              background: lite ? "var(--primary-soft)" : "var(--surface-warm)",
+              color: lite ? "var(--primary)" : "var(--text-secondary)",
+            }}
+          >
+            {lite ? "⚡ Mode Ringan aktif — tap untuk matikan" : "Aktifkan Mode Ringan"}
+          </button>
         </div>
 
         {/* Push Notifications */}
