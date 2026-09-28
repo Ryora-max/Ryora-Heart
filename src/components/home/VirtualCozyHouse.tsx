@@ -27,6 +27,7 @@ import { CoupleAvatars } from "./CoupleAvatars";
 import { LoveNotesFridge } from "./LoveNotesFridge";
 import { MusicPlayer } from "./MusicPlayer";
 import { TicTacToe } from "./TicTacToe";
+import { PhotoGallery } from "./PhotoGallery";
 import {
   playHeartPopSound,
   playSwitchSound,
@@ -585,6 +586,9 @@ export function VirtualCozyHouse({
               <MusicPlayer />
               <TicTacToe partnerName={partnerName} />
             </div>
+
+            {/* Galeri Kenangan — foto berdua */}
+            <PhotoGallery />
 
             {/* Quick Live Activities Side-by-Side */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
