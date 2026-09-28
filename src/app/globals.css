@@ -392,6 +392,21 @@ h1, h2, h3, h4, h5, h6 {
   animation: shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97);
 }
 
+/* ─── Typing indicator — 3 dot bounce ala chat app ─── */
+@keyframes typing-bounce {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.35; }
+  30% { transform: translateY(-4px); opacity: 1; }
+}
+
+.typing-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 9999px;
+  background: var(--text-secondary);
+  animation: typing-bounce 1.2s ease-in-out infinite;
+}
+
 /* ─── 3D helpers — dipakai Furniture tilt & HouseEntryTransition door ─── */
 /* Tailwind `perspective-*` hanya punya skala bernama — 1000px custom. */
 .perspective-1000 {

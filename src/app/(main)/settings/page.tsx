@@ -39,6 +39,35 @@ export default function SettingsPage() {
   type PushState = "loading" | "unsupported" | "denied" | "off" | "on";
   const [pushState, setPushState] = useState<PushState>("loading");
   const [pushBusy, setPushBusy] = useState(false);
+  const [exporting, setExporting] = useState(false);
+
+  const handleExport = async () => {
+    if (exporting) return;
+    setExporting(true);
+    try {
+      const res = await fetch("/api/db", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "exportData" }),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      const blob = new Blob([JSON.stringify(data, null, 2)], {
+        type: "application/json",
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `ryora-kenangan-${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast("Kenangan berhasil diunduh 💾", "success");
+    } catch {
+      showToast("Gagal mengunduh — coba lagi ya", "error");
+    } finally {
+      setExporting(false);
+    }
+  };
 
   // Mode Ringan — matikan efek visual berat (blur, orbs, cursor custom).
   const [lite, setLite] = useState(false);
@@ -442,6 +471,23 @@ export default function SettingsPage() {
               : pushState === "loading"
               ? "Memeriksa status..."
               : "Aktifkan notifikasi push"}
+          </button>
+        </div>
+
+        {/* Backup Data */}
+        <div className="surface-card p-5 mb-5">
+          <h2 className="text-heading text-lg font-bold mb-1">Backup Kenangan 💾</h2>
+          <p className="text-body text-xs mb-4">
+            Unduh semua kenangan kalian (memo, surat, chat, mood, foto, lokasi) sebagai file JSON — aman disimpan kalau-kalau.
+          </p>
+          <button
+            type="button"
+            onClick={handleExport}
+            disabled={exporting}
+            className="touch-target touch-press w-full py-3 rounded-xl border-2 transition-all cursor-pointer flex items-center justify-center gap-2 font-medium disabled:opacity-60"
+            style={{ borderColor: "var(--border)", background: "var(--surface-warm)", color: "var(--text-primary)" }}
+          >
+            {exporting ? "Mengumpulkan kenangan…" : "Unduh Semua Kenangan (.json)"}
           </button>
         </div>
 

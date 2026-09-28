@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { useAuthStore } from "@/stores";
 import { APP_CONFIG } from "@/config";
 import { useChat, useRindu, usePartnerId, usePresence } from "@/hooks/useDatabase";
+import { useTypingIndicator } from "@/hooks/useTypingIndicator";
 import type { RinduNotification, RinduLevel } from "@/types";
 import { cn } from "@/lib/utils";
 
@@ -139,6 +140,10 @@ export default function ChatPage() {
   );
   const { rinduList, sendRindu, respondRindu } = useRindu(authToken);
   const { presence } = usePresence(authToken);
+  const { partnerTyping, sendTyping } = useTypingIndicator(
+    user?.pair_id,
+    user?.id
+  );
 
   // Partner info from config (the other user)
   const partnerName = useMemo(() => {
@@ -209,8 +214,18 @@ export default function ChatPage() {
     const content = input.trim();
     if (!content || !partnerId) return;
     setInput("");
+    sendTyping(false);
     await sendMessage(content, partnerId);
-  }, [input, partnerId, sendMessage]);
+  }, [input, partnerId, sendMessage, sendTyping]);
+
+  const handleInputChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const v = e.target.value;
+      setInput(v);
+      sendTyping(v.trim().length > 0);
+    },
+    [sendTyping]
+  );
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -326,7 +341,11 @@ export default function ChatPage() {
                   isPartnerOnline ? "bg-emerald-500" : "bg-text-muted"
                 )}
               />
-              {isPartnerOnline ? "Online 💕" : "Offline 💤"}
+              {partnerTyping
+                ? "sedang mengetik…"
+                : isPartnerOnline
+                  ? "Online 💕"
+                  : "Offline 💤"}
               <span className="opacity-60">· @{partnerUsername}</span>
             </p>
           </div>
@@ -466,6 +485,19 @@ export default function ChatPage() {
             );
           })
         )}
+        {/* Typing indicator — bubble ala chat app */}
+        {partnerTyping && (
+          <div className="flex flex-col items-start max-w-[78%]">
+            <div
+              className="px-4 py-2.5 rounded-2xl rounded-bl-md shadow-soft flex items-center gap-1.5"
+              style={{ background: "var(--surface)" }}
+            >
+              <span className="typing-dot" style={{ animationDelay: "0ms" }} />
+              <span className="typing-dot" style={{ animationDelay: "150ms" }} />
+              <span className="typing-dot" style={{ animationDelay: "300ms" }} />
+            </div>
+          </div>
+        )}
         <div ref={messagesEndRef} />
       </div>
 
@@ -491,7 +523,7 @@ export default function ChatPage() {
             type="text"
             autoComplete="off"
             value={input}
-            onChange={(e) => setInput(e.target.value)}
+            onChange={handleInputChange}
             onKeyDown={handleKeyDown}
             placeholder={`Tulis pesan untuk ${partnerName}…`}
             className="input-soft flex-1 px-4 py-3 text-sm"

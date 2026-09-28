@@ -9,13 +9,13 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 const sora = Sora({
   variable: "--font-sora",
   subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700", "800"],
+  weight: ["400", "600", "700", "800"],
 });
 
 const jakarta = Plus_Jakarta_Sans({
   variable: "--font-jakarta",
   subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700", "800"],
+  weight: ["400", "600", "700", "800"],
 });
 
 export const metadata: Metadata = {

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { APP_CONFIG } from "@/config";
-import { calculateDaysTogether } from "@/lib/utils";
+import { calculateDaysTogether, calculateDaysUntil } from "@/lib/utils";
 import { useAuthStore } from "@/stores";
 import {
   usePresence,
@@ -80,6 +80,11 @@ export default function DashboardPage() {
   // fallback APP_CONFIG (2024-10-29).
   const startDate = settings?.relationshipStartDate || APP_CONFIG.relationship.startDate;
   const daysTogether = now === null ? 0 : calculateDaysTogether(startDate);
+  // Countdown ke nextMeetupDate (Settings → "Tanggal Ketemu"). Null kalau
+  // belum di-set atau sudah lewat — chip disembunyikan.
+  const meetupDate = settings?.nextMeetupDate;
+  const daysUntilMeetup =
+    now === null || !meetupDate ? null : calculateDaysUntil(meetupDate);
 
   const handleFinishEntry = () => {
     setShowEntryTransition(false);
@@ -140,6 +145,7 @@ export default function DashboardPage() {
 
       <VirtualCozyHouse
         daysTogether={daysTogether}
+        daysUntilMeetup={daysUntilMeetup}
         myName={myName}
         partnerName={partnerDisplayName}
         isOwner={isOwner}

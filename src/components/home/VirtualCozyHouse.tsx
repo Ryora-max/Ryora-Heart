@@ -38,6 +38,7 @@ import type { MoodEntry, Activity, Presence } from "@/types";
 
 interface VirtualCozyHouseProps {
   daysTogether: number;
+  daysUntilMeetup?: number | null;
   myName: string;
   partnerName: string;
   isOwner?: boolean;
@@ -119,6 +120,7 @@ const TV_CHANNELS = [
 
 export function VirtualCozyHouse({
   daysTogether,
+  daysUntilMeetup,
   myName,
   partnerName,
   isOwner = true,
@@ -319,6 +321,11 @@ export function VirtualCozyHouse({
                   <Flame size={11} className="text-orange-500 fill-orange-500 animate-pulse" />
                   {daysTogether} Hari
                 </span>
+                {daysUntilMeetup !== null && daysUntilMeetup !== undefined && daysUntilMeetup >= 0 && (
+                  <span className="inline-flex items-center gap-1 text-[10px] font-bold text-white bg-gradient-to-r from-rose-500 to-pink-500 px-2 py-0.5 rounded-full shadow-sm">
+                    💕 {daysUntilMeetup === 0 ? "Ketemu hari ini!" : `${daysUntilMeetup} hari lagi ketemu`}
+                  </span>
+                )}
               </div>
               <p className="text-[11px] opacity-80 font-medium flex items-center gap-1">
                 {isPartnerOnline ? (

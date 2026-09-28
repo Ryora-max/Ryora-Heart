@@ -40,6 +40,7 @@ import {
   getRinduNotifications,
   sendRindu,
   respondRindu,
+  exportAllData,
 } from "@/app/actions/db";
 import { updateProfile, updateSettings, getUserSettings } from "@/app/actions/auth";
 
@@ -211,6 +212,8 @@ async function runAction(
       return await sendRindu(userId, pairId, params.receiverId, params.level, params.message);
     case "respondRindu":
       return await respondRindu(userId, pairId, params.rinduId, params.response);
+    case "exportData":
+      return await exportAllData(userId, pairId);
     default:
       throw new InvalidActionError();
   }

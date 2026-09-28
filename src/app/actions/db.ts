@@ -965,3 +965,63 @@ export async function respondRindu(userId: string, pairId: string, rinduId: stri
   if (error) throw error;
   return { success: true };
 }
+
+// ─── Export / Backup ──────────────────────────────────────────────────────
+
+/**
+ * Dump semua data pair ke satu objek JSON (backup kenangan — memo, surat,
+ * chat, mood, dll). Raw rows (snake_case) supaya tidak ada field yang hilang.
+ */
+export async function exportAllData(userId: string, pairId: string) {
+  const supabase = getSupabaseServer();
+
+  const { data: members } = await supabase
+    .from("users")
+    .select("id, username, role")
+    .eq("pair_id", pairId);
+  const memberIds = (members || []).map((m) => m.id as string);
+
+  const pairTables = [
+    "moods",
+    "activities",
+    "gallery",
+    "calendar_events",
+    "letters",
+    "ldr_presence",
+    "ldr_status_updates",
+    "ldr_hugs",
+    "ldr_love_meter",
+    "ldr_locations",
+    "user_extras",
+    "user_settings",
+    "chat_messages",
+    "rindu_notifications",
+  ] as const;
+
+  const result: Record<string, unknown[]> = {};
+  await Promise.all(
+    pairTables.map(async (table) => {
+      const { data, error } = await supabase
+        .from(table)
+        .select("*")
+        .eq("pair_id", pairId);
+      if (error) throw error;
+      result[table] = data || [];
+    })
+  );
+
+  // Notifications bersifat user-scoped — ambil untuk kedua member pair.
+  const { data: notifs, error: nErr } = await supabase
+    .from("notifications")
+    .select("*")
+    .in("user_id", memberIds.length ? memberIds : [userId]);
+  if (nErr) throw nErr;
+  result.notifications = notifs || [];
+
+  return {
+    exportedAt: new Date().toISOString(),
+    pairId,
+    members,
+    tables: result,
+  };
+}

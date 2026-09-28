@@ -47,6 +47,16 @@ export function calculateDaysTogether(startDate: Date | string): number {
   return Math.max(0, Math.floor((today.getTime() - startDay.getTime()) / (1000 * 60 * 60 * 24)));
 }
 
+export function calculateDaysUntil(targetDate: Date | string): number {
+  // Hari menuju tanggal target (0 = hari ini, negatif = sudah lewat).
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(targetDate));
+  const target = m ? new Date(+m[1], +m[2] - 1, +m[3]) : new Date(targetDate);
+  const now = new Date();
+  const targetDay = new Date(target.getFullYear(), target.getMonth(), target.getDate());
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  return Math.floor((targetDay.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+}
+
 export function generateId(): string {
   return Date.now().toString(36) + Math.random().toString(36).substr(2);
 }
